@@ -1,3 +1,8 @@
+0.50_02 21 November 2003
+        Make tests skip rather than try to run zero tests if no backends
+          configured - thanks to nothingmuch via CPAN testers for the
+          test failure report.
+
 0.50_01 18 November 2003
         Huge overhaul of test suite, no change in functionality.
         Removed dependency on Test::MockObject and Hook::LexWrap

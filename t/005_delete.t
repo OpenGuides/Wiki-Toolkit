@@ -1,6 +1,12 @@
 use strict;
 use CGI::Wiki::TestLib;
-use Test::More tests => ( 4 * scalar @CGI::Wiki::TestLib::wiki_info );
+use Test::More;
+
+if ( scalar @CGI::Wiki::TestLib::wiki_info == 0 ) {
+    plan skip_all => "no backends configured";
+} else {
+    plan tests => ( 4 * scalar @CGI::Wiki::TestLib::wiki_info );
+}
 
 my $iterator = CGI::Wiki::TestLib->new_wiki_maker;
 
