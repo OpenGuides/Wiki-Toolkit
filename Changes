@@ -1,3 +1,6 @@
+0.51    8 June 2004
+        Time for a non-developer release.
+
 0.51_02 6 June 2004
         Added support for passing in a database handle instead of
           connection parameters (Chris Winters).
