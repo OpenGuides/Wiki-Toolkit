@@ -1,3 +1,9 @@
+0.58    18 September 2004
+        Even more powerful metadata filtering!  You can now supply both
+          "metadata_was" and "metadata_wasnt", or both "metadata_is"
+          and "metadata_isnt", and they will be ANDed.
+        (Also added the test I forgot to add to MANIFEST last time.)
+
 0.57    18 September 2004
         Extended capabilities of list_recent_changes - more powerful
           metadata filtering (see docs for details).

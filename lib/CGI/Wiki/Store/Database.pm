@@ -11,7 +11,7 @@ use Time::Seconds;
 use Carp qw( carp croak );
 use Digest::MD5 qw( md5_hex );
 
-$VERSION = '0.24';
+$VERSION = '0.25';
 
 # first, detect if Encode is available - it's not under 5.6. If we _are_
 # under 5.6, give up - we'll just have to hope that nothing explodes. This
@@ -683,21 +683,18 @@ sub delete_node {
 You I<must> supply one of the following constraints: C<days>
 (integer), C<since> (epoch), C<last_n_changes> (integer).
 
-You I<may> also supply one of the following constraints:
-C<metadata_is>, C<metadata_isnt>, C<metadata_was>, C<metadata_wasnt>,
-each of which should be a ref to a hash with scalar keys and values.
-If the hash has more than one entry, then only changes satisfying
-I<all> criteria will be returned when using C<metadata_is> or
-C<metadata_was>, but all changes which fail to satisfy any one of the
-criteria will be returned when using C<metadata_isnt> or
-C<metadata_is>.
+You I<may> also supply I<either> C<metadata_is> (and optionally
+C<metadata_isnt>), I<or> C<metadata_was> (and optionally
+C<metadata_wasnt>). Each of these should be a ref to a hash with
+scalar keys and values.  If the hash has more than one entry, then
+only changes satisfying I<all> criteria will be returned when using
+C<metadata_is> or C<metadata_was>, but all changes which fail to
+satisfy any one of the criteria will be returned when using
+C<metadata_isnt> or C<metadata_is>.
 
 C<metadata_is> and C<metadata_isnt> look only at the metadata that the
 node I<currently> has. C<metadata_was> and C<metadata_wasnt> take into
-account the metadata of previous versions of a node. B<NOTE:> Only one
-of these constraints will be honoured, so please only supply one. This
-may change in the future. (For avoidance of confusion - they are
-examined in the following order: is, isnt, was, wasnt.)
+account the metadata of previous versions of a node.
 
 Returns results as an array, in reverse chronological order.  Each
 element of the array is a reference to a hash with the following entries:
@@ -753,67 +750,74 @@ sub _find_recent_changes_by_criteria {
     my @where;
     my @metadata_joins;
     my $main_table = $args{include_all_changes} ? "content" : "node";
-    if ( $metadata_is ) {
-        my $i = 0;
-        foreach my $type ( keys %$metadata_is ) {
-            $i++;
-            my $value  = $metadata_is->{$type};
-            croak "metadata_is must have scalar values" if ref $value;
-            push @metadata_joins, "LEFT JOIN metadata AS md$i
+    if ( $metadata_is || $metadata_isnt ) {
+        if ( $metadata_is ) {
+            my $i = 0;
+            foreach my $type ( keys %$metadata_is ) {
+                $i++;
+                my $value  = $metadata_is->{$type};
+                croak "metadata_is must have scalar values" if ref $value;
+                push @metadata_joins, "LEFT JOIN metadata AS md$i
                                  ON $main_table.name=md$i.node
                                  AND $main_table.version=md$i.version\n";
-            push @where, "( "
+                push @where, "( "
                          . "md$i.metadata_type=" . $dbh->quote($type)
                          . " AND "
                          . "md$i.metadata_value=" . $dbh->quote($value)
                          . " )";
+	    }
 	}
-    } elsif ( $metadata_isnt ) {
-        foreach my $type ( keys %$metadata_isnt ) {
-            my $value  = $metadata_isnt->{$type};
-            croak "metadata_isnt must have scalar values" if ref $value;
+        if ( $metadata_isnt ) {
+            foreach my $type ( keys %$metadata_isnt ) {
+                my $value  = $metadata_isnt->{$type};
+                croak "metadata_isnt must have scalar values" if ref $value;
+	    }
+            my @omits = $self->_find_recent_changes_by_criteria(
+                since        => $since,
+                between_days => $between_days,
+                metadata_is  => $metadata_isnt,
+            );
+            foreach my $omit ( @omits ) {
+                push @where, "( node.name != " . $dbh->quote($omit->{name})
+                     . "  OR node.version != " . $dbh->quote($omit->{version})
+                     . ")";
+	    }
 	}
-        my @omits = $self->_find_recent_changes_by_criteria(
-            since        => $since,
-            between_days => $between_days,
-            metadata_is  => $metadata_isnt,
-        );
-        foreach my $omit ( @omits ) {
-            push @where, "( node.name != " . $dbh->quote($omit->{name})
-                 . "  OR node.version != " . $dbh->quote($omit->{version})
-                 . ")";
-	}
-    } elsif ( $metadata_was ) {
-        $main_table = "content";
-        my $i = 0;
-        foreach my $type ( keys %$metadata_was ) {
-            $i++;
-            my $value  = $metadata_was->{$type};
-            croak "metadata_was must have scalar values" if ref $value;
-            push @metadata_joins, "LEFT JOIN metadata AS md$i
-                                 ON $main_table.name=md$i.node
-                                 AND $main_table.version=md$i.version\n";
-            push @where, "( "
-                         . "md$i.metadata_type=" . $dbh->quote($type)
+    } else {
+        if ( $metadata_was ) {
+            $main_table = "content";
+            my $i = 0;
+            foreach my $type ( keys %$metadata_was ) {
+                $i++;
+                my $value  = $metadata_was->{$type};
+                croak "metadata_was must have scalar values" if ref $value;
+                my $mdt = "md_was_$i";
+                push @metadata_joins, "LEFT JOIN metadata AS $mdt
+                                 ON $main_table.name=$mdt.node
+                                 AND $main_table.version=$mdt.version\n";
+                push @where, "( "
+                         . "$mdt.metadata_type=" . $dbh->quote($type)
                          . " AND "
-                         . "md$i.metadata_value=" . $dbh->quote($value)
+                         . "$mdt.metadata_value=" . $dbh->quote($value)
                          . " )";
+	    }
 	}
-    } elsif ( $metadata_wasnt ) {
-        $main_table = "content";
-        foreach my $type ( keys %$metadata_wasnt ) {
-            my $value  = $metadata_was->{$type};
-            croak "metadata_was must have scalar values" if ref $value;
-	}
-        my @omits = $self->_find_recent_changes_by_criteria(
-            since        => $since,
-            between_days => $between_days,
-            metadata_was => $metadata_wasnt,
-        );
-        foreach my $omit ( @omits ) {
-            push @where, "( content.name != " . $dbh->quote($omit->{name})
+        if ( $metadata_wasnt ) {
+            $main_table = "content";
+            foreach my $type ( keys %$metadata_wasnt ) {
+                my $value  = $metadata_was->{$type};
+                croak "metadata_was must have scalar values" if ref $value;
+	    }
+            my @omits = $self->_find_recent_changes_by_criteria(
+                since        => $since,
+                between_days => $between_days,
+                metadata_was => $metadata_wasnt,
+            );
+            foreach my $omit ( @omits ) {
+                push @where, "( content.name != " . $dbh->quote($omit->{name})
                  . "  OR content.version != " . $dbh->quote($omit->{version})
                  . ")";
+	    }
 	}
     }
 

@@ -3,7 +3,7 @@ package CGI::Wiki;
 use strict;
 
 use vars qw( $VERSION );
-$VERSION = '0.57';
+$VERSION = '0.58';
 
 use Carp qw(croak carp);
 use Digest::MD5 "md5_hex";
@@ -376,21 +376,18 @@ sub list_nodes_by_metadata {
 You I<must> supply one of the following constraints: C<days>
 (integer), C<since> (epoch), C<last_n_changes> (integer).
 
-You I<may> also supply one of the following constraints:
-C<metadata_is>, C<metadata_isnt>, C<metadata_was>, C<metadata_wasnt>,
-each of which should be a ref to a hash with scalar keys and values.
-If the hash has more than one entry, then only changes satisfying
-I<all> criteria will be returned when using C<metadata_is> or
-C<metadata_was>, but all changes which fail to satisfy any one of the
-criteria will be returned when using C<metadata_isnt> or
-C<metadata_is>.
+You I<may> also supply I<either> C<metadata_is> (and optionally
+C<metadata_isnt>), I<or> C<metadata_was> (and optionally
+C<metadata_wasnt>). Each of these should be a ref to a hash with
+scalar keys and values.  If the hash has more than one entry, then
+only changes satisfying I<all> criteria will be returned when using
+C<metadata_is> or C<metadata_was>, but all changes which fail to
+satisfy any one of the criteria will be returned when using
+C<metadata_isnt> or C<metadata_is>.
 
 C<metadata_is> and C<metadata_isnt> look only at the metadata that the
 node I<currently> has. C<metadata_was> and C<metadata_wasnt> take into
-account the metadata of previous versions of a node. B<NOTE:> Only one
-of these constraints will be honoured, so please only supply one. This
-may change in the future. (For avoidance of confusion - they are
-examined in the following order: is, isnt, was, wasnt.)
+account the metadata of previous versions of a node.
 
 Returns results as an array, in reverse chronological order.  Each
 element of the array is a reference to a hash with the following entries:
