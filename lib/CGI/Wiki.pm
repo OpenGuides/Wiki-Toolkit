@@ -3,7 +3,7 @@ package CGI::Wiki;
 use strict;
 
 use vars qw( $VERSION );
-$VERSION = '0.51';
+$VERSION = '0.52';
 
 use Carp qw(croak carp);
 use Digest::MD5 "md5_hex";
@@ -315,8 +315,18 @@ sub list_nodes_by_metadata {
 
 =item B<list_recent_changes>
 
-  # Changes in last 7 days.
+  # Nodes changed in last 7 days - each node listed only once.
   my @nodes = $wiki->list_recent_changes( days => 7 );
+
+  # All changes in last 7 days - nodes changed more than once will
+  # be listed more than once.
+  my @nodes = $wiki->list_recent_changes(
+                                          days => 7,
+                                          include_all_changes => 1,
+                                        );
+
+  # Nodes changed between 1 and 7 days ago.
+  my @nodes = $wiki->list_recent_changes( between_days => [ 1, 7 ] );
 
   # Changes since a given time.
   my @nodes = $wiki->list_recent_changes( since => 1036235131 );
@@ -373,9 +383,9 @@ to the current version of the node
 
 =back
 
-Unless you supply C<metadata_was> or C<metadata_wasnt>, each node will
-only be returned once, regardless of how many times it has been
-changed recently.
+Unless you supply C<include_all_changes>, C<metadata_was> or
+C<metadata_wasnt>, each node will only be returned once regardless of
+how many times it has been changed recently.
 
 =cut
 
@@ -816,7 +826,7 @@ Questions, feature requests and bug reports should go to cgi-wiki-dev@earth.li
 
 =head1 COPYRIGHT
 
-     Copyright (C) 2002-2003 Kake Pugh.  All Rights Reserved.
+     Copyright (C) 2002-2004 Kake Pugh.  All Rights Reserved.
 
 This module is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.

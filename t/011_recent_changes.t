@@ -5,7 +5,7 @@ use Test::More;
 if ( scalar @CGI::Wiki::TestLib::wiki_info == 0 ) {
     plan skip_all => "no backends configured";
 } else {
-    plan tests => ( 25 * scalar @CGI::Wiki::TestLib::wiki_info );
+    plan tests => ( 26 * scalar @CGI::Wiki::TestLib::wiki_info );
 }
 
 my $iterator = CGI::Wiki::TestLib->new_wiki_maker;
@@ -143,6 +143,10 @@ while ( my $wiki = $iterator->new_wiki ) {
     @nodes = $wiki->list_recent_changes( days => 1 );
     is( scalar @nodes, 3,
         "By default each node returned only once however many times changed" );
+
+    @nodes = $wiki->list_recent_changes( days => 1, include_all_changes => 1 );
+    is( scalar @nodes, 4,
+        "...returned more than once when 'include_all_changes' set" );
 
     @nodes = $wiki->list_recent_changes(
         last_n_changes => 5,

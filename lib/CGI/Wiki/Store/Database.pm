@@ -531,10 +531,20 @@ sub delete_node {
 
 =item B<list_recent_changes>
 
-  # Changes in last 7 days.
+  # Nodes changed in last 7 days - each node listed only once.
   my @nodes = $store->list_recent_changes( days => 7 );
 
-  # Changes since a given time.
+  # All changes in last 7 days - nodes changed more than once will
+  # be listed more than once.
+  my @nodes = $store->list_recent_changes(
+                                           days => 7,
+                                           include_all_changes => 1,
+                                         );
+
+  # Nodes changed between 1 and 7 days ago.
+  my @nodes = $store->list_recent_changes( between_days => [ 1, 7 ] );
+
+  # Nodes changed since a given time.
   my @nodes = $store->list_recent_changes( since => 1036235131 );
 
   # Most recent change and its details.
@@ -590,9 +600,9 @@ to the current version of the node
 
 =back
 
-Unless you supply C<metadata_was> or C<metadata_wasnt>, each node will
-only be returned once, regardless of how many times it has been
-changed recently.
+Unless you supply C<include_all_changes>, C<metadata_was> or
+C<metadata_wasnt>, each node will only be returned once regardless of
+how many times it has been changed recently.
 
 B<Future plans and thoughts for list_recent_changes>
 
@@ -623,6 +633,8 @@ sub list_recent_changes {
     my %args = @_;
     if ($args{since}) {
         return $self->_find_recent_changes_by_criteria( %args );
+    } elsif ($args{between_days}) {
+        return $self->_find_recent_changes_by_criteria( %args );
     } elsif ( $args{days} ) {
         my $now = localtime;
 	my $then = $now - ( ONE_DAY * $args{days} );
@@ -633,20 +645,20 @@ sub list_recent_changes {
         $args{limit} = delete $args{last_n_changes};
         return $self->_find_recent_changes_by_criteria( %args );
     } else {
-	croak "Need to supply a parameter";
+	croak "Need to supply some criteria to list_recent_changes.";
     }
 }
 
 sub _find_recent_changes_by_criteria {
     my ($self, %args) = @_;
-    my ($since, $limit, $metadata_is,  $metadata_isnt,
-                        $metadata_was, $metadata_wasnt ) =
-                             @args{ qw( since limit metadata_is metadata_isnt
-                                                metadata_was metadata_wasnt) };
+    my ($since, $limit, $between_days,
+        $metadata_is,  $metadata_isnt, $metadata_was, $metadata_wasnt ) =
+         @args{ qw( since limit between_days
+                    metadata_is metadata_isnt metadata_was metadata_wasnt) };
     my $dbh = $self->dbh;
 
     my @where;
-    my $main_table = "node";
+    my $main_table = $args{include_all_changes} ? "content" : "node";
     if ( $metadata_is ) {
         if ( scalar keys %$metadata_is > 1 ) {
             croak "metadata_is must have one key and one value only";
@@ -693,6 +705,7 @@ sub _find_recent_changes_by_criteria {
          if ref $value;
         my @omits = $self->_find_recent_changes_by_criteria(
             since        => $since,
+            between_days => $between_days,
             metadata_was => $metadata_wasnt,
         );
         foreach my $omit ( @omits ) {
@@ -705,6 +718,15 @@ sub _find_recent_changes_by_criteria {
     if ( $since ) {
         my $timestamp = $self->_get_timestamp( $since );
         push @where, "$main_table.modified >= " . $dbh->quote($timestamp);
+    } elsif ( $between_days ) {
+        my $now = localtime;
+        # Start is the larger number of days ago.
+        my ($start, $end) = @$between_days;
+        ($start, $end) = ($end, $start) if $start < $end;
+        my $ts_start = $self->_get_timestamp( $now - (ONE_DAY * $start) ); 
+        my $ts_end = $self->_get_timestamp( $now - (ONE_DAY * $end) ); 
+        push @where, "$main_table.modified >= " . $dbh->quote($ts_start);
+        push @where, "$main_table.modified <= " . $dbh->quote($ts_end);
     }
 
     my $sql = "SELECT DISTINCT

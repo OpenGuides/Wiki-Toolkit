@@ -1,3 +1,6 @@
+0.52    10 June 2004
+        Add include_all_changes and between_days to list_recent_changes.
+
 0.51    8 June 2004
         Time for a non-developer release.
 
