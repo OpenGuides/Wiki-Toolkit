@@ -5,12 +5,13 @@ use Test::More;
 if ( scalar @CGI::Wiki::TestLib::wiki_info == 0 ) {
     plan skip_all => "no backends configured";
 } else {
-    plan tests => ( 35 * scalar @CGI::Wiki::TestLib::wiki_info );
+    plan tests => ( 39 * scalar @CGI::Wiki::TestLib::wiki_info );
 }
 
 my $iterator = CGI::Wiki::TestLib->new_wiki_maker;
 
 while ( my $wiki = $iterator->new_wiki ) {
+    print "# Store: " . (ref $wiki->store) . "\n";
     # Test deletion of the first version of a node.
     $wiki->write_node( "A Node", "Node content.", undef, { one => 1 } )
       or die "Can't write node";
@@ -116,6 +117,7 @@ while ( my $wiki = $iterator->new_wiki ) {
     $wiki->write_node("Three Node", "saucer", $data{checksum}, { three => 3 } )
       or die "Can't write node";
 
+    print "# Deleting version 2\n";
     eval { $wiki->delete_node( name => "Three Node", version => 2 ); };
     is( $@, "", "delete_node doesn't die when deleting intermediate version" );
     ok( $wiki->node_exists( "Three Node" ), "...and the node still exists" );
@@ -140,6 +142,14 @@ while ( my $wiki = $iterator->new_wiki ) {
                                          metadata_wasnt => { three => 2 } );
     %nodehash = map { $_->{name} => 1 } @nodes;
     ok($nodehash{"Three Node"}, "...does show up in metadata_wasnt search" );
+
+    print "# Deleting version 3\n";
+    eval { $wiki->delete_node( name => "Three Node", version => 3 ); };
+    is( $@, "", "delete_node doesn't die when we now try to delete the latest version" );
+    %data = $wiki->retrieve_node( "Three Node" );
+    is( $data{version}, 1, "...and the current version is 1" );
+    is( $data{content}, "plate", "...and has correct content" );
+    ok( $data{last_modified}, "...and has non-blank timestamp" );
 
     # Test deletion of the only version of a node.
     $wiki->write_node( "Four Node", "television", undef, { four => 1 } )

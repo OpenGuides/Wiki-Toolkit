@@ -11,7 +11,7 @@ use Time::Seconds;
 use Carp qw( carp croak );
 use Digest::MD5 qw( md5_hex );
 
-$VERSION = '0.26';
+$VERSION = '0.27';
 
 # first, detect if Encode is available - it's not under 5.6. If we _are_
 # under 5.6, give up - we'll just have to hope that nothing explodes. This
@@ -602,10 +602,17 @@ sub delete_node {
     # Check whether we're deleting the latest version.
     my %currdata = $self->retrieve_node( name => $name );
     if ( $currdata{version} == $version ) {
-        my %prevdata = $self->retrieve_node(
-                                             name    => $name,
-                                             version => $version - 1 # ICK
-                                           );
+        # Can't just grab version ($version - 1) since it may have been
+        # deleted itself.
+        my $try = $version - 1;
+        my %prevdata;
+        until ( $prevdata{version} ) {
+            %prevdata = $self->retrieve_node(
+                                              name    => $name,
+                                              version => $try,
+                                            );
+            $try--;
+	}
         my $sql="UPDATE node SET version=?, text=?, modified=? WHERE name=?";
         my $sth = $dbh->prepare( $sql );
         $sth->execute( @prevdata{ qw( version content last_modified ) }, $name)
@@ -638,7 +645,6 @@ sub delete_node {
         $sth = $dbh->prepare( $sql );
         $sth->execute( $name, $version )
           or croak "Deletion failed: " . $dbh->errstr;
-
         return 1;
     }
 
@@ -652,6 +658,7 @@ sub delete_node {
     $sth = $dbh->prepare( $sql );
     $sth->execute( $name, $version )
       or croak "Deletion failed: " . $dbh->errstr;
+
     return 1;
 }
 
