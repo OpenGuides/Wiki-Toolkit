@@ -6,7 +6,7 @@ use Carp "croak";
 
 use vars qw( @ISA $VERSION );
 
-$VERSION = 0.07;
+$VERSION = 0.08;
 
 =head1 NAME
 
@@ -173,10 +173,10 @@ sub fuzzy_title_match {
 
 =item B<index_node>
 
-  $search->index_node($node);
+  $search->index_node($node, $content);
 
-Indexes or reindexes the given node in the Search::InvertedIndex
-indexes.
+Indexes or reindexes the given node in the L<Search::InvertedIndex>
+indexes.  You must supply both the node name and its content.
 
 =cut
 
