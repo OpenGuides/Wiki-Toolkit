@@ -31,8 +31,6 @@ for CGI::Wiki
 
 =head1 SYNOPSIS
 
-Can't see yet why you'd want to use the backends directly, but:
-
   # See below for parameter details.
   my $store = CGI::Wiki::Store::MySQL->new( %config );
 

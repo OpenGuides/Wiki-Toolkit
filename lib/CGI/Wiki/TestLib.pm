@@ -162,14 +162,6 @@ foreach my $dbtype ( qw( MySQL Pg SQLite ) ) {
 =item B<new_wiki_maker>
 
   my $iterator = CGI::Wiki::TestLib->new_wiki_maker;
-  while ( my $wiki = $iterator->new_wiki ) {
-      # put some test data in
-      # run some tests
-  }
-
-Each time you call C<< ->new_wiki >> on your iterator, you will get a
-fresh blank wiki object. The iterator will iterate over all configured
-search and storage backends.
 
 =cut
 
@@ -194,6 +186,15 @@ Returns the number of new wikis that your iterator will be able to give you.
 sub number {
     return scalar @wiki_info;
 }
+
+=item B<new_wiki>
+
+  my $wiki = $iterator->new_wiki;
+
+Returns a fresh blank wiki object, or false if you've used up all the
+configured search and storage backends.
+
+=cut
 
 sub new_wiki {
     my $self = shift;
