@@ -3,7 +3,7 @@ use CGI::Wiki;
 use CGI::Wiki::Setup::SQLite;
 use CGI::Wiki::Store::SQLite;
 use CGI::Wiki::TestConfig;
-use Test::More tests => 6;
+use Test::More tests => 9;
 
 my $class = "CGI::Wiki::Store::SQLite";
 
@@ -13,15 +13,21 @@ ok( $@, "Failed creation dies" );
 my $dbname = $CGI::Wiki::TestConfig::config{SQLite}{dbname};
 
 SKIP: {
-    skip "No SQLite database configured for testing", 5 unless $dbname;
+    skip "No SQLite database configured for testing", 8 unless $dbname;
 
     CGI::Wiki::Setup::SQLite::cleardb( $dbname );
     CGI::Wiki::Setup::SQLite::setup( $dbname );
 
     my $store = eval { $class->new( dbname => $dbname ) };
-    is( $@, "", "Creation doesn't die" );
+    is( $@, "", "Creation doesn't die when given connection parameters" );
     isa_ok( $store, $class );
     ok( $store->dbh, "...and has set up a database handle" );
+
+    my $dbh = DBI->connect( "dbi:SQLite:dbname=$dbname" );
+    my $store2 = eval { $class->new( dbh => $dbh ) };
+    is( $@, "", "Creation doesn't die when given dbh" );
+    isa_ok( $store2, $class );
+    ok( $store2->dbh, "...and we can access the database handle" );
 
     SKIP: {
         eval { require Hook::LexWrap; require Test::MockObject; };

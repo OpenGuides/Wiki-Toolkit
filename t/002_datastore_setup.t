@@ -1,19 +1,24 @@
 use strict;
-use Test::More tests => 15;
+use Test::More tests => 27;
 use CGI::Wiki;
 use CGI::Wiki::TestConfig;
+use DBI;
 
 foreach my $dbtype (qw( MySQL Pg SQLite )) {
 
     SKIP: {
-        skip "$dbtype backend not configured", 4
+        skip "$dbtype backend not configured", 8
             unless $CGI::Wiki::TestConfig::config{$dbtype}->{dbname};
 
         my %config = %{$CGI::Wiki::TestConfig::config{$dbtype}};
         my $setup_class = "CGI::Wiki::Setup::$dbtype";
         eval "require $setup_class";
+        my $store_class = "CGI::Wiki::Store::$dbtype";
+        eval "require $store_class";
         {
             no strict 'refs';
+
+            my $dsn = $store_class->_dsn( $config{dbname} );
 
             foreach my $method ( qw( cleardb setup ) ) {
                 eval {
@@ -22,13 +27,35 @@ foreach my $dbtype (qw( MySQL Pg SQLite )) {
                                                );
                 };
                 is( $@, "",
-                  "${setup_class}::$method doesn't die when called with list");
+                  "${setup_class}::$method doesn't die when called with connection details list");
 
                 eval {
                     &{$setup_class . "::" . $method}( \% config );
                 };
                 is( $@, "",
-               "${setup_class}::$method doesn't die when called with hashref");
+               "${setup_class}::$method doesn't die when called with connection details hashref");
+
+                eval {
+                    my $dbh = DBI->connect($dsn, @config{ qw( dbuser dbpass )},
+		    		           { PrintError => 0, RaiseError => 1,
+				             AutoCommit => 1 } )
+                      or die DBI->errstr;
+                    &{$setup_class . "::" . $method}( $dbh );
+                    $dbh->disconnect;
+                };
+                is( $@, "",
+                  "${setup_class}::$method doesn't die when called with dbh");
+
+                eval {
+                    my $dbh = DBI->connect($dsn, @config{ qw( dbuser dbpass )},
+		    		           { PrintError => 0, RaiseError => 1,
+				             AutoCommit => 1 } )
+                      or die DBI->errstr;
+                    &{$setup_class . "::" . $method}( { dbh => $dbh } );
+                    $dbh->disconnect;
+                };
+                is( $@, "",
+                  "${setup_class}::$method doesn't die when called with dbh in hashref");
             }
         }
     }

@@ -1,3 +1,7 @@
+0.51_02 6 June 2004
+        Added support for passing in a database handle instead of
+          connection parameters (Chris Winters).
+
 0.51_01 24 February 2004
         Refactoring of search classes in preparation for new search
           backend.  (Simon Cozens)

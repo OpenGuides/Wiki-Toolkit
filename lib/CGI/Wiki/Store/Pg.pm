@@ -65,7 +65,9 @@ sub check_and_write_node {
         my $error = $@;
         $dbh->rollback;
 	$dbh->{AutoCommit} = 1;
-	if ($error =~ /Can't serialize access due to concurrent update/) {
+	if ( $error =~ /can't serialize access due to concurrent update/i
+            or $error =~ /could not serialize access due to concurrent update/i
+           ) {
             return 0;
         } else {
             croak $error;

@@ -11,7 +11,7 @@ use Time::Seconds;
 use Carp qw( carp croak );
 use Digest::MD5 qw( md5_hex );
 
-$VERSION = '0.20';
+$VERSION = '0.21';
 
 =head1 NAME
 
@@ -36,9 +36,34 @@ Can't see yet why you'd want to use the backends directly, but:
 					    dbpass => "wiki",
                                             dbhost => "db.example.com" );
 
-C<dbname> is mandatory. C<dbpass>, C<dbuser> and C<dbhost> are optional, but
-you'll want to supply them unless your database's authentication
-method doesn't require it.
+or
+
+  my $store = CGI::Wiki::Store::MySQL->new( dbh => $dbh );
+
+If you do not provide an active database handle in C<dbh>, then
+C<dbname> is mandatory. C<dbpass>, C<dbuser> and C<dbhost> are
+optional, but you'll want to supply them unless your database's
+authentication method doesn't require it.
+
+If you do provide C<database> then it must have the following
+parameters set, otherwise you should just provide the connection
+information and let us create our own handle:
+
+=over 4
+
+=item *
+
+C<RaiseError> = 1
+
+=item *
+
+C<PrintError> = 0
+
+=item *
+
+C<AutoCommit> = 1
+
+=back
 
 =cut
 
@@ -52,24 +77,27 @@ sub new {
 sub _init {
     my ($self, %args) = @_;
 
-    # Store parameters.
-    foreach ( qw(dbname) ) {
-        die "Must supply a value for $_" unless defined $args{$_};
-        $self->{"_$_"} = $args{$_};
-    }
-    $self->{_dbuser} = $args{dbuser} || "";
-    $self->{_dbpass} = $args{dbpass} || "";
-    $self->{_dbhost} = $args{dbhost} || "";
+    if ( $args{dbh} ) {
+        $self->{_dbh} = $args{dbh};
+        $self->{_external_dbh} = 1; # don't disconnect at DESTROY time
+    } else {
+        die "Must supply a dbname" unless defined $args{dbname};
+        $self->{_dbname} = $args{dbname};
+        $self->{_dbuser} = $args{dbuser} || "";
+        $self->{_dbpass} = $args{dbpass} || "";
+        $self->{_dbhost} = $args{dbhost} || "";
 
-    # Connect to database and store the database handle.
-    my ($dbname, $dbuser, $dbpass, $dbhost) =
+        # Connect to database and store the database handle.
+        my ($dbname, $dbuser, $dbpass, $dbhost) =
                                @$self{qw(_dbname _dbuser _dbpass _dbhost)};
-    my $dsn = $self->_dsn($dbname, $dbhost)
-       or croak "No data source string provided by class";
-    $self->{_dbh} = DBI->connect($dsn, $dbuser, $dbpass,
-				 { PrintError => 0, RaiseError => 1,
-				   AutoCommit => 1 } )
-       or croak "Can't connect to database $dbname using $dsn: " . DBI->errstr;
+        my $dsn = $self->_dsn($dbname, $dbhost)
+            or croak "No data source string provided by class";
+        $self->{_dbh} = DBI->connect( $dsn, $dbuser, $dbpass,
+				      { PrintError => 0, RaiseError => 1,
+				        AutoCommit => 1 } )
+          or croak "Can't connect to database $dbname using $dsn: "
+                   . DBI->errstr;
+    }
 
     return $self;
 }
@@ -871,6 +899,7 @@ sub dbhost {
 # Cleanup.
 sub DESTROY {
     my $self = shift;
+    return if $self->{_external_dbh};
     my $dbh = $self->dbh;
     $dbh->disconnect if $dbh;
 }

@@ -23,9 +23,9 @@ Omit $dbhost if the database is local.
 =head1 DESCRIPTION
 
 Set up DBIx::FullTextSearch indexes for use with CGI::Wiki. Has only
-one function, C<setup>, which takes as arguments the database name,
-the username and the password. The username must be able to create and
-drop tables in the database.
+one function, C<setup>, which takes as arguments B<either> the
+database name, the username and the password B<or> a database handle
+. The username must be able to create and drop tables in the database.
 
 The $dbhost argument is optional -- omit it if the database is local.
 
@@ -35,16 +35,8 @@ probably want to use the C<store> parameter to get it re-indexed.
 
 =cut
 
-sub setup
-{
-  my ($dbname, $dbuser, $dbpass, $dbhost) = (@_);
-
-    my $dsn = "dbi:mysql:$dbname";
-    $dsn .= ";host=$dbhost" if $dbhost;
-    my $dbh = DBI->connect($dsn, $dbuser, $dbpass,
-			   { PrintError => 1, RaiseError => 1,
-			     AutoCommit => 1 } )
-      or croak DBI::errstr;
+sub setup {
+  my $dbh = _get_dbh( @_ );
 
   # Drop FTS indexes if they already exist.
   my $fts = DBIx::FullTextSearch->open($dbh, "_content_and_title_fts");
@@ -79,13 +71,25 @@ sub setup
   $sth->finish;
 }
 
+sub _get_dbh {
+    return $_[0] if ( ref $_[0] and ref $_[0] eq 'DBI::db' );
+    my ($dbname, $dbuser, $dbpass, $dbhost) = @_;
+    my $dsn = "dbi:mysql:$dbname";
+    $dsn .= ";host=$dbhost" if $dbhost;
+    my $dbh = DBI->connect($dsn, $dbuser, $dbpass,
+			   { PrintError => 1, RaiseError => 1,
+			     AutoCommit => 1 } )
+      or croak DBI::errstr;
+    return $dbh;
+}
+
 =head1 AUTHOR
 
 Kake Pugh (kake@earth.li).
 
 =head1 COPYRIGHT
 
-     Copyright (C) 2002 Kake Pugh.  All Rights Reserved.
+     Copyright (C) 2002-2004 Kake Pugh.  All Rights Reserved.
 
 This module is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.

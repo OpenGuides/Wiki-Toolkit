@@ -3,7 +3,7 @@ package CGI::Wiki::Setup::SQLite;
 use strict;
 
 use vars qw( $VERSION );
-$VERSION = '0.05';
+$VERSION = '0.06';
 
 use DBI;
 use Carp;
@@ -65,10 +65,15 @@ Set up a SQLite database for use as a CGI::Wiki store.
 =item B<setup>
 
   use CGI::Wiki::Setup::SQLite;
-  CGI::Wiki::Setup::SQLite::setup($dbfile);
 
-Takes one argument - the name of the file that the SQLite database is
-stored in.
+  CGI::Wiki::Setup::SQLite::setup( $filename );
+
+or
+
+  CGI::Wiki::Setup::SQLite::setup( $dbh );
+
+Takes one argument - B<either> the name of the file that the SQLite
+database is stored in B<or> an active database handle.
 
 B<NOTE:> If a table that the module wants to create already exists,
 C<setup> will leave it alone. This means that you can safely run this
@@ -79,12 +84,9 @@ again with a fresh database, run C<cleardb> first.
 =cut
 
 sub setup {
-    my $dbfile = _get_args(@_);
-
-    my $dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "",
-			   { PrintError => 1, RaiseError => 1,
-			     AutoCommit => 1 } )
-      or croak DBI::errstr;
+    my @args = @_;
+    my $dbh = _get_dbh( @args );
+    my $disconnect_required = _disconnect_required( @args );
 
     # Check whether tables exist, set them up if not.
     my $sql = "SELECT name FROM sqlite_master
@@ -106,20 +108,23 @@ sub setup {
         }
     }
 
-    # Clean up.
-    $dbh->disconnect;
+    # Clean up if we made our own dbh.
+    $dbh->disconnect if $disconnect_required;
 }
 
 =item B<cleardb>
 
   use CGI::Wiki::Setup::SQLite;
 
-  # Clear out the old database completely, then set up tables afresh.
-  CGI::Wiki::Setup::SQLite::cleardb($dbfile);
-  CGI::Wiki::Setup::SQLite::setup($dbfile);
+  # Clear out all CGI::Wiki tables from the database.
+  CGI::Wiki::Setup::SQLite::cleardb( $filename );
 
-Takes one argument - the name of the file that the SQLite database is
-stored in.
+or
+
+  CGI::Wiki::Setup::SQLite::cleardb( $dbh );
+
+Takes one argument - B<either> the name of the file that the SQLite
+database is stored in B<or> an active database handle.
 
 Clears out all L<CGI::Wiki> store tables from the database. B<NOTE>
 that this will lose all your data; you probably only want to use this
@@ -132,12 +137,9 @@ which search backend you're using.
 =cut
 
 sub cleardb {
-    my $dbfile = _get_args(@_);
-
-    my $dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "",
-			   { PrintError => 1, RaiseError => 1,
-			     AutoCommit => 1 } )
-      or croak DBI::errstr;
+    my @args = @_;
+    my $dbh = _get_dbh( @args );
+    my $disconnect_required = _disconnect_required( @args );
 
     print "Dropping tables... ";
     my $sql = "SELECT name FROM sqlite_master
@@ -148,19 +150,57 @@ sub cleardb {
     }
     print "done\n";
 
-    # Clean up.
-    $dbh->disconnect;
+    # Clean up if we made our own dbh.
+    $dbh->disconnect if $disconnect_required;
 }
 
-sub _get_args {
-    my @args;
-    if ( ref $_[0] and ref $_[0] eq 'HASH' ) {
-        my %hash = %{$_[0]};
-        @args = @hash{ qw( dbname ) };
-    } else {
-        @args = @_;
+sub _get_dbh {
+    # Database handle passed in.
+    if ( ref $_[0] and ref $_[0] eq 'DBI::db' ) {
+        return $_[0];
     }
-    return $args[0];
+
+    # Args passed as hashref.
+    if ( ref $_[0] and ref $_[0] eq 'HASH' ) {
+        my %args = %{$_[0]};
+        if ( $args{dbh} ) {
+            return $args{dbh};
+	} else {
+            return _make_dbh( %args );
+        }
+    }
+
+    # Args passed as list of connection details.
+    return _make_dbh( dbname => $_[0] );
+}
+
+sub _disconnect_required {
+    # Database handle passed in.
+    if ( ref $_[0] and ref $_[0] eq 'DBI::db' ) {
+        return 0;
+    }
+
+    # Args passed as hashref.
+    if ( ref $_[0] and ref $_[0] eq 'HASH' ) {
+        my %args = %{$_[0]};
+        if ( $args{dbh} ) {
+            return 0;
+	} else {
+            return 1;
+        }
+    }
+
+    # Args passed as list of connection details.
+    return 1;
+}
+
+sub _make_dbh {
+    my %args = @_;
+    my $dbh = DBI->connect("dbi:SQLite:dbname=$args{dbname}", "", "",
+			   { PrintError => 1, RaiseError => 1,
+			     AutoCommit => 1 } )
+      or croak DBI::errstr;
+    return $dbh;
 }
 
 =back
@@ -169,13 +209,15 @@ sub _get_args {
 
 As requested by Podmaster.  Instead of passing arguments to the methods as
 
-  ($dbfile)
+  ($filename)
 
 you can pass them as
 
-  ( { dbname => $dbfile
-    }
-  )
+  ( { dbname => $filename } )
+
+or indeed
+
+  ( { dbh => $dbh } )
 
 Note that's a hashref, not a hash.
 
@@ -185,7 +227,7 @@ Kake Pugh (kake@earth.li).
 
 =head1 COPYRIGHT
 
-     Copyright (C) 2002 Kake Pugh.  All Rights Reserved.
+     Copyright (C) 2002-2004 Kake Pugh.  All Rights Reserved.
 
 This module is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
