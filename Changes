@@ -1,3 +1,6 @@
+0.61    3 October 2004
+        Added "ignore_case" option to ->node_exists.
+
 0.60    30 September 2004
         Added generic ->new method to CGI::Wiki::Plugin (Tom Insam).
 

@@ -11,7 +11,7 @@ use Time::Seconds;
 use Carp qw( carp croak );
 use Digest::MD5 qw( md5_hex );
 
-$VERSION = '0.25';
+$VERSION = '0.26';
 
 # first, detect if Encode is available - it's not under 5.6. If we _are_
 # under 5.6, give up - we'll just have to hope that nothing explodes. This
@@ -252,19 +252,43 @@ sub _checksum_hashes {
 
 =item B<node_exists>
 
-  if ( $store->node_exists( "Wombat Defenestration" ) {
-      # do something about the weird people infesting your wiki
-  } else {
-      # ah, safe, no weirdos here
-  }
+  my $ok = $store->node_exists( "Wombat Defenestration" );
+
+  # or ignore case - optional but recommended
+  my $ok = $store->node_exists(
+                                name        => "monkey brains",
+                                ignore_case => 1,
+                              );  
 
 Returns true if the node has ever been created (even if it is
 currently empty), and false otherwise.
 
+By default, the case-sensitivity of C<node_exists> depends on your
+database.  If you supply a true value to the C<ignore_case> parameter,
+then you can be sure of its being case-insensitive.  This is
+recommended.
+
 =cut
 
 sub node_exists {
-    my ( $self, $node ) = @_;
+    my $self = shift;
+    if ( scalar @_ == 1 ) {
+        my $node = shift;
+        return $self->_do_old_node_exists( $node );
+    } else {
+        my %args = @_;
+        return $self->_do_old_node_exists( $args{name} )
+          unless $args{ignore_case};
+        my $sql = $self->_get_node_exists_ignore_case_sql;
+        my $sth = $self->dbh->prepare( $sql );
+        $sth->execute( $args{name} );
+        my $found_name = $sth->fetchrow_array || "";
+        return lc($found_name) eq lc($args{name}) ? 1 : 0;
+    }
+}
+
+sub _do_old_node_exists {
+    my ($self, $node) = @_;
     my %data = $self->retrieve_node($node) or return ();
     return $data{version}; # will be 0 if node doesn't exist, >=1 otherwise
 }
@@ -988,6 +1012,11 @@ sub _get_comparison_sql {
     my ($self, %args) = @_;
     # can be over-ridden by database-specific subclasses
     return "$args{thing1} = $args{thing2}";
+}
+
+sub _get_node_exists_ignore_case_sql {
+    # can be over-ridden by database-specific subclasses
+    return "SELECT name FROM node WHERE name = ? ";
 }
 
 =item B<dbh>

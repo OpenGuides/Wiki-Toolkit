@@ -8,7 +8,7 @@ use CGI::Wiki::Store::Database;
 use Carp qw/carp croak/;
 
 @ISA = qw( CGI::Wiki::Store::Database );
-$VERSION = 0.04;
+$VERSION = 0.05;
 
 =head1 NAME
 
@@ -104,5 +104,10 @@ sub _get_comparison_sql {
         return "$args{thing1} = $args{thing2}";
     }
 }
+
+sub _get_node_exists_ignore_case_sql {
+    return "SELECT name FROM node WHERE lower(name) = lower(?) ";
+}
+
 
 1;

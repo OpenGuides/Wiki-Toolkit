@@ -3,7 +3,7 @@ package CGI::Wiki;
 use strict;
 
 use vars qw( $VERSION );
-$VERSION = '0.60';
+$VERSION = '0.61';
 
 use Carp qw(croak carp);
 use Digest::MD5 "md5_hex";
@@ -424,14 +424,21 @@ sub list_recent_changes {
 
 =item B<node_exists>
 
-  if ( $wiki->node_exists( "Wombat Defenestration" ) {
-      # do something about the weird people infesting your wiki
-  } else {
-      # ah, safe, no weirdos here
-  }
+  my $ok = $wiki->node_exists( "Wombat Defenestration" );
+
+  # or ignore case - optional but recommended
+  my $ok = $wiki->node_exists(
+                               name        => "monkey brains",
+                               ignore_case => 1,
+                             );  
 
 Returns true if the node has ever been created (even if it is
 currently empty), and false otherwise.
+
+By default, the case-sensitivity of C<node_exists> depends on your
+store backend.  If you supply a true value to the C<ignore_case>
+parameter, then you can be sure of its being case-insensitive.  This
+is recommended.
 
 =cut
 
