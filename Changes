@@ -1,3 +1,6 @@
+0.50    21 December 2003
+        First non-developer release with new test system.
+
 0.50_02 21 November 2003
         Make tests skip rather than try to run zero tests if no backends
           configured - thanks to nothingmuch via CPAN testers for the
