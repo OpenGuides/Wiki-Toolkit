@@ -171,6 +171,20 @@ sub new_wiki_maker {
     return $iterator;
 }
 
+=item B<number>
+
+  use Test::More;
+  my $iterator = CGI::Wiki::TestLib->new_wiki_maker;
+  plan tests => ( $iterator->number * 6 );
+
+Returns the number of new wikis that your iterator will be able to give you.
+
+=cut
+
+sub number {
+    return scalar @wiki_info;
+}
+
 sub new_wiki {
     my $self = shift;
     return undef if $$self > $#wiki_info;
@@ -235,7 +249,7 @@ Kake Pugh (kake@earth.li).
 
 =head1 COPYRIGHT
 
-     Copyright (C) 2003 Kake Pugh.  All Rights Reserved.
+     Copyright (C) 2003-2004 Kake Pugh.  All Rights Reserved.
 
 This module is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.

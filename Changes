@@ -1,3 +1,6 @@
+0.53    18 June 2004
+        Fixed CGI::Wiki::TestLib so $iterator->number actually does something.
+
 0.52    10 June 2004
         Add include_all_changes and between_days to list_recent_changes.
 
