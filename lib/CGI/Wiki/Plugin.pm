@@ -3,7 +3,7 @@ package CGI::Wiki::Plugin;
 use strict;
 
 use vars qw( $VERSION );
-$VERSION = '0.02';
+$VERSION = '0.03';
 
 =head1 NAME
 
@@ -20,11 +20,6 @@ registered with.
   package CGI::Wiki::Plugin::Foo;
   use base qw( CGI::Wiki::Plugin);
 
-  sub new {
-      my $class = shift;
-      return bless {}, $class;
-  }
-
   # And then in your script:
   my $wiki = CGI::Wiki->new( ... );
   my $plugin = CGI::Wiki::Plugin::Foo->new;
@@ -34,6 +29,26 @@ registered with.
 =head1 METHODS
 
 =over 4
+
+=item B<new>
+
+  sub new {
+      my $class = shift;
+      my $self = bless {}, $class;
+      $self->_init if $self->can("_init");
+      return $self;
+  }
+
+Generic contructor, just returns a blessed object.
+
+=cut
+
+sub new {
+    my $class = shift;
+    my $self = bless {}, $class;
+    $self->_init if $self->can("_init");
+    return $self;
+}
 
 =item B<datastore>
 
@@ -87,7 +102,7 @@ Kake Pugh (kake@earth.li).
 
 =head1 COPYRIGHT
 
-     Copyright (C) 2003 Kake Pugh.  All Rights Reserved.
+     Copyright (C) 2003-4 Kake Pugh.  All Rights Reserved.
 
 This module is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
