@@ -162,7 +162,7 @@ sub cleardb {
 }
 
 sub _get_args {
-    if ( ref $_[0] ) {
+    if ( ref $_[0] and ref $_[0] eq 'HASH' ) {
         my %hash = %{$_[0]};
         return @hash{ qw( dbname dbuser dbpass dbhost ) };
     } else {
