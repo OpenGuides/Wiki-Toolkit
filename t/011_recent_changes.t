@@ -61,9 +61,6 @@ while ( my $wiki = $iterator->new_wiki ) {
                ["Another Node", "Everyone's Favourite Hobby", "Node1"],
                "recent_changes for last 1 day gets the right results" );
 
-    is( scalar @nodenames, 3,
-        "...only once per node however many times changed" );
-
     is_deeply( \@nodenames,
                ["Another Node", "Everyone's Favourite Hobby", "Node1"],
                "...in the right order" ); # returns in reverse chron. order
@@ -128,7 +125,8 @@ while ( my $wiki = $iterator->new_wiki ) {
   "list_recent_changes doesn't die when metadata_isnt doesn't omit anything" );
 
     #####
-    ##### Write another bunch of stuff for testing metadata_was
+    ##### Write to Another Node again for testing metadata_was and the
+    ##### effect of the presence and absence of include_all_changes
     #####
 
     do_sleep();
@@ -141,6 +139,11 @@ while ( my $wiki = $iterator->new_wiki ) {
                          edit_type => "Minor tidying",
                        }
                      );
+
+    @nodes = $wiki->list_recent_changes( days => 1 );
+    is( scalar @nodes, 3,
+        "By default each node returned only once however many times changed" );
+
     @nodes = $wiki->list_recent_changes(
         last_n_changes => 5,
         metadata_was => { username => "nou" }
