@@ -1,8 +1,9 @@
-use Test::More tests => 13;
+use Test::More tests => 14;
 
 use_ok( "CGI::Wiki" );
 use_ok( "CGI::Wiki::Formatter::Default" );
 use_ok( "CGI::Wiki::Plugin" );
+use_ok( "CGI::Wiki::Search::Base" );
 
 eval { require DBIx::FullTextSearch; };
 SKIP: {

@@ -3,14 +3,15 @@ package CGI::Wiki::Search::SII;
 use strict;
 use Search::InvertedIndex;
 use Carp "croak";
+use base 'CGI::Wiki::Search::Base';
 
 use vars qw( @ISA $VERSION );
 
-$VERSION = 0.08;
+$VERSION = 0.09;
 
 =head1 NAME
 
-CGI::Wiki::Search::SII - Search::InvertedIndex plugin for CGI::Wiki
+CGI::Wiki::Search::SII - Search::InvertedIndex plugin for CGI::Wiki.
 
 =head1 SYNOPSIS
 
@@ -18,7 +19,9 @@ CGI::Wiki::Search::SII - Search::InvertedIndex plugin for CGI::Wiki
   my $search = CGI::Wiki::Search::SII->new( indexdb => $indexdb );
   my %wombat_nodes = $search->search_nodes("wombat");
 
-Provides search-related methods for CGI::Wiki
+Provides search-related methods for L<CGI::Wiki>.
+
+See also L<CGI::Wiki::Search::Base>, for methods not documented here.
 
 =cut
 
@@ -53,13 +56,6 @@ C<Search::InvertedIndex::DB::*> object.
 
 =cut
 
-sub new {
-    my ($class, @args) = @_;
-    my $self = {};
-    bless $self, $class;
-    return $self->_init(@args);
-}
-
 sub _init {
     my ($self, %args) = @_;
     my $indexdb = $args{indexdb};
@@ -74,42 +70,12 @@ sub _init {
     return $self;
 }
 
-=item B<search_nodes>
-
-  # Find all the nodes which contain the word 'expert'.
-  my %results = $search->search_nodes('expert');
-
-Returns a (possibly empty) hash whose keys are the node names and
-whose values are the scores in some kind of relevance-scoring system I
-haven't entirely come up with yet. For OR searches, this could
-initially be the number of terms that appear in the node, perhaps.
-
-Defaults to AND searches (if $and_or is not supplied, or is anything
-other than C<OR> or C<or>).
-
-Searches are case-insensitive.
-
-=cut
-
-sub search_nodes {
-    my ($self, $termstr, $and_or) = @_;
-
-    $and_or = lc($and_or);
-    unless ( defined $and_or and $and_or eq "or" ) {
-        $and_or = "and";
-    }
-
-    # Extract individual search terms.
-    my @terms = grep { length > 1            # ignore single characters
-                      and ! /^\W*$/ }        # and things composed entirely
-                                             #   of non-word characters
-               split( /\b/,                  # split at word boundaries
-                            lc($termstr)     # be case-insensitive
-                    );
+sub _do_search {
+    my ($self, $and_or, $terms) = @_;
 
     # Create a leaf for each search term.
     my @leaves;
-    foreach my $term ( @terms ) {
+    foreach my $term ( @$terms ) {
         my $leaf = Search::InvertedIndex::Query::Leaf->new(-key   => $term,
                                                            -group => "nodes" );
         push @leaves, $leaf;
@@ -131,29 +97,8 @@ sub search_nodes {
     return %results;
 }
 
-=item B<fuzzy_title_match>
-
-  $wiki->write_node( "King's Cross St Pancras", "A station." );
-  my %matches = $search->fuzzy_title_match( "Kings Cross St. Pancras" );
-
-Returns a (possibly empty) hash whose keys are the node names and
-whose values are the scores in some kind of relevance-scoring system I
-haven't entirely come up with yet.
-
-Note that even if an exact match is found, any other similar enough
-matches will also be returned. However, any exact match is guaranteed
-to have the highest relevance score.
-
-The matching is done against "canonicalised" forms of the search
-string and the node titles in the database: stripping vowels, repeated
-letters and non-word characters, and lowercasing.
-
-=cut
-
-sub fuzzy_title_match {
-    my ($self, $string) = @_;
-    my $canonical = $self->_canonicalise_title( $string );
-
+sub _fuzzy_match {
+    my ($self, $string, $canonical) = @_;
     my $leaf = Search::InvertedIndex::Query::Leaf->new(
         -key   => $canonical,
         -group => "fuzzy_titles" );
@@ -171,42 +116,20 @@ sub fuzzy_title_match {
     return %results;
 }
 
-=item B<index_node>
-
-  $search->index_node($node, $content);
-
-Indexes or reindexes the given node in the L<Search::InvertedIndex>
-indexes.  You must supply both the node name and its content.
-
-=cut
-
-sub index_node {
-    my ($self, $node, $content) = @_;
-    croak "Must supply a node name" unless $node;
-    croak "Must supply node content" unless defined $content;
-
-    # Index the individual words in the node content and title.
-    my @keys = grep { length > 1                 # ignore single characters
-                      and ! /^\W*$/ }            # and things composed entirely
-                                                 #   of non-word characters
-               split( /\b/,                      # split at word boundaries
-                            lc(                  # be case-insensitive
-                                "$content $node" # index content and title
-                              )
-                    );
-
+sub _index_node {
+    my ($self, $node, $content, $keys) = @_;
     my $update = Search::InvertedIndex::Update->new(
         -group => "nodes",
         -index => $node,
         -data  => $content,
-        -keys => { map { $_ => 1 } @keys }
+        -keys => { map { $_ => 1 } @$keys }
     );
     $self->{_map}->update( -update => $update );
+}
 
-    # Index a canonicalised form of the title for fuzzy searches.
-    my $canonical = $self->_canonicalise_title( $node );
-
-    $update = Search::InvertedIndex::Update->new(
+sub _index_fuzzy {
+    my ($self, $node, $canonical) = @_;
+    my $update = Search::InvertedIndex::Update->new(
         -group => "fuzzy_titles",
         -index => $node . "_fuzzy_title",
         -data  => $node,
@@ -215,51 +138,19 @@ sub index_node {
     $self->{_map}->update( -update => $update );
 }
 
-sub _canonicalise_title {
-    my ($self, $title) = @_;
-    return "" unless $title;
-    my $canonical = lc($title);
-    $canonical =~ s/\W//g;         # remove non-word characters
-    $canonical =~ s/[aeiouy]//g;   # remove vowels and 'y'
-    $canonical =~ s/(\w)\1+/$1/eg; # collapse doubled (or tripled, etc) letters
-    return $canonical;
-}
-
-=item B<delete_node>
-
-  $search->delete_node($node);
-
-Removes the given node from the search indexes.  NOTE: It's up to you to
-make sure the node is removed from the backend store.  Croaks on error.
-
-=cut
-
-sub delete_node {
+sub _delete_node {
     my ($self, $node) = @_;
-    croak "Must supply a node name" unless $node;
     $self->{_map}->remove_index_from_all({ -index => $node });
 }
 
-=item B<supports_phrase_searches>
-
-  if ( $search->supports_phrase_searches ) {
-      return $search->search_nodes( '"fox in socks"' );
-  }
-
-Returns true if this search backend supports phrase searching, and
-false otherwise.
-
-=cut
-
-sub supports_phrase_searches {
-    return 0;
-}
+sub supports_phrase_searches { return 0; }
+sub supports_fuzzy_searches  { return 1; }
 
 =back
 
 =head1 SEE ALSO
 
-L<CGI::Wiki>
+L<CGI::Wiki>, L<CGI::Wiki::Search::Base>.
 
 =cut
 

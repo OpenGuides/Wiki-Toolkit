@@ -15,7 +15,7 @@ while ( my $wiki = $iterator->new_wiki ) {
         my $search = $wiki->search_obj;
         skip "No search backend in this combination", 5 unless $search;
         skip "Search backend doesn't support fuzzy searching", 5
-            unless $search->can("fuzzy_title_match");
+            unless $search->supports_fuzzy_searches;
 
         # Fuzzy match with differing punctuation.
         $wiki->write_node( "King's Cross St Pancras", "station" )

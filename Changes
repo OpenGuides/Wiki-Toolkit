@@ -1,3 +1,9 @@
+0.51_01 24 February 2004
+        Refactoring of search classes in preparation for new search
+          backend.  (Simon Cozens)
+        Please test against your applications and let me know of any
+          problems ASAP.
+
 0.50    21 December 2003
         First non-developer release with new test system.
 

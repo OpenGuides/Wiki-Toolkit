@@ -9,6 +9,7 @@ bin/user-setup-mysql-dbixfts.pl
 lib/CGI/Wiki/Extending.pod
 lib/CGI/Wiki/Formatter/Default.pm
 lib/CGI/Wiki/Plugin.pm
+lib/CGI/Wiki/Search/Base.pm
 lib/CGI/Wiki/Search/DBIxFTS.pm
 lib/CGI/Wiki/Search/SII.pm
 lib/CGI/Wiki/Setup/DBIxFTSMySQL.pm

@@ -3,7 +3,7 @@ package CGI::Wiki;
 use strict;
 
 use vars qw( $VERSION );
-$VERSION = '0.51';
+$VERSION = '0.51_01';
 
 use Carp qw(croak carp);
 use Digest::MD5 "md5_hex";
@@ -468,11 +468,27 @@ sub supports_phrase_searches {
     $self->search_obj->supports_phrase_searches( @args ) if $self->search_obj;
 }
 
+=item B<supports_fuzzy_searches>
+
+  if ( $wiki->supports_fuzzy_searches ) {
+      return $wiki->fuzzy_title_match( 'Kings Cross, St Pancreas' );
+  }
+
+Returns true if your chosen search backend supports fuzzy title searching,
+and false otherwise.
+
+=cut
+
+sub supports_fuzzy_searches {
+    my ($self, @args) = @_;
+    $self->search_obj->supports_fuzzy_searches( @args ) if $self->search_obj;
+}
+
 =item B<fuzzy_title_match>
 
-B<NOTE:> This section of the documentation assumes you are using the
-L<CGI::Wiki::Search::SII> backend; this feature has not yet been
-implemented for the L<CGI::Wiki::Search::DBIxFTS> backend.
+B<NOTE:> This section of the documentation assumes you are using a
+search engine which supports fuzzy matching. (See above.) The 
+L<CGI::Wiki::Search::DBIxFTS> backend in particular does not.
 
   $wiki->write_node( "King's Cross St Pancras", "A station." );
   my %matches = $wiki->fuzzy_title_match( "Kings Cross St. Pancras" );
@@ -496,7 +512,11 @@ Croaks if you haven't defined a search backend.
 sub fuzzy_title_match {
     my ($self, @args) = @_;
     if ( $self->search_obj ) {
-        $self->search_obj->fuzzy_title_match( @args );
+        if ($self->search_obj->supports_fuzzy_searches) {
+            $self->search_obj->fuzzy_title_match( @args );
+        } else {
+            croak "Search backend doesn't support fuzzy searches";
+        }
     } else {
         croak "No search backend defined.";
     }
