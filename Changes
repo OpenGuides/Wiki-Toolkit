@@ -1,5 +1,6 @@
 0.55    14 September 2004
         Added Plucene search backend (with help from Simon Cozens).
+        Applied Tom Insam's encoding patch.
 
 0.54    25 June 2004
         Let ->delete_node take an optional version parameter.

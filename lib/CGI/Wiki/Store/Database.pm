@@ -11,7 +11,18 @@ use Time::Seconds;
 use Carp qw( carp croak );
 use Digest::MD5 qw( md5_hex );
 
-$VERSION = '0.22';
+$VERSION = '0.23';
+
+# first, detect if Encode is available - it's not under 5.6. If we _are_
+# under 5.6, give up - we'll just have to hope that nothing explodes. This
+# is the current 0.54 behaviour, so that's ok.
+
+my $CAN_USE_ENCODE;
+BEGIN {
+  eval " use Encode ";
+  $CAN_USE_ENCODE = $@ ? 0 : 1;
+}
+
 
 =head1 NAME
 
@@ -31,14 +42,17 @@ Can't see yet why you'd want to use the backends directly, but:
 
 =item B<new>
 
-  my $store = CGI::Wiki::Store::MySQL->new( dbname => "wiki",
-					    dbuser => "wiki",
-					    dbpass => "wiki",
-                                            dbhost => "db.example.com" );
-
+  my $store = CGI::Wiki::Store::MySQL->new( dbname  => "wiki",
+					    dbuser  => "wiki",
+					    dbpass  => "wiki",
+                                            dbhost  => "db.example.com",
+                                            charset => "iso-8859-1" );
 or
 
   my $store = CGI::Wiki::Store::MySQL->new( dbh => $dbh );
+
+C<charset> is optional, defaults to C<iso-8859-1>, and does nothing
+unless you're using perl 5.8 or newer.
 
 If you do not provide an active database handle in C<dbh>, then
 C<dbname> is mandatory. C<dbpass>, C<dbuser> and C<dbhost> are
@@ -46,7 +60,7 @@ optional, but you'll want to supply them unless your database's
 authentication method doesn't require it.
 
 If you do provide C<database> then it must have the following
-parameters set, otherwise you should just provide the connection
+parameters set; otherwise you should just provide the connection
 information and let us create our own handle:
 
 =over 4
@@ -86,6 +100,7 @@ sub _init {
         $self->{_dbuser} = $args{dbuser} || "";
         $self->{_dbpass} = $args{dbpass} || "";
         $self->{_dbhost} = $args{dbhost} || "";
+        $self->{_charset} = $args{charset} || "iso-8859-1";
 
         # Connect to database and store the database handle.
         my ($dbname, $dbuser, $dbpass, $dbhost) =
@@ -167,12 +182,12 @@ sub _retrieve_node_data {
     # specified in the call.
     my $dbh = $self->dbh;
     my $sql = "SELECT metadata_type, metadata_value FROM metadata WHERE "
-         . "node=" . $dbh->quote($args{name}) . " AND "
-         . "version=" . $dbh->quote($data{version});
+         . "node=" . $dbh->quote($self->charset_encode($args{name})) . " AND "
+         . "version=" . $dbh->quote($self->charset_encode($data{version}));
     my $sth = $dbh->prepare($sql);
     $sth->execute or croak $dbh->errstr;
     my %metadata;
-    while ( my ($type, $val) = $sth->fetchrow_array ) {
+    while ( my ($type, $val) = $self->charset_decode( $sth->fetchrow_array ) ) {
         if ( defined $metadata{$type} ) {
 	    push @{$metadata{$type}}, $val;
 	} else {
@@ -194,13 +209,13 @@ sub _retrieve_node_content {
     my $sql;
     if ( $args{version} ) {
         $sql = "SELECT text, version, modified FROM content"
-             . " WHERE  name=" . $dbh->quote($args{name})
-             . " AND version=" . $dbh->quote($args{version});
+             . " WHERE  name=" . $dbh->quote($self->charset_encode($args{name}))
+             . " AND version=" . $dbh->quote($self->charset_encode($args{version}));
     } else {
         $sql = "SELECT text, version, modified FROM node
-                WHERE name=" . $dbh->quote($args{name});
+                WHERE name=" . $dbh->quote($self->charset_encode($args{name}));
     }
-    my @results = $dbh->selectrow_array($sql);
+    my @results = $self->charset_decode( $dbh->selectrow_array($sql) );
     @results = ("", 0, "") unless scalar @results;
     my %data;
     @data{ qw( content version last_modified ) } = @results;
@@ -216,7 +231,7 @@ sub _checksum {
         $string .= "\0\0\0" . $key . "\0\0"
                  . join("\0", sort @{$metadata{$key}} );
     }
-    return md5_hex($string);
+    return md5_hex($self->charset_encode($string));
 }
 
 # Expects an array of hashes whose keys and values are scalars.
@@ -293,7 +308,7 @@ sub list_backlinks {
     my $sth = $dbh->prepare($sql);
     $sth->execute or croak $dbh->errstr;
     my @backlinks;
-    while ( my $backlink = $sth->fetchrow_array ) {
+    while ( my ($backlink) = $self->charset_decode( $sth->fetchrow_array ) ) {
         push @backlinks, $backlink;
     }
     return @backlinks;
@@ -320,7 +335,7 @@ sub list_dangling_links {
     my $sth = $dbh->prepare($sql);
     $sth->execute or croak $dbh->errstr;
     my @links;
-    while ( my $link = $sth->fetchrow_array ) {
+    while ( my ($link) = $self->charset_decode( $sth->fetchrow_array ) ) {
         push @links, $link;
     }
     return @links;
@@ -395,15 +410,15 @@ sub write_node_post_locking {
         croak "Can't get version number" unless $version;
         $version++;
         $sql = "UPDATE node SET version=" . $dbh->quote($version)
-	     . ", text=" . $dbh->quote($content)
+	     . ", text=" . $dbh->quote($self->charset_encode($content))
 	     . ", modified=" . $dbh->quote($timestamp)
-	     . " WHERE name=" . $dbh->quote($node);
+	     . " WHERE name=" . $dbh->quote($self->charset_encode($node));
 	$dbh->do($sql) or croak "Error updating database: " . DBI->errstr;
     } else {
         $version = 1;
         $sql = "INSERT INTO node (name, version, text, modified)
                 VALUES ("
-             . join(", ", map { $dbh->quote($_) }
+             . join(", ", map { $dbh->quote($self->charset_encode($_)) }
 		              ($node, $version, $content, $timestamp)
                    )
              . ")";
@@ -413,7 +428,7 @@ sub write_node_post_locking {
     # In either case we need to add to the history.
     $sql = "INSERT INTO content (name, version, text, modified)
             VALUES ("
-         . join(", ", map { $dbh->quote($_) }
+         . join(", ", map { $dbh->quote($self->charset_encode($_)) }
 		          ($node, $version, $content, $timestamp)
                )
          . ")";
@@ -421,10 +436,10 @@ sub write_node_post_locking {
 
     # And to the backlinks.
     $dbh->do("DELETE FROM internal_links WHERE link_from="
-             . $dbh->quote($node) ) or croak $dbh->errstr;
+             . $dbh->quote($self->charset_encode($node)) ) or croak $dbh->errstr;
     foreach my $links_to ( @links_to ) {
         $sql = "INSERT INTO internal_links (link_from, link_to) VALUES ("
-             . join(", ", map { $dbh->quote($_) } ( $node, $links_to ) ) . ")";
+             . join(", ", map { $dbh->quote($self->charset_encode($_)) } ( $node, $links_to ) ) . ")";
         # Better to drop a backlink or two than to lose the whole update.
         # Shevek wants a case-sensitive wiki, Jerakeen wants a case-insensitive
         # one, MySQL compares case-sensitively on varchars unless you add
@@ -457,7 +472,7 @@ sub write_node_post_locking {
             foreach my $value ( @values ) {
                 my $sql = "INSERT INTO metadata "
                     . "(node, version, metadata_type, metadata_value) VALUES ("
-                    . join(", ", map { $dbh->quote($_) }
+                    . join(", ", map { $dbh->quote($self->charset_encode($_)) }
                                  ( $node, $version, $type, $value )
                           )
                     . ")";
@@ -469,7 +484,7 @@ sub write_node_post_locking {
             my $value_to_store = $self->_checksum_hashes( @values );
             my $sql = "INSERT INTO metadata "
                     . "(node, version, metadata_type, metadata_value) VALUES ("
-                    . join(", ", map { $dbh->quote($_) }
+                    . join(", ", map { $dbh->quote($self->charset_encode($_)) }
                            ( $node, $version, $type_to_store, $value_to_store )
                           )
                     . ")";
@@ -843,7 +858,7 @@ sub _find_recent_changes_by_criteria {
         my $sth = $dbh->prepare( "SELECT metadata_type, metadata_value
                                   FROM metadata WHERE node=? AND version=?" );
         $sth->execute( $find->{name}, $find->{version} );
-        while ( my ($type, $value) = $sth->fetchrow_array ) {
+        while ( my ($type, $value) = $self->charset_decode( $sth->fetchrow_array ) ) {
 	    if ( defined $metadata{$type} ) {
                 push @{$metadata{$type}}, $value;
 	    } else {
@@ -869,7 +884,7 @@ sub list_all_nodes {
     my $dbh = $self->dbh;
     my $sql = "SELECT name FROM node;";
     my $nodes = $dbh->selectall_arrayref($sql); 
-    return ( map { $_->[0] } (@$nodes) );
+    return ( map { $self->charset_decode( $_->[0] ) } (@$nodes) );
 }
 
 =item B<list_nodes_by_metadata>
@@ -1011,6 +1026,36 @@ sub DESTROY {
     return if $self->{_external_dbh};
     my $dbh = $self->dbh;
     $dbh->disconnect if $dbh;
+}
+
+# decode a string of octets into perl's internal encoding, based on the
+# charset parameter we were passed. Takes a list, returns a list.
+sub charset_decode {
+  my $self = shift;
+  my @input = @_;
+  if ($CAN_USE_ENCODE) {
+    my @output;
+    for (@input) {
+      push( @output, Encode::decode( $self->{_charset}, $_ ) );
+    }
+    return @output;
+  }
+  return @input;
+}
+
+# convert a perl string into a series of octets we can put into the database
+# takes a list, returns a list
+sub charset_encode {
+  my $self = shift;
+  my @input = @_;
+  if ($CAN_USE_ENCODE) {
+    my @output;
+    for (@input) {
+      push( @output, Encode::encode( $self->{_charset}, $_ ) );
+    }
+    return @output;
+  }
+  return @input;
 }
 
 1;

@@ -8,6 +8,17 @@ $VERSION = '0.55';
 use Carp qw(croak carp);
 use Digest::MD5 "md5_hex";
 
+# first, detect if Encode is available - it's not under 5.6. If we _are_
+# under 5.6, give up - we'll just have to hope that nothing explodes. This
+# is the current 0.54 behaviour, so that's ok.
+
+my $CAN_USE_ENCODE;
+BEGIN {
+  eval " use Encode ";
+  $CAN_USE_ENCODE = $@ ? 0 : 1;
+}
+
+
 =head1 NAME
 
 CGI::Wiki - A toolkit for building Wikis.
@@ -475,8 +486,9 @@ Croaks if you haven't defined a search backend.
 
 sub search_nodes {
     my ($self, @args) = @_;
+    my @terms = map { $self->store->charset_encode($_) } @args;
     if ( $self->search_obj ) {
-        $self->search_obj->search_nodes( @args );
+        $self->search_obj->search_nodes( @terms );
     } else {
         croak "No search backend defined.";
     }
@@ -658,6 +670,7 @@ sub write_node {
     $checksum = md5_hex("") unless defined $checksum;
 
     my $formatter = $self->{_formatter};
+
     my @links_to;
     if ( $formatter->can( "find_internal_links" ) ) {
         # Supply $metadata to formatter in case it's needed to alter the
@@ -680,7 +693,7 @@ sub write_node {
 
     my $search = $self->{_search};
     if ($search and $content) {
-        $search->index_node($node, $content);
+        $search->index_node($node, $store->charset_encode($content) );
     }
     return 1;
 }
@@ -701,7 +714,17 @@ sub format {
     my $formatter = $self->{_formatter};
     # Add on $self to the call so the formatter can access things like whether
     # a linked-to node exists, etc.
-    return $formatter->format( $raw, $self, $metadata );
+    my $result = $formatter->format( $raw, $self, $metadata );
+    
+    # Nasty hack to work around an HTML::Parser deficiency
+    # see http://rt.cpan.org/NoAuth/Bug.html?id=7014
+    if ($CAN_USE_ENCODE) {
+      if (Encode::is_utf8($raw)) {
+        Encode::_utf8_on( $result );
+      }
+    }
+
+    return $result;
 }
 
 =item B<store>
