@@ -108,4 +108,13 @@ sub _get_list_by_metadata_sql {
     }
 }
 
+sub _get_comparison_sql {
+    my ($self, %args) = @_;
+    if ( $args{ignore_case} ) {
+        return "$args{thing1} LIKE $args{thing2}";
+    } else {
+        return "$args{thing1} = $args{thing2}";
+    }
+}
+
 1;

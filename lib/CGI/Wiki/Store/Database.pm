@@ -716,6 +716,12 @@ Unless you supply C<include_all_changes>, C<metadata_was> or
 C<metadata_wasnt>, each node will only be returned once regardless of
 how many times it has been changed recently.
 
+By default, the case-sensitivity of both C<metadata_type> and
+C<metadata_value> depends on your database - if it will return rows
+with an attribute value of "Pubs" when you asked for "pubs", or not.
+If you supply a true value to the C<ignore_case> parameter, then you
+can be sure of its being case-insensitive.  This is recommended.
+
 =cut
 
 sub list_recent_changes {
@@ -741,9 +747,9 @@ sub list_recent_changes {
 
 sub _find_recent_changes_by_criteria {
     my ($self, %args) = @_;
-    my ($since, $limit, $between_days,
+    my ($since, $limit, $between_days, $ignore_case,
         $metadata_is,  $metadata_isnt, $metadata_was, $metadata_wasnt ) =
-         @args{ qw( since limit between_days
+         @args{ qw( since limit between_days ignore_case
                     metadata_is metadata_isnt metadata_was metadata_wasnt) };
     my $dbh = $self->dbh;
 
@@ -757,13 +763,22 @@ sub _find_recent_changes_by_criteria {
                 $i++;
                 my $value  = $metadata_is->{$type};
                 croak "metadata_is must have scalar values" if ref $value;
-                push @metadata_joins, "LEFT JOIN metadata AS md$i
-                                 ON $main_table.name=md$i.node
-                                 AND $main_table.version=md$i.version\n";
+                my $mdt = "md_is_$i";
+                push @metadata_joins, "LEFT JOIN metadata AS $mdt
+                                 ON $main_table.name=$mdt.node
+                                 AND $main_table.version=$mdt.version\n";
                 push @where, "( "
-                         . "md$i.metadata_type=" . $dbh->quote($type)
+                         . $self->_get_comparison_sql(
+                                          thing1      => "$mdt.metadata_type",
+                                          thing2      => $dbh->quote($type),
+                                          ignore_case => $ignore_case,
+                                                     )
                          . " AND "
-                         . "md$i.metadata_value=" . $dbh->quote($value)
+                         . $self->_get_comparison_sql(
+                                          thing1      => "$mdt.metadata_value",
+                                          thing2      => $dbh->quote($value),
+                                          ignore_case => $ignore_case,
+                                                     )
                          . " )";
 	    }
 	}
@@ -776,6 +791,7 @@ sub _find_recent_changes_by_criteria {
                 since        => $since,
                 between_days => $between_days,
                 metadata_is  => $metadata_isnt,
+                ignore_case  => $ignore_case,
             );
             foreach my $omit ( @omits ) {
                 push @where, "( node.name != " . $dbh->quote($omit->{name})
@@ -796,9 +812,17 @@ sub _find_recent_changes_by_criteria {
                                  ON $main_table.name=$mdt.node
                                  AND $main_table.version=$mdt.version\n";
                 push @where, "( "
-                         . "$mdt.metadata_type=" . $dbh->quote($type)
+                         . $self->_get_comparison_sql(
+                                          thing1      => "$mdt.metadata_type",
+                                          thing2      => $dbh->quote($type),
+                                          ignore_case => $ignore_case,
+                                                     )
                          . " AND "
-                         . "$mdt.metadata_value=" . $dbh->quote($value)
+                         . $self->_get_comparison_sql(
+                                          thing1      => "$mdt.metadata_value",
+                                          thing2      => $dbh->quote($value),
+                                          ignore_case => $ignore_case,
+                                                     )
                          . " )";
 	    }
 	}
@@ -812,6 +836,7 @@ sub _find_recent_changes_by_criteria {
                 since        => $since,
                 between_days => $between_days,
                 metadata_was => $metadata_wasnt,
+                ignore_case  => $ignore_case,
             );
             foreach my $omit ( @omits ) {
                 push @where, "( content.name != " . $dbh->quote($omit->{name})
@@ -852,7 +877,7 @@ sub _find_recent_changes_by_criteria {
         croak "Bad argument $limit" unless $limit =~ /^\d+$/;
         $sql .= " LIMIT $limit";
     }
-
+#print "\n\n$sql\n\n";
     my $nodesref = $dbh->selectall_arrayref($sql);
     my @finds = map { { name          => $_->[0],
 			version       => $_->[1],
@@ -957,6 +982,12 @@ sub _get_list_by_metadata_sql {
          . " AND node.version=metadata.version"
          . " AND metadata.metadata_type = ? "
          . " AND metadata.metadata_value = ? ";
+}
+
+sub _get_comparison_sql {
+    my ($self, %args) = @_;
+    # can be over-ridden by database-specific subclasses
+    return "$args{thing1} = $args{thing2}";
 }
 
 =item B<dbh>

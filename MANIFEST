@@ -43,6 +43,7 @@ t/015_dangling_links.t
 t/016_recent_changes_between.t
 t/017_delete_version.t
 t/018_rc_multiple_metadata_criteria.t
+t/019_recent_changes_case.t
 t/050_mysql_store.t
 t/051_pg_store.t
 t/052_sqlite_store.t

@@ -3,7 +3,7 @@ package CGI::Wiki;
 use strict;
 
 use vars qw( $VERSION );
-$VERSION = '0.58';
+$VERSION = '0.59';
 
 use Carp qw(croak carp);
 use Digest::MD5 "md5_hex";
@@ -408,6 +408,12 @@ to the current version of the node
 Unless you supply C<include_all_changes>, C<metadata_was> or
 C<metadata_wasnt>, each node will only be returned once regardless of
 how many times it has been changed recently.
+
+By default, the case-sensitivity of both C<metadata_type> and
+C<metadata_value> depends on your database - if it will return rows
+with an attribute value of "Pubs" when you asked for "pubs", or not.
+If you supply a true value to the C<ignore_case> parameter, then you
+can be sure of its being case-insensitive.  This is recommended.
 
 =cut
 
