@@ -175,6 +175,17 @@ if ( $sii_inst ) {
     $CGI::Wiki::TestConfig::config{search_invertedindex} = undef;
 }
 
+# If we have Plucene installed, we can test that without asking questions.
+eval { require Plucene; require File::Spec::Functions };
+my $plucene_inst = $@ ? 0 : 1;
+if ( $plucene_inst ) {
+    print "You have Plucene installed, so will test with that...\n\n";
+    $CGI::Wiki::TestConfig::config{plucene} = 1;
+} else {
+    print "Either Plucene or File::Spec::Functions not installed; skipping test...\n\n";
+    $CGI::Wiki::TestConfig::config{plucene} = undef;
+}
+
 # Write out the config for next run.
 open OUT, ">lib/CGI/Wiki/TestConfig.pm"
   or die "Couldn't open lib/CGI/Wiki/TestConfig.pm for writing: $!";
@@ -201,6 +212,9 @@ if ( $config{SQLite}{dbname} ) {
 if ( $config{dbixfts} ) {
     $extras{'DBIx::FullTextSearch'} = '0.71'; # earlier ones buggy
 }
+if ( $config{plucene} ) {
+    $extras{'Plucene'} = '1.19'; # earlier has trouble with delete
+}
 
 # Write the Makefile.
 WriteMakefile( NAME         => "CGI::Wiki",
@@ -213,5 +227,7 @@ WriteMakefile( NAME         => "CGI::Wiki",
 			         %extras },
                EXE_FILES => [ "bin/cgi-wiki-setupdb" ],
 	       clean => { FILES => "Config lib/CGI/Wiki/TestConfig.pm "
-			         . "t/sqlite-test.db t/sii-db-file-test.db" }
+			         . "t/sqlite-test.db t/sii-db-file-test.db "
+                                 . "t/node.db t/plucene"
+                        }
 	     );

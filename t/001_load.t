@@ -1,4 +1,4 @@
-use Test::More tests => 14;
+use Test::More tests => 15;
 
 use_ok( "CGI::Wiki" );
 use_ok( "CGI::Wiki::Formatter::Default" );
@@ -16,6 +16,12 @@ SKIP: {
         skip "Search::InvertedIndex not installed", 2 if $@;
         use_ok( "CGI::Wiki::Search::SII" );
         use_ok( "CGI::Wiki::Setup::SII" );
+}
+
+eval { require Plucene; };
+SKIP: {
+        skip "Plucene not installed", 1 if $@;
+        use_ok( "CGI::Wiki::Search::Plucene" );
 }
 
 use_ok( "CGI::Wiki::Setup::MySQL" );

@@ -11,6 +11,7 @@ lib/CGI/Wiki/Formatter/Default.pm
 lib/CGI/Wiki/Plugin.pm
 lib/CGI/Wiki/Search/Base.pm
 lib/CGI/Wiki/Search/DBIxFTS.pm
+lib/CGI/Wiki/Search/Plucene.pm
 lib/CGI/Wiki/Search/SII.pm
 lib/CGI/Wiki/Setup/DBIxFTSMySQL.pm
 lib/CGI/Wiki/Setup/MySQL.pm

@@ -24,7 +24,8 @@ foreach my $infoid ( @wiki_info ) {
     # Test search instantiation.
     SKIP: {
         skip "No search configured for this combination", 1
-          unless ($infoid->{dbixfts_info} or $infoid->{sii_info} );
+          unless ($infoid->{dbixfts_info} or $infoid->{sii_info}
+                  or $infoid->{plucene_path} );
         if ( $infoid->{dbixfts_info} ) {
             my %fts_info = %{ $infoid->{dbixfts_info} };
             require CGI::Wiki::Store::MySQL;
@@ -48,6 +49,11 @@ foreach my $infoid ( @wiki_info ) {
             require CGI::Wiki::Search::SII;
             my $search = CGI::Wiki::Search::SII->new(indexdb =>$indexdb);
             isa_ok( $search, "CGI::Wiki::Search::SII" );
+            $wiki_config{search} = $search;
+        } elsif ( $infoid->{plucene_path} ) {
+            require CGI::Wiki::Search::Plucene;
+            my $search = CGI::Wiki::Search::Plucene->new( path => $infoid->{plucene_path} );
+            isa_ok( $search, "CGI::Wiki::Search::Plucene" );
             $wiki_config{search} = $search;
         }
     } # end of SKIP for no search

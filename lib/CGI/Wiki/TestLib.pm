@@ -6,7 +6,7 @@ use CGI::Wiki;
 use CGI::Wiki::TestConfig;
 
 use vars qw( $VERSION @wiki_info );
-$VERSION = '0.02';
+$VERSION = '0.03';
 
 =head1 NAME
 
@@ -123,6 +123,12 @@ if ( $configured{search_invertedindex} ) {
                          };
 }
 
+my $plucene_path;
+# Test with Plucene if possible.
+if ( $configured{plucene} ) {
+    $plucene_path = "t/plucene";
+}
+
 # @wiki_info describes which searches work with which stores.
 
 # Database-specific searchers.
@@ -136,11 +142,15 @@ push @wiki_info, { datastore_info => $datastore_info{Pg},
                    sii_info       => $sii_info{Pg} }
   if ( $datastore_info{Pg} and $sii_info{Pg} );
 
-# All stores are compatible with the default S::II search, and with no search.
+# All stores are compatible with the default S::II search, and with Plucene,
+# and with no search.
 foreach my $dbtype ( qw( MySQL Pg SQLite ) ) {
     push @wiki_info, { datastore_info => $datastore_info{$dbtype},
                        sii_info       => $sii_info{DB_File} }
       if ( $datastore_info{$dbtype} and $sii_info{DB_File} );
+    push @wiki_info, { datastore_info => $datastore_info{$dbtype},
+                       plucene_path   => $plucene_path }
+      if ( $datastore_info{$dbtype} and $plucene_path );
     push @wiki_info, { datastore_info => $datastore_info{$dbtype} }
       if $datastore_info{$dbtype};
 }
@@ -229,6 +239,15 @@ sub new_wiki {
         require CGI::Wiki::Setup::SII;
         CGI::Wiki::Setup::SII::setup( indexdb => $indexdb );
         $wiki_config{search} = CGI::Wiki::Search::SII->new(indexdb =>$indexdb);
+    } elsif ( $details->{plucene_path} ) {
+        require CGI::Wiki::Search::Plucene;
+        my $dir = $details->{plucene_path};
+        unlink <$dir/*>; # don't die if false since there may be no files
+        if ( -d $dir ) {
+            rmdir $dir or die $!;
+	}
+        mkdir $dir or die $!;
+        $wiki_config{search} = CGI::Wiki::Search::Plucene->new( path => $dir );
     }
 
     # Make a wiki.

@@ -3,7 +3,7 @@ package CGI::Wiki;
 use strict;
 
 use vars qw( $VERSION );
-$VERSION = '0.54';
+$VERSION = '0.55';
 
 use Carp qw(croak carp);
 use Digest::MD5 "md5_hex";
@@ -442,12 +442,13 @@ sub delete_node {
                              );
 
     if ( my $search = $self->search_obj ) {
+        # Remove old data.
+        $search->delete_node( $args{name} );
+        # If we have any versions left, index the new latest version.
         my $new_current_content = $self->retrieve_node( $args{name } );
         if ( $new_current_content ) {
             $search->index_node( $args{name}, $new_current_content );
-	} else {
-            $search->delete_node( $args{name} );
-        }
+	}
     }
 
     return 1;

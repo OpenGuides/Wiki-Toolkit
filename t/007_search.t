@@ -5,15 +5,19 @@ use Test::More;
 if ( scalar @CGI::Wiki::TestLib::wiki_info == 0 ) {
     plan skip_all => "no backends configured";
 } else {
-    plan tests => ( 13 * scalar @CGI::Wiki::TestLib::wiki_info );
+    plan tests => ( 15 * scalar @CGI::Wiki::TestLib::wiki_info );
 }
 
 my $iterator = CGI::Wiki::TestLib->new_wiki_maker;
 
 while ( my $wiki = $iterator->new_wiki ) {
     SKIP: {
-        skip "Not testing search for this configuration", 13
+        skip "Not testing search for this configuration", 15
             unless $wiki->search_obj;
+
+        my %results = eval { $wiki->search_nodes( "foo" ); };
+        is( $@, "",
+            "->search_nodes doesn't die when we've not written anything" );
 
         # Put some test data in.
         $wiki->write_node( "Home", "This is the home node." )
@@ -27,7 +31,7 @@ while ( my $wiki = $iterator->new_wiki ) {
                            "Expert advice for all your defenestration needs!")
           or die "Couldn't write node";
 
-        my %results = eval {
+        %results = eval {
             local $SIG{__WARN__} = sub { die $_[0] };
             $wiki->search_nodes('home');
         };
@@ -42,10 +46,15 @@ while ( my $wiki = $iterator->new_wiki ) {
         isnt( scalar keys %results, 0,
               "...and can find two words on an AND search" );
 
-        %results = $wiki->search_nodes('wombat home', 'OR');
         my %and_results = $wiki->search_nodes('wombat home', 'AND');
-        die "Erroneous wombat home in test data"
-            if scalar keys %and_results;
+        if ( scalar keys %and_results ) {
+            print "# " . join( "\n# ", map { "$_: " . $and_results{$_} }
+                                       keys %and_results ) . "\n";
+        }
+        is( scalar keys %and_results, 0,
+            "...AND search doesn't find nodes with only one term." );
+
+        %results = $wiki->search_nodes('wombat home', 'OR');
         isnt( scalar keys %results, 0,
               "...and the OR search seems to work" );
 
