@@ -1,6 +1,8 @@
-0.55    14 September 2004
+0.56    14 September 2004
         Added Plucene search backend (with help from Simon Cozens).
         Applied Tom Insam's encoding patch.
+
+0.55    There wasn't one.  Something bizarre happened with PAUSE.
 
 0.54    25 June 2004
         Let ->delete_node take an optional version parameter.
