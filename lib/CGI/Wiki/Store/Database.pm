@@ -11,7 +11,7 @@ use Time::Seconds;
 use Carp qw( carp croak );
 use Digest::MD5 qw( md5_hex );
 
-$VERSION = '0.23';
+$VERSION = '0.24';
 
 # first, detect if Encode is available - it's not under 5.6. If we _are_
 # under 5.6, give up - we'll just have to hope that nothing explodes. This
@@ -667,6 +667,13 @@ sub delete_node {
       metadata_was   => { username => "Kake" }
   );
 
+  # All minor edits made by Earle in the last week.
+  my @nodes = $store->list_recent_changes(
+      days           => 7,
+      metadata_was   => { username  => "Earle",
+                          edit_type => "Minor tidying." }
+  );
+
   # Last 10 changes that weren't minor edits.
   my @nodes = $store->list_recent_changes(
       last_n_changes => 5,
@@ -674,10 +681,16 @@ sub delete_node {
   );
 
 You I<must> supply one of the following constraints: C<days>
-(integer), C<since> (epoch), C<last_n_changes> (integer). You I<may>
-also supply one of the following constraints: C<metadata_is>,
-C<metadata_isnt>, C<metadata_was>, C<metadata_wasnt>. Each should be a
-ref to a hash with a single key and value.
+(integer), C<since> (epoch), C<last_n_changes> (integer).
+
+You I<may> also supply one of the following constraints:
+C<metadata_is>, C<metadata_isnt>, C<metadata_was>, C<metadata_wasnt>,
+each of which should be a ref to a hash with scalar keys and values.
+If the hash has more than one entry, then only changes satisfying
+I<all> criteria will be returned when using C<metadata_is> or
+C<metadata_was>, but all changes which fail to satisfy any one of the
+criteria will be returned when using C<metadata_isnt> or
+C<metadata_is>.
 
 C<metadata_is> and C<metadata_isnt> look only at the metadata that the
 node I<currently> has. C<metadata_was> and C<metadata_wasnt> take into
@@ -705,28 +718,6 @@ to the current version of the node
 Unless you supply C<include_all_changes>, C<metadata_was> or
 C<metadata_wasnt>, each node will only be returned once regardless of
 how many times it has been changed recently.
-
-B<Future plans and thoughts for list_recent_changes>
-
-This method will croak if you try to put more than one key/value in
-the metadata constraint hashes, because the API for that is not yet
-decided. It'll be nice in the future to be able to do for example:
-
-  # All minor edits made by Earle in the last week.
-  my @nodes = $store->list_recent_changes(
-      days           => 7,
-      metadata_was   => { username  => "Earle",
-                          edit_type => "Minor tidying." }
-  );
-
-  # The last three Holborn pubs whose entries were edited.
-  my @nodes = $store->list_recent_changes(
-      last_n_changes => 3,
-      metadata_is    => { category => [ "Pubs", "Holborn" ] }
-  );
-
-The question is a nice syntax for specifying how the criteria should
-be ANDed or ORed. This might make sense done as a plugin.
 
 =cut
 
@@ -760,51 +751,60 @@ sub _find_recent_changes_by_criteria {
     my $dbh = $self->dbh;
 
     my @where;
+    my @metadata_joins;
     my $main_table = $args{include_all_changes} ? "content" : "node";
     if ( $metadata_is ) {
-        if ( scalar keys %$metadata_is > 1 ) {
-            croak "metadata_is must have one key and one value only";
-        }
-        my ($type) = keys %$metadata_is;
-        my $value  = $metadata_is->{$type};
-        croak "metadata_is must have one key and one value only"
-          if ref $value;
-	push @where, "metadata.metadata_type=" . $dbh->quote($type);
-	push @where, "metadata.metadata_value=" . $dbh->quote($value);
-    } elsif ( $metadata_isnt ) {
-        if ( scalar keys %$metadata_isnt > 1 ) {
-            croak "metadata_isnt must have one key and one value only";
+        my $i = 0;
+        foreach my $type ( keys %$metadata_is ) {
+            $i++;
+            my $value  = $metadata_is->{$type};
+            croak "metadata_is must have scalar values" if ref $value;
+            push @metadata_joins, "LEFT JOIN metadata AS md$i
+                                 ON $main_table.name=md$i.node
+                                 AND $main_table.version=md$i.version\n";
+            push @where, "( "
+                         . "md$i.metadata_type=" . $dbh->quote($type)
+                         . " AND "
+                         . "md$i.metadata_value=" . $dbh->quote($value)
+                         . " )";
 	}
-        my ($type) = keys %$metadata_isnt;
-	my $value  = $metadata_isnt->{$type};
-        croak "metadata_isnt must have one key and one value only"
-          if ref $value;
-        my @omit = $self->list_nodes_by_metadata(
-            metadata_type  => $type,
-            metadata_value => $value );
-        push @where, "node.name NOT IN ("
-                   . join(",", map { $dbh->quote($_) } @omit ) . ")"
-          if scalar @omit;
+    } elsif ( $metadata_isnt ) {
+        foreach my $type ( keys %$metadata_isnt ) {
+            my $value  = $metadata_isnt->{$type};
+            croak "metadata_isnt must have scalar values" if ref $value;
+	}
+        my @omits = $self->_find_recent_changes_by_criteria(
+            since        => $since,
+            between_days => $between_days,
+            metadata_is  => $metadata_isnt,
+        );
+        foreach my $omit ( @omits ) {
+            push @where, "( node.name != " . $dbh->quote($omit->{name})
+                 . "  OR node.version != " . $dbh->quote($omit->{version})
+                 . ")";
+	}
     } elsif ( $metadata_was ) {
         $main_table = "content";
-        if ( scalar keys %$metadata_was > 1 ) {
-            croak "metadata_was must have one key and one value only";
+        my $i = 0;
+        foreach my $type ( keys %$metadata_was ) {
+            $i++;
+            my $value  = $metadata_was->{$type};
+            croak "metadata_was must have scalar values" if ref $value;
+            push @metadata_joins, "LEFT JOIN metadata AS md$i
+                                 ON $main_table.name=md$i.node
+                                 AND $main_table.version=md$i.version\n";
+            push @where, "( "
+                         . "md$i.metadata_type=" . $dbh->quote($type)
+                         . " AND "
+                         . "md$i.metadata_value=" . $dbh->quote($value)
+                         . " )";
 	}
-        my ($type) = keys %$metadata_was;
-	my $value  = $metadata_was->{$type};
-            croak "metadata_was must have one key and one value only"
-          if ref $value;
-        push @where, "metadata.metadata_type=" . $dbh->quote($type);
-	push @where, "metadata.metadata_value=" . $dbh->quote($value);
     } elsif ( $metadata_wasnt ) {
         $main_table = "content";
-        if ( scalar keys %$metadata_wasnt > 1 ) {
-            croak "metadata_wasnt must have one key and one value only";
+        foreach my $type ( keys %$metadata_wasnt ) {
+            my $value  = $metadata_was->{$type};
+            croak "metadata_was must have scalar values" if ref $value;
 	}
-        my ($type) = keys %$metadata_wasnt;
-	my $value  = $metadata_wasnt->{$type};
-        croak "metadata_wasnt must have one key and one value only"
-         if ref $value;
         my @omits = $self->_find_recent_changes_by_criteria(
             since        => $since,
             between_days => $between_days,
@@ -836,12 +836,13 @@ sub _find_recent_changes_by_criteria {
                                $main_table.version,
                                $main_table.modified
                FROM $main_table
-                    LEFT JOIN metadata
-                           ON $main_table.name=metadata.node
-                          AND $main_table.version=metadata.version
               "
-            . ( scalar @where ? " WHERE " . join(" AND ",@where)
-			                     : "" )
+            . join("\n", @metadata_joins)
+            . (
+                scalar @where
+                              ? " WHERE " . join(" AND ",@where) 
+                              : ""
+              )
             . " ORDER BY $main_table.modified DESC";
     if ( $limit ) {
         croak "Bad argument $limit" unless $limit =~ /^\d+$/;

@@ -1,3 +1,7 @@
+0.57    18 September 2004
+        Extended capabilities of list_recent_changes - more powerful
+          metadata filtering (see docs for details).
+
 0.56    14 September 2004
         Added Plucene search backend (with help from Simon Cozens).
         Applied Tom Insam's encoding patch.

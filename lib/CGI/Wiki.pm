@@ -3,7 +3,7 @@ package CGI::Wiki;
 use strict;
 
 use vars qw( $VERSION );
-$VERSION = '0.56';
+$VERSION = '0.57';
 
 use Carp qw(croak carp);
 use Digest::MD5 "md5_hex";
@@ -360,6 +360,13 @@ sub list_nodes_by_metadata {
       metadata_was   => { username => "Kake" }
   );
 
+  # All minor edits made by Earle in the last week.
+  my @nodes = $wiki->list_recent_changes(
+      days           => 7,
+      metadata_was   => { username  => "Earle",
+                          edit_type => "Minor tidying." }
+  );
+
   # Last 10 changes that weren't minor edits.
   my @nodes = $wiki->list_recent_changes(
       last_n_changes => 5,
@@ -367,16 +374,23 @@ sub list_nodes_by_metadata {
   );
 
 You I<must> supply one of the following constraints: C<days>
-(integer), C<since> (epoch), C<last_n_changes> (integer). You I<may> also
-supply one of the following constraints: C<metadata_is>,
-C<metadata_isnt>, C<metadata_was>, C<metadata_wasnt>. Each should be a
-ref to a hash with a single key and value.
+(integer), C<since> (epoch), C<last_n_changes> (integer).
+
+You I<may> also supply one of the following constraints:
+C<metadata_is>, C<metadata_isnt>, C<metadata_was>, C<metadata_wasnt>,
+each of which should be a ref to a hash with scalar keys and values.
+If the hash has more than one entry, then only changes satisfying
+I<all> criteria will be returned when using C<metadata_is> or
+C<metadata_was>, but all changes which fail to satisfy any one of the
+criteria will be returned when using C<metadata_isnt> or
+C<metadata_is>.
 
 C<metadata_is> and C<metadata_isnt> look only at the metadata that the
-node I<currently> has. C<metadata_was> and C<metadata_wasnt> also take
-into account the metadata of previous versions of a node. B<NOTE:> If
-you supply either or both of C<metadata_was> and C<metadata_wasnt>
-then any C<metadata_is> and C<metadata_isnt> will be ignored.
+node I<currently> has. C<metadata_was> and C<metadata_wasnt> take into
+account the metadata of previous versions of a node. B<NOTE:> Only one
+of these constraints will be honoured, so please only supply one. This
+may change in the future. (For avoidance of confusion - they are
+examined in the following order: is, isnt, was, wasnt.)
 
 Returns results as an array, in reverse chronological order.  Each
 element of the array is a reference to a hash with the following entries:
