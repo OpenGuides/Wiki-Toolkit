@@ -39,6 +39,8 @@ t/012_blank_data.t
 t/013_fuzzy_title_match.t
 t/014_advanced_metadata.t
 t/015_dangling_links.t
+t/016_recent_changes_between.t
+t/017_delete_version.t
 t/050_mysql_store.t
 t/051_pg_store.t
 t/052_sqlite_store.t

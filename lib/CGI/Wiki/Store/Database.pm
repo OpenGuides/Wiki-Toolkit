@@ -11,7 +11,7 @@ use Time::Seconds;
 use Carp qw( carp croak );
 use Digest::MD5 qw( md5_hex );
 
-$VERSION = '0.21';
+$VERSION = '0.22';
 
 =head1 NAME
 
@@ -504,28 +504,115 @@ sub _get_timestamp {
 
 =item B<delete_node>
 
-  $store->delete_node($node);
+  $store->delete_node(
+                       name    => $node,
+                       version => $version,
+                       wiki    => $wiki
+                     );
 
-Deletes the node (whether it exists or not), croaks on error. Again,
-doesn't do any kind of locking. You probably don't want to let anyone
-except Wiki admins call this. Removes all the node's history as well.
+C<version> is optional.  If it is supplied then only that version of
+the node will be deleted.  Otherwise the node and all its history will
+be completely deleted.
+
+C<wiki> is also optional, but if you care about updating the backlinks
+you want to include it.
+
+Again, doesn't do any locking. You probably don't want to let anyone
+except Wiki admins call this. You may not want to use it at all.
+
+Croaks on error, silently does nothing if the node or version doesn't
+exist, returns true if no error.
 
 =cut
 
 sub delete_node {
-    my ($self, $node) = @_;
+    my $self = shift;
+    # Backwards compatibility.
+    my %args = ( scalar @_ == 1 ) ? ( name => $_[0] ) : @_;
+
     my $dbh = $self->dbh;
-    my $name = $dbh->quote($node);
-    # Should start a transaction here.  FIXME.
-    my $sql = "DELETE FROM node WHERE name=$name";
-    $dbh->do($sql) or croak "Deletion failed: " . DBI->errstr;
-    $sql = "DELETE FROM content WHERE name=$name";
-    $dbh->do($sql) or croak "Deletion failed: " . DBI->errstr;
-    $sql = "DELETE FROM internal_links WHERE link_from=$name";
-    $dbh->do($sql) or croak $dbh->errstr;
-    $sql = "DELETE FROM metadata WHERE node=$name";
-    $dbh->do($sql) or croak $dbh->errstr;
-    # And finish it here.
+    my ($name, $version, $wiki) = @args{ qw( name version wiki ) };
+
+    # Trivial case - delete the whole node and all its history.
+    unless ( $version ) {
+        my $name = $dbh->quote($name);
+        # Should start a transaction here.  FIXME.
+        my $sql = "DELETE FROM node WHERE name=$name";
+        $dbh->do($sql) or croak "Deletion failed: " . DBI->errstr;
+        $sql = "DELETE FROM content WHERE name=$name";
+        $dbh->do($sql) or croak "Deletion failed: " . DBI->errstr;
+        $sql = "DELETE FROM internal_links WHERE link_from=$name";
+        $dbh->do($sql) or croak $dbh->errstr;
+        $sql = "DELETE FROM metadata WHERE node=$name";
+        $dbh->do($sql) or croak $dbh->errstr;
+        # And finish it here.
+        return 1;
+    }
+
+    # Skip out early if we're trying to delete a nonexistent version.
+    my %verdata = $self->retrieve_node( name => $name, version => $version );
+    return 1 unless $verdata{version};
+
+    # Reduce to trivial case if deleting the only version.
+    my $sql = "SELECT COUNT(*) FROM content WHERE name=?";
+    my $sth = $dbh->prepare( $sql );
+    $sth->execute( $name ) or croak "Deletion failed: " . $dbh->errstr;
+    my ($count) = $sth->fetchrow_array;
+    return $self->delete_node( $name ) if $count == 1;
+
+    # Check whether we're deleting the latest version.
+    my %currdata = $self->retrieve_node( name => $name );
+    if ( $currdata{version} == $version ) {
+        my %prevdata = $self->retrieve_node(
+                                             name    => $name,
+                                             version => $version - 1 # ICK
+                                           );
+        my $sql="UPDATE node SET version=?, text=?, modified=? WHERE name=?";
+        my $sth = $dbh->prepare( $sql );
+        $sth->execute( @prevdata{ qw( version content last_modified ) }, $name)
+          or croak "Deletion failed: " . $dbh->errstr;
+        $sql = "DELETE FROM content WHERE name=? AND version=?";
+        $sth = $dbh->prepare( $sql );
+        $sth->execute( $name, $version )
+          or croak "Deletion failed: " . $dbh->errstr;
+        $sql = "DELETE FROM internal_links WHERE link_from=?";
+        $sth = $dbh->prepare( $sql );
+        $sth->execute( $name )
+          or croak "Deletion failed: " . $dbh->errstr;
+        my @links_to;
+        my $formatter = $wiki->formatter;
+        if ( $formatter->can( "find_internal_links" ) ) {
+            # Supply $metadata to formatter in case it's needed to alter the
+            # behaviour of the formatter, eg for CGI::Wiki::Formatter::Multiple
+            my @all = $formatter->find_internal_links(
+                                    $prevdata{content}, $prevdata{metadata} );
+            my %unique = map { $_ => 1 } @all;
+            @links_to = keys %unique;
+        }
+        $sql = "INSERT INTO internal_links (link_from, link_to) VALUES (?,?)";
+        $sth = $dbh->prepare( $sql );
+        foreach my $link ( @links_to ) {
+            eval { $sth->execute( $name, $link ); };
+            carp "Couldn't index backlink: " . $dbh->errstr if $@;
+        }
+        $sql = "DELETE FROM metadata WHERE node=? and version=?";
+        $sth = $dbh->prepare( $sql );
+        $sth->execute( $name, $version )
+          or croak "Deletion failed: " . $dbh->errstr;
+
+        return 1;
+    }
+
+    # If we're still here, then we're deleting neither the latest
+    # nor the only version.
+    $sql = "DELETE FROM content WHERE name=? AND version=?";
+    $sth = $dbh->prepare( $sql );
+    $sth->execute( $name, $version )
+      or croak "Deletion failed: " . $dbh->errstr;
+    $sql = "DELETE FROM metadata WHERE node=? and version=?";
+    $sth = $dbh->prepare( $sql );
+    $sth->execute( $name, $version )
+      or croak "Deletion failed: " . $dbh->errstr;
     return 1;
 }
 

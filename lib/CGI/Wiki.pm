@@ -3,7 +3,7 @@ package CGI::Wiki;
 use strict;
 
 use vars qw( $VERSION );
-$VERSION = '0.53';
+$VERSION = '0.54';
 
 use Carp qw(croak carp);
 use Digest::MD5 "md5_hex";
@@ -414,23 +414,42 @@ sub node_exists {
 
 =item B<delete_node>
 
-  $wiki->delete_node($node);
+  $wiki->delete_node( name => "Home Page", version => 15 );
 
-Deletes the node completely, including removing all its history. 
+C<version> is optional.  If it is supplied then only that version of
+the node will be deleted.  Otherwise the node and all its history will
+be completely deleted.
+
 Doesn't do any locking though - to fix? You probably don't want to let
 anyone except Wiki admins call this. You may not want to use it at
 all.
 
-Croaks on error, silently does nothing if the node doesn't exist,
-returns true if no error.
+Croaks on error, silently does nothing if the node or version doesn't
+exist, returns true if no error.
 
 =cut
 
 sub delete_node {
-    my ($self, $node) = @_;
-    return 1 unless $self->node_exists( $node );
-    $self->store->delete_node( $node );
-    $self->search_obj->delete_node( $node ) if $self->search_obj;
+    my $self = shift;
+    # Backwards compatibility.
+    my %args = ( scalar @_ == 1 ) ? ( name => $_[0] ) : @_;
+
+    return 1 unless $self->node_exists( $args{name} );
+    $self->store->delete_node(
+                               name    => $args{name},
+                               version => $args{version},
+                               wiki    => $self,
+                             );
+
+    if ( my $search = $self->search_obj ) {
+        my $new_current_content = $self->retrieve_node( $args{name } );
+        if ( $new_current_content ) {
+            $search->index_node( $args{name}, $new_current_content );
+	} else {
+            $search->delete_node( $args{name} );
+        }
+    }
+
     return 1;
 }
 
