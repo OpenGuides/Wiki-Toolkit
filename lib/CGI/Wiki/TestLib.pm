@@ -6,7 +6,7 @@ use CGI::Wiki;
 use CGI::Wiki::TestConfig;
 
 use vars qw( $VERSION @wiki_info );
-$VERSION = '0.01';
+$VERSION = '0.02';
 
 =head1 NAME
 
@@ -202,7 +202,7 @@ sub new_wiki {
           or croak "Can't connect to $dbconfig{dbname} using $dsn: " . DBI->errstr;
         require CGI::Wiki::Setup::DBIxFTSMySQL;
         CGI::Wiki::Setup::DBIxFTSMySQL::setup(
-                                        @dbconfig{ qw( dbuser dbname dbpass ) }
+                                 @dbconfig{ qw( dbuser dbname dbpass dbhost ) }
                                              );
         require CGI::Wiki::Search::DBIxFTS;
         $wiki_config{search} = CGI::Wiki::Search::DBIxFTS->new( dbh => $dbh );
