@@ -11,22 +11,23 @@ use Carp;
 my %create_sql = (
     node => [ qq|
 CREATE TABLE node (
+  id        integer      NOT NULL AUTO_INCREMENT,
   name      varchar(200) NOT NULL DEFAULT '',
   version   int(10)      NOT NULL default 0,
   text      mediumtext   NOT NULL default '',
   modified  datetime     default NULL,
-  PRIMARY KEY (name)
+  PRIMARY KEY (id)
 )
 | ],
 
     content => [ qq|
 CREATE TABLE content (
-  name      varchar(200) NOT NULL default '',
+  node_id   integer      NOT NULL,
   version   int(10)      NOT NULL default 0,
   text      mediumtext   NOT NULL default '',
   modified  datetime     default NULL,
   comment   mediumtext   NOT NULL default '',
-  PRIMARY KEY (name, version)
+  PRIMARY KEY (node_id, version)
 )
 | ],
     internal_links => [ qq|
@@ -38,13 +39,13 @@ CREATE TABLE internal_links (
 | ],
     metadata => [ qq|
 CREATE TABLE metadata (
-  node           varchar(200) NOT NULL DEFAULT '',
+  node_id        integer      NOT NULL,
   version        int(10)      NOT NULL default 0,
   metadata_type  varchar(200) NOT NULL DEFAULT '',
   metadata_value mediumtext   NOT NULL DEFAULT ''
 )
 |, qq|
-CREATE INDEX metadata_index ON metadata(node, version, metadata_type, metadata_value(10))
+CREATE INDEX metadata_index ON metadata(node_id, version, metadata_type, metadata_value(10))
 | ]
 );
 

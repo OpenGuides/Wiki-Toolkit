@@ -95,13 +95,13 @@ sub _get_list_by_metadata_sql {
     my ($self, %args) = @_;
     if ( $args{ignore_case} ) {
         return "SELECT node.name FROM node, metadata"
-             . " WHERE node.name=metadata.node"
+             . " WHERE node.id=metadata.node_id"
              . " AND node.version=metadata.version"
              . " AND metadata.metadata_type LIKE ? "
              . " AND metadata.metadata_value LIKE ? ";
     } else {
         return "SELECT node.name FROM node, metadata"
-             . " WHERE node.name=metadata.node"
+             . " WHERE node.id=metadata.node_id"
              . " AND node.version=metadata.version"
              . " AND metadata.metadata_type = ? "
              . " AND metadata.metadata_value = ? ";

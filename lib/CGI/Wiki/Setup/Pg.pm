@@ -10,26 +10,30 @@ use Carp;
 
 my %create_sql = (
     node => [ qq|
+CREATE SEQUENCE node_seq
+|, qq|
 CREATE TABLE node (
+  id        integer      NOT NULL DEFAULT NEXTVAL('node_seq'),
   name      varchar(200) NOT NULL DEFAULT '',
   version   integer      NOT NULL default 0,
   text      text         NOT NULL default '',
-  modified  timestamp without time zone    default NULL
+  modified  timestamp without time zone    default NULL,
+  CONSTRAINT pk_id PRIMARY KEY (id)
 )
 |, qq|
-CREATE UNIQUE INDEX node_pkey ON node (name)
+CREATE UNIQUE INDEX node_name ON node (name)
 | ],
 
     content => [ qq|
 CREATE TABLE content (
-  name      varchar(200) NOT NULL default '',
+  node_id   integer      NOT NULL,
   version   integer      NOT NULL default 0,
   text      text         NOT NULL default '',
   modified  timestamp without time zone    default NULL,
-  comment   text         NOT NULL default ''
+  comment   text         NOT NULL default '',
+  CONSTRAINT pk_node_id PRIMARY KEY (node_id,version),
+  CONSTRAINT fk_node_id FOREIGN KEY (node_id) REFERENCES node (id)
 )
-|, qq|
-CREATE UNIQUE INDEX content_pkey ON content (name, version)
 | ],
 
     internal_links => [ qq|
@@ -43,13 +47,14 @@ CREATE UNIQUE INDEX internal_links_pkey ON internal_links (link_from, link_to)
 
     metadata => [ qq|
 CREATE TABLE metadata (
-  node           varchar(200) NOT NULL DEFAULT '',
+  node_id        integer      NOT NULL,
   version        integer      NOT NULL default 0,
   metadata_type  varchar(200) NOT NULL DEFAULT '',
-  metadata_value text         NOT NULL DEFAULT ''
+  metadata_value text         NOT NULL DEFAULT '',
+  CONSTRAINT fk_node_id FOREIGN KEY (node_id) REFERENCES node (id)
 )
 |, qq|
-CREATE INDEX metadata_index ON metadata (node, version, metadata_type, metadata_value)
+CREATE INDEX metadata_index ON metadata (node_id, version, metadata_type, metadata_value)
 | ]
 
 );
@@ -115,7 +120,7 @@ sub setup {
         $tables{$table} = 1;
     }
 
-    foreach my $required ( keys %create_sql ) {
+    foreach my $required ( reverse sort keys %create_sql ) {
         if ( $tables{$required} ) {
             print "Table $required already exists... skipping...\n";
         } else {
@@ -170,8 +175,15 @@ sub cleardb {
                WHERE tablename in ("
             . join( ",", map { $dbh->quote($_) } keys %create_sql ) . ")";
     foreach my $tableref (@{$dbh->selectall_arrayref($sql)}) {
-        $dbh->do("DROP TABLE $tableref->[0]") or croak $dbh->errstr;
+        $dbh->do("DROP TABLE $tableref->[0] CASCADE") or croak $dbh->errstr;
     }
+
+    $sql = "SELECT relname FROM pg_statio_all_sequences
+               WHERE relname = 'node_seq'";
+    foreach my $seqref (@{$dbh->selectall_arrayref($sql)}) {
+        $dbh->do("DROP SEQUENCE $seqref->[0]") or croak $dbh->errstr;
+    }
+
     print "done\n";
 
     # Clean up if we made our own dbh.

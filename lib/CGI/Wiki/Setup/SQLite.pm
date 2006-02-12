@@ -11,21 +11,21 @@ use Carp;
 my %create_sql = (
     node => "
 CREATE TABLE node (
+  id        integer      NOT NULL PRIMARY KEY AUTOINCREMENT,
   name      varchar(200) NOT NULL DEFAULT '',
   version   integer      NOT NULL default 0,
   text      mediumtext   NOT NULL default '',
-  modified  datetime     default NULL,
-  PRIMARY KEY (name)
+  modified  datetime     default NULL
 )
 ",
     content => "
 CREATE TABLE content (
-  name      varchar(200) NOT NULL default '',
+  node_id   integer      NOT NULL,
   version   integer      NOT NULL default 0,
   text      mediumtext   NOT NULL default '',
   modified  datetime     default NULL,
   comment   mediumtext   NOT NULL default '',
-  PRIMARY KEY (name, version)
+  PRIMARY KEY (node_id, version)
 )
 ",
     internal_links => "
@@ -37,7 +37,7 @@ CREATE TABLE internal_links (
 ",
     metadata => "
 CREATE TABLE metadata (
-  node           varchar(200) NOT NULL DEFAULT '',
+  node_id        integer      NOT NULL,
   version        integer      NOT NULL default 0,
   metadata_type  varchar(200) NOT NULL DEFAULT '',
   metadata_value mediumtext   NOT NULL DEFAULT ''

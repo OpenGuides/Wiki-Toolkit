@@ -31,6 +31,8 @@ for CGI::Wiki
 
 =head1 SYNOPSIS
 
+Can't see yet why you'd want to use the backends directly, but:
+
   # See below for parameter details.
   my $store = CGI::Wiki::Store::MySQL->new( %config );
 
@@ -179,9 +181,12 @@ sub _retrieve_node_data {
     # will already have been set by C<_retrieve_node_content>, if it wasn't
     # specified in the call.
     my $dbh = $self->dbh;
-    my $sql = "SELECT metadata_type, metadata_value FROM metadata WHERE "
-         . "node=" . $dbh->quote($self->charset_encode($args{name})) . " AND "
-         . "version=" . $dbh->quote($self->charset_encode($data{version}));
+    my $sql = "SELECT metadata_type, metadata_value "
+         . "FROM node "
+         . "INNER JOIN metadata ON (node_id = id) "
+         . "WHERE "
+         . "name=" . $dbh->quote($self->charset_encode($args{name})) . " AND "
+         . "metadata.version=" . $dbh->quote($self->charset_encode($data{version}));
     my $sth = $dbh->prepare($sql);
     $sth->execute or croak $dbh->errstr;
     my %metadata;
@@ -206,9 +211,11 @@ sub _retrieve_node_content {
     my $dbh = $self->dbh;
     my $sql;
     if ( $args{version} ) {
-        $sql = "SELECT text, version, modified FROM content"
-             . " WHERE  name=" . $dbh->quote($self->charset_encode($args{name}))
-             . " AND version=" . $dbh->quote($self->charset_encode($args{version}));
+        $sql = "SELECT content.text, content.version, content.modified "
+             . "FROM node "
+             . "INNER JOIN content ON (id = node_id) "
+             . "WHERE name=" . $dbh->quote($self->charset_encode($args{name}))
+             . " AND content.version=" . $dbh->quote($self->charset_encode($args{version}));
     } else {
         $sql = "SELECT text, version, modified FROM node
                 WHERE name=" . $dbh->quote($self->charset_encode($args{name}));
@@ -426,7 +433,8 @@ sub write_node_post_locking {
     my $sql = "SELECT count(*) FROM node WHERE name=" . $dbh->quote($node);
     my $exists = @{ $dbh->selectcol_arrayref($sql) }[0] || 0;
     if ($exists) {
-        $sql = "SELECT max(version) FROM content
+        $sql = "SELECT max(content.version) FROM node
+                INNER JOIN content ON (id = node_id)
                 WHERE name=" . $dbh->quote($node);
         $version = @{ $dbh->selectcol_arrayref($sql) }[0] || 0;
         croak "Can't get version number" unless $version;
@@ -447,11 +455,15 @@ sub write_node_post_locking {
 	$dbh->do($sql) or croak "Error updating database: " . DBI->errstr;
     }
 
+    # Get the ID of the node we've just added / updated
+    $sql = "SELECT id FROM node WHERE name=" . $dbh->quote($node);
+    my $node_id = @{ $dbh->selectcol_arrayref($sql) }[0];
+
     # In either case we need to add to the history.
-    $sql = "INSERT INTO content (name, version, text, modified)
+    $sql = "INSERT INTO content (node_id, version, text, modified)
             VALUES ("
          . join(", ", map { $dbh->quote($self->charset_encode($_)) }
-		          ($node, $version, $content, $timestamp)
+		          ($node_id, $version, $content, $timestamp)
                )
          . ")";
     $dbh->do($sql) or croak "Error updating database: " . DBI->errstr;
@@ -493,9 +505,9 @@ sub write_node_post_locking {
 
             foreach my $value ( @values ) {
                 my $sql = "INSERT INTO metadata "
-                    . "(node, version, metadata_type, metadata_value) VALUES ("
+                    . "(node_id, version, metadata_type, metadata_value) VALUES ("
                     . join(", ", map { $dbh->quote($self->charset_encode($_)) }
-                                 ( $node, $version, $type, $value )
+                                 ( $node_id, $version, $type, $value )
                           )
                     . ")";
 	        $dbh->do($sql) or croak $dbh->errstr;
@@ -505,9 +517,9 @@ sub write_node_post_locking {
             my $type_to_store  = "__" . $type . "__checksum";
             my $value_to_store = $self->_checksum_hashes( @values );
             my $sql = "INSERT INTO metadata "
-                    . "(node, version, metadata_type, metadata_value) VALUES ("
+                    . "(node_id, version, metadata_type, metadata_value) VALUES ("
                     . join(", ", map { $dbh->quote($self->charset_encode($_)) }
-                           ( $node, $version, $type_to_store, $value_to_store )
+                           ( $node_id, $version, $type_to_store, $value_to_store )
                           )
                     . ")";
 	    $dbh->do($sql) or croak $dbh->errstr;
@@ -519,6 +531,7 @@ sub write_node_post_locking {
     foreach my $plugin (@plugins) {
         if ( $plugin->can( "post_write" ) ) {
             $plugin->post_write( node     => $node,
+                 node_id  => $node_id,
 				 version  => $version,
 				 content  => $content,
 				 metadata => $metadata_ref );
@@ -570,18 +583,28 @@ sub delete_node {
     my $dbh = $self->dbh;
     my ($name, $version, $wiki) = @args{ qw( name version wiki ) };
 
+    # Grab IDs
+    my $id_sql = "SELECT id FROM node WHERE name=?";
+    my $id_sth = $dbh->prepare($id_sql);
+    $id_sth->execute($name);
+    my @idlist;
+    while(my ($id) = $id_sth->fetchrow_array) { push @idlist,$id; }
+    my $ids = join(',', @idlist);
+
     # Trivial case - delete the whole node and all its history.
     unless ( $version ) {
         my $name = $dbh->quote($name);
+        my $sql;
         # Should start a transaction here.  FIXME.
-        my $sql = "DELETE FROM node WHERE name=$name";
-        $dbh->do($sql) or croak "Deletion failed: " . DBI->errstr;
-        $sql = "DELETE FROM content WHERE name=$name";
+        # Do deletes
+        $sql = "DELETE FROM content WHERE node_id IN (-1,$ids)";
         $dbh->do($sql) or croak "Deletion failed: " . DBI->errstr;
         $sql = "DELETE FROM internal_links WHERE link_from=$name";
         $dbh->do($sql) or croak $dbh->errstr;
-        $sql = "DELETE FROM metadata WHERE node=$name";
+        $sql = "DELETE FROM metadata WHERE node_id IN (-1,$ids)";
         $dbh->do($sql) or croak $dbh->errstr;
+        $sql = "DELETE FROM node WHERE name=$name";
+        $dbh->do($sql) or croak "Deletion failed: " . DBI->errstr;
         # And finish it here.
         return 1;
     }
@@ -591,9 +614,9 @@ sub delete_node {
     return 1 unless $verdata{version};
 
     # Reduce to trivial case if deleting the only version.
-    my $sql = "SELECT COUNT(*) FROM content WHERE name=?";
+    my $sql = "SELECT COUNT(*) FROM content WHERE node_id IN ($ids)";
     my $sth = $dbh->prepare( $sql );
-    $sth->execute( $name ) or croak "Deletion failed: " . $dbh->errstr;
+    $sth->execute() or croak "Deletion failed: " . $dbh->errstr;
     my ($count) = $sth->fetchrow_array;
     return $self->delete_node( $name ) if $count == 1;
 
@@ -611,13 +634,23 @@ sub delete_node {
                                             );
             $try--;
 	}
+        # Grab IDs for this version
+        my $idv_sql = "SELECT id FROM node WHERE name=? and version = ?";
+        my $id_sth = $dbh->prepare($idv_sql);
+        $id_sth->execute($name,$version);
+        my @idlist;
+        while(my ($id) = ($id_sth->fetchrow_array)) { push @idlist,$id; }
+        my $idvs = join(',', @idlist);
+
+        # Move to new version
         my $sql="UPDATE node SET version=?, text=?, modified=? WHERE name=?";
         my $sth = $dbh->prepare( $sql );
         $sth->execute( @prevdata{ qw( version content last_modified ) }, $name)
           or croak "Deletion failed: " . $dbh->errstr;
-        $sql = "DELETE FROM content WHERE name=? AND version=?";
+
+        $sql = "DELETE FROM content WHERE node_id IN (-1,$idvs)";
         $sth = $dbh->prepare( $sql );
-        $sth->execute( $name, $version )
+        $sth->execute()
           or croak "Deletion failed: " . $dbh->errstr;
         $sql = "DELETE FROM internal_links WHERE link_from=?";
         $sth = $dbh->prepare( $sql );
@@ -639,22 +672,26 @@ sub delete_node {
             eval { $sth->execute( $name, $link ); };
             carp "Couldn't index backlink: " . $dbh->errstr if $@;
         }
-        $sql = "DELETE FROM metadata WHERE node=? and version=?";
+        $sql = "DELETE FROM metadata WHERE node_id IN ($idvs)";
         $sth = $dbh->prepare( $sql );
-        $sth->execute( $name, $version )
+        $sth->execute()
           or croak "Deletion failed: " . $dbh->errstr;
         return 1;
     }
 
     # If we're still here, then we're deleting neither the latest
     # nor the only version.
-    $sql = "DELETE FROM content WHERE name=? AND version=?";
+    $sql = "DELETE FROM content 
+            WHERE node_id IN ($ids)
+            AND version=?";
     $sth = $dbh->prepare( $sql );
-    $sth->execute( $name, $version )
+    $sth->execute( $version )
       or croak "Deletion failed: " . $dbh->errstr;
-    $sql = "DELETE FROM metadata WHERE node=? and version=?";
+    $sql = "DELETE FROM metadata 
+            WHERE node_id IN ($ids)
+            AND version=?";
     $sth = $dbh->prepare( $sql );
-    $sth->execute( $name, $version )
+    $sth->execute( $version )
       or croak "Deletion failed: " . $dbh->errstr;
 
     return 1;
@@ -794,7 +831,9 @@ sub _find_recent_changes_by_criteria {
                 croak "metadata_is must have scalar values" if ref $value;
                 my $mdt = "md_is_$i";
                 push @metadata_joins, "LEFT JOIN metadata AS $mdt
-                                 ON $main_table.name=$mdt.node
+                                 ON $main_table."
+                                 . (($main_table eq "node") ? "id" : "node_id")
+                                 . "=$mdt.node_id
                                  AND $main_table.version=$mdt.version\n";
                 push @where, "( "
                          . $self->_get_comparison_sql(
@@ -838,7 +877,7 @@ sub _find_recent_changes_by_criteria {
                 croak "metadata_was must have scalar values" if ref $value;
                 my $mdt = "md_was_$i";
                 push @metadata_joins, "LEFT JOIN metadata AS $mdt
-                                 ON $main_table.name=$mdt.node
+                                 ON $main_table.node_id=$mdt.node_id
                                  AND $main_table.version=$mdt.version\n";
                 push @where, "( "
                          . $self->_get_comparison_sql(
@@ -868,7 +907,7 @@ sub _find_recent_changes_by_criteria {
                 ignore_case  => $ignore_case,
             );
             foreach my $omit ( @omits ) {
-                push @where, "( content.name != " . $dbh->quote($omit->{name})
+                push @where, "( node.name != " . $dbh->quote($omit->{name})
                  . "  OR content.version != " . $dbh->quote($omit->{version})
                  . ")";
 	    }
@@ -890,11 +929,16 @@ sub _find_recent_changes_by_criteria {
     }
 
     my $sql = "SELECT DISTINCT
-                               $main_table.name,
+                               node.name,
                                $main_table.version,
                                $main_table.modified
                FROM $main_table
               "
+              . (
+                  ($main_table ne "node") 
+                    ? "INNER JOIN node ON (id = $main_table.node_id) "
+                    : ""
+              )
             . join("\n", @metadata_joins)
             . (
                 scalar @where
@@ -915,7 +959,11 @@ sub _find_recent_changes_by_criteria {
     foreach my $find ( @finds ) {
         my %metadata;
         my $sth = $dbh->prepare( "SELECT metadata_type, metadata_value
-                                  FROM metadata WHERE node=? AND version=?" );
+                                  FROM node
+                                  INNER JOIN metadata 
+                                        ON (id = node_id)
+                                  WHERE name=?
+                                  AND metadata.version=?" );
         $sth->execute( $find->{name}, $find->{version} );
         while ( my ($type, $value) = $self->charset_decode( $sth->fetchrow_array ) ) {
 	    if ( defined $metadata{$type} ) {
