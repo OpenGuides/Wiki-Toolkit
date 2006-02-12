@@ -64,6 +64,9 @@ while ( my $wiki = $iterator->new_wiki ) {
     is_deeply( [ sort @nodes ], [ "The Old Trout" ],
        "removing metadata from a node stops it showing up in list_nodes_by_metadata" );
 
+    my $dbh = eval { $wiki->store->dbh; };
+    my $id_sql = "SELECT id FROM node WHERE name='Reun Thai'";
+    my $id = @{ $dbh->selectcol_arrayref($id_sql) }[0];
     $wiki->delete_node("Reun Thai");
     @nodes = $wiki->list_nodes_by_metadata( metadata_type  => "category",
                                 metadata_value => "Hammersmith" );
@@ -71,12 +74,11 @@ while ( my $wiki = $iterator->new_wiki ) {
                "...as does deleting a node" );
 
     # Check that deleting a node really does clear out the metadata.
-    my $dbh = eval { $wiki->store->dbh; };
     SKIP: {
         skip "Test only works on database backends", 1 unless $dbh;
         # White box testing.
         my $sql = "SELECT metadata_type, metadata_value FROM metadata
-                   WHERE node='Reun Thai'";
+                   WHERE node_id = $id";
         my $sth = $dbh->prepare($sql);
         $sth->execute;
         my ( $type, $value ) = $sth->fetchrow_array;
