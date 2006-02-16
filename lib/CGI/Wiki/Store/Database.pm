@@ -583,13 +583,13 @@ sub delete_node {
     my $dbh = $self->dbh;
     my ($name, $version, $wiki) = @args{ qw( name version wiki ) };
 
-    # Grab IDs
+    # Grab the ID of this node
+    # (It will only ever have one entry in node, but might have entries
+    #  for other versions in metadata and content)
     my $id_sql = "SELECT id FROM node WHERE name=?";
     my $id_sth = $dbh->prepare($id_sql);
     $id_sth->execute($name);
-    my @idlist;
-    while(my ($id) = $id_sth->fetchrow_array) { push @idlist,$id; }
-    my $ids = join(',', @idlist);
+	my ($node_id) = $id_sth->fetchrow_array;
 
     # Trivial case - delete the whole node and all its history.
     unless ( $version ) {
@@ -597,13 +597,13 @@ sub delete_node {
         my $sql;
         # Should start a transaction here.  FIXME.
         # Do deletes
-        $sql = "DELETE FROM content WHERE node_id IN (-1,$ids)";
+        $sql = "DELETE FROM content WHERE node_id = $node_id";
         $dbh->do($sql) or croak "Deletion failed: " . DBI->errstr;
         $sql = "DELETE FROM internal_links WHERE link_from=$name";
         $dbh->do($sql) or croak $dbh->errstr;
-        $sql = "DELETE FROM metadata WHERE node_id IN (-1,$ids)";
+        $sql = "DELETE FROM metadata WHERE node_id = $node_id";
         $dbh->do($sql) or croak $dbh->errstr;
-        $sql = "DELETE FROM node WHERE name=$name";
+        $sql = "DELETE FROM node WHERE id = $node_id";
         $dbh->do($sql) or croak "Deletion failed: " . DBI->errstr;
         # And finish it here.
         return 1;
@@ -614,17 +614,21 @@ sub delete_node {
     return 1 unless $verdata{version};
 
     # Reduce to trivial case if deleting the only version.
-    my $sql = "SELECT COUNT(*) FROM content WHERE node_id IN ($ids)";
+    my $sql = "SELECT COUNT(*) FROM content WHERE node_id = $node_id";
     my $sth = $dbh->prepare( $sql );
     $sth->execute() or croak "Deletion failed: " . $dbh->errstr;
     my ($count) = $sth->fetchrow_array;
-    return $self->delete_node( $name ) if $count == 1;
+	if($count == 1) {
+		# Only one version, so can do the non version delete
+	    return $self->delete_node( $name );
+	}
 
     # Check whether we're deleting the latest version.
     my %currdata = $self->retrieve_node( name => $name );
     if ( $currdata{version} == $version ) {
-        # Can't just grab version ($version - 1) since it may have been
-        # deleted itself.
+		# Deleting latest version, so need to update the copy in node
+        # (Can't just grab version ($version - 1) since it may have been
+        #  deleted itself.)
         my $try = $version - 1;
         my %prevdata;
         until ( $prevdata{version} ) {
@@ -636,15 +640,22 @@ sub delete_node {
         }
 
         # Move to new (old) version
-        my $sql="UPDATE node SET version=?, text=?, modified=? WHERE name=?";
+        my $sql="UPDATE node 
+                 SET version=?, text=?, modified=? 
+                 WHERE name=?";
         my $sth = $dbh->prepare( $sql );
         $sth->execute( @prevdata{ qw( version content last_modified ) }, $name)
           or croak "Deletion failed: " . $dbh->errstr;
 
-        $sql = "DELETE FROM content WHERE node_id IN (-1,$ids) AND version = $version";
+		# Remove the current version from content
+        $sql = "DELETE FROM content 
+                WHERE node_id = $node_id 
+                AND version = $version";
         $sth = $dbh->prepare( $sql );
         $sth->execute()
           or croak "Deletion failed: " . $dbh->errstr;
+
+		# Update the internal links to reflect the new version
         $sql = "DELETE FROM internal_links WHERE link_from=?";
         $sth = $dbh->prepare( $sql );
         $sth->execute( $name )
@@ -667,7 +678,9 @@ sub delete_node {
         }
 
 		# Delete the metadata for the old version
-        $sql = "DELETE FROM metadata WHERE node_id IN ($ids) AND version = $version";
+        $sql = "DELETE FROM metadata 
+                WHERE node_id = $node_id 
+                AND version = $version";
         $sth = $dbh->prepare( $sql );
         $sth->execute()
           or croak "Deletion failed: " . $dbh->errstr;
@@ -677,13 +690,13 @@ sub delete_node {
     # If we're still here, then we're deleting neither the latest
     # nor the only version.
     $sql = "DELETE FROM content 
-            WHERE node_id IN ($ids)
+            WHERE node_id = $node_id
             AND version=?";
     $sth = $dbh->prepare( $sql );
     $sth->execute( $version )
       or croak "Deletion failed: " . $dbh->errstr;
     $sql = "DELETE FROM metadata 
-            WHERE node_id IN ($ids)
+            WHERE node_id = $node_id
             AND version=?";
     $sth = $dbh->prepare( $sql );
     $sth->execute( $version )
