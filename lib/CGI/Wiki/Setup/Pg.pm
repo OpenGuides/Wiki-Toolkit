@@ -9,6 +9,14 @@ use DBI;
 use Carp;
 
 my %create_sql = (
+	schema_info => [ qq|
+CREATE TABLE schema_info (
+  version   integer      NOT NULL default 0
+)
+|, qq|
+INSERT INTO schema_info VALUES (|.($VERSION*100).qq|)
+| ],
+
     node => [ qq|
 CREATE SEQUENCE node_seq
 |, qq|
@@ -57,6 +65,55 @@ CREATE TABLE metadata (
 CREATE INDEX metadata_index ON metadata (node_id, version, metadata_type, metadata_value)
 | ]
 
+);
+
+my %upgrades = (
+	old_to_8 => [ qq|
+CREATE SEQUENCE node_seq
+|, qq|
+ALTER TABLE node ADD COLUMN id INTEGER
+|, qq|
+UPDATE node SET id = NEXTVAL('node_seq')
+|, qq|
+ALTER TABLE node ALTER COLUMN id SET NOT NULL
+|, qq|
+ALTER TABLE node ALTER COLUMN id SET DEFAULT NEXTVAL('node_seq')
+|, qq|
+DROP INDEX node_pkey
+|, qq|
+ALTER TABLE node ADD CONSTRAINT pk_id PRIMARY KEY (id)
+|, qq|
+CREATE UNIQUE INDEX node_name ON node (name)
+|, 
+
+qq|
+ALTER TABLE content ADD COLUMN node_id INTEGER
+|, qq|
+UPDATE content SET node_id = (SELECT id FROM node where node.name = content.name)
+|, qq|
+ALTER TABLE content ALTER COLUMN node_id SET NOT NULL
+|, qq|
+ALTER TABLE content DROP COLUMN name
+|, qq|
+ALTER TABLE content ADD CONSTRAINT pk_node_id PRIMARY KEY (node_id,version)
+|, qq|
+ALTER TABLE content ADD CONSTRAINT fk_node_id FOREIGN KEY (node_id) REFERENCES node (id)
+|, 
+
+qq|
+ALTER TABLE metadata ADD COLUMN node_id INTEGER
+|, qq|
+UPDATE metadata SET node_id = (SELECT id FROM node where node.name = metadata.node)
+|, qq|
+ALTER TABLE metadata ALTER COLUMN node_id SET NOT NULL
+|, qq|
+ALTER TABLE metadata DROP COLUMN node
+|, qq|
+ALTER TABLE metadata ADD CONSTRAINT fk_node_id FOREIGN KEY (node_id) REFERENCES node (id)
+|, qq|
+CREATE INDEX metadata_index ON metadata (node_id, version, metadata_type, metadata_value)
+|
+]
 );
 
 =head1 NAME
@@ -109,11 +166,26 @@ sub setup {
     my $dbh = _get_dbh( @args );
     my $disconnect_required = _disconnect_required( @args );
 
+	# Do we need to upgrade the schema of existing tables?
+	my @upgrade_schema = ();
+	my $sql = "SELECT version FROM schema_info";
+    my $sth = $dbh->prepare($sql);
+	eval{ $sth->execute };
+	if($@) {
+		@upgrade_schema = ("old", ($VERSION*100));;
+	}
+	unless(@upgrade_schema) {
+		my ($cur_schema) = $sth->fetchrow_array;
+		if($cur_schema != ($VERSION*100)) {
+			@upgrade_schema = ($cur_schema,($VERSION*100));
+		}
+	}
+
     # Check whether tables exist, set them up if not.
-    my $sql = "SELECT tablename FROM pg_tables
+    $sql = "SELECT tablename FROM pg_tables
                WHERE tablename in ("
             . join( ",", map { $dbh->quote($_) } keys %create_sql ) . ")";
-    my $sth = $dbh->prepare($sql) or croak $dbh->errstr;
+    $sth = $dbh->prepare($sql) or croak $dbh->errstr;
     $sth->execute;
     my %tables;
     while ( my $table = $sth->fetchrow_array ) {
@@ -130,6 +202,19 @@ sub setup {
             }
         }
     }
+
+	# Do the upgrade if required
+	if(@upgrade_schema) {
+		print "Upgrading schema from $upgrade_schema[0] to $upgrade_schema[1]\n";
+		my @updates = @{$upgrades{$upgrade_schema[0]."_to_".$upgrade_schema[1]}};
+		foreach my $update (@updates) {
+			if(ref($update) eq "CODE") {
+				&$update($dbh);
+			} else {
+				$dbh->do($update);
+			}
+		}
+	}
 
     # Clean up if we made our own dbh.
     $dbh->disconnect if $disconnect_required;

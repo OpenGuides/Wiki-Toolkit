@@ -1,3 +1,10 @@
+0.70    ?? February 2006
+        Update to database schema: added an ID column to node, and changed
+          the content + metadata tables to FK to the ID field, rather than
+          the node name. Also added rails like schema_info table, to hold
+          the current database schema version number
+        You will need to run cgi-wiki-setupdb to upgrade your database
+
 0.62    26 November 2004
         Fixed delete_node bug - now it's OK to delete eg version 2 and
           then version 3 of a node (ie you no longer have to delete

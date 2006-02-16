@@ -12,6 +12,10 @@ SEE ALSO
 
 SIGNIFICANT RECENT CHANGES
 
+0.70    ?? February 2006
+        Change to the database schema. You need to run cgi-wiki-setupdb to
+          upgrade your database to the new version
+
 0.49    23 September 2003
         Added "ignore_case" option to ->list_nodes_by_metadata
 

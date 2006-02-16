@@ -3,12 +3,20 @@ package CGI::Wiki::Setup::MySQL;
 use strict;
 
 use vars qw( $VERSION );
-$VERSION = '0.07';
+$VERSION = '0.08';
 
 use DBI;
 use Carp;
 
 my %create_sql = (
+	schema_info => [ qq|
+CREATE TABLE schema_info (
+  version   int(10)      NOT NULL default 0
+)
+|, qq|
+INSERT INTO schema_info VALUES (|.($VERSION*100).qq|)
+| ],
+
     node => [ qq|
 CREATE TABLE node (
   id        integer      NOT NULL AUTO_INCREMENT,

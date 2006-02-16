@@ -3,12 +3,19 @@ package CGI::Wiki::Setup::SQLite;
 use strict;
 
 use vars qw( $VERSION );
-$VERSION = '0.06';
+$VERSION = '0.08';
 
 use DBI;
 use Carp;
 
 my %create_sql = (
+	schema_info => "
+CREATE TABLE schema_info (
+  version   integer      NOT NULL default 0
+);
+INSERT INTO schema_info VALUES (". ($VERSION*100) .")
+",
+
     node => "
 CREATE TABLE node (
   id        integer      NOT NULL PRIMARY KEY AUTOINCREMENT,
@@ -87,6 +94,8 @@ sub setup {
     my @args = @_;
     my $dbh = _get_dbh( @args );
     my $disconnect_required = _disconnect_required( @args );
+
+	# Do we need to upgrade the schema?
 
     # Check whether tables exist, set them up if not.
     my $sql = "SELECT name FROM sqlite_master
