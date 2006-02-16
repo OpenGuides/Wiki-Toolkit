@@ -633,22 +633,15 @@ sub delete_node {
                                               version => $try,
                                             );
             $try--;
-	}
-        # Grab IDs for this version
-        my $idv_sql = "SELECT id FROM node WHERE name=? and version = ?";
-        my $id_sth = $dbh->prepare($idv_sql);
-        $id_sth->execute($name,$version);
-        my @idlist;
-        while(my ($id) = ($id_sth->fetchrow_array)) { push @idlist,$id; }
-        my $idvs = join(',', @idlist);
+        }
 
-        # Move to new version
+        # Move to new (old) version
         my $sql="UPDATE node SET version=?, text=?, modified=? WHERE name=?";
         my $sth = $dbh->prepare( $sql );
         $sth->execute( @prevdata{ qw( version content last_modified ) }, $name)
           or croak "Deletion failed: " . $dbh->errstr;
 
-        $sql = "DELETE FROM content WHERE node_id IN (-1,$idvs)";
+        $sql = "DELETE FROM content WHERE node_id IN (-1,$ids) AND version = $version";
         $sth = $dbh->prepare( $sql );
         $sth->execute()
           or croak "Deletion failed: " . $dbh->errstr;
@@ -672,7 +665,9 @@ sub delete_node {
             eval { $sth->execute( $name, $link ); };
             carp "Couldn't index backlink: " . $dbh->errstr if $@;
         }
-        $sql = "DELETE FROM metadata WHERE node_id IN ($idvs)";
+
+		# Delete the metadata for the old version
+        $sql = "DELETE FROM metadata WHERE node_id IN ($ids) AND version = $version";
         $sth = $dbh->prepare( $sql );
         $sth->execute()
           or croak "Deletion failed: " . $dbh->errstr;
