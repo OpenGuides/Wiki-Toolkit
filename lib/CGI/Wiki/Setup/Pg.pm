@@ -69,48 +69,37 @@ CREATE INDEX metadata_index ON metadata (node_id, version, metadata_type, metada
 
 my %upgrades = (
 	old_to_8 => [ qq|
-CREATE SEQUENCE node_seq
+CREATE SEQUENCE node_seq;
+ALTER TABLE node ADD COLUMN id INTEGER;
+UPDATE node SET id = NEXTVAL('node_seq');
 |, qq|
-ALTER TABLE node ADD COLUMN id INTEGER
+ALTER TABLE node ALTER COLUMN id SET NOT NULL;
+ALTER TABLE node ALTER COLUMN id SET DEFAULT NEXTVAL('node_seq');
 |, qq|
-UPDATE node SET id = NEXTVAL('node_seq')
-|, qq|
-ALTER TABLE node ALTER COLUMN id SET NOT NULL
-|, qq|
-ALTER TABLE node ALTER COLUMN id SET DEFAULT NEXTVAL('node_seq')
-|, qq|
-DROP INDEX node_pkey
-|, qq|
-ALTER TABLE node ADD CONSTRAINT pk_id PRIMARY KEY (id)
-|, qq|
+DROP INDEX node_pkey;
+ALTER TABLE node ADD CONSTRAINT pk_id PRIMARY KEY (id);
 CREATE UNIQUE INDEX node_name ON node (name)
 |, 
 
 qq|
-ALTER TABLE content ADD COLUMN node_id INTEGER
+ALTER TABLE content ADD COLUMN node_id INTEGER;
+UPDATE content SET node_id = 
+	(SELECT id FROM node where node.name = content.name)
 |, qq|
-UPDATE content SET node_id = (SELECT id FROM node where node.name = content.name)
-|, qq|
-ALTER TABLE content ALTER COLUMN node_id SET NOT NULL
-|, qq|
-ALTER TABLE content DROP COLUMN name
-|, qq|
-ALTER TABLE content ADD CONSTRAINT pk_node_id PRIMARY KEY (node_id,version)
-|, qq|
+ALTER TABLE content ALTER COLUMN node_id SET NOT NULL;
+ALTER TABLE content DROP COLUMN name;
+ALTER TABLE content ADD CONSTRAINT pk_node_id PRIMARY KEY (node_id,version);
 ALTER TABLE content ADD CONSTRAINT fk_node_id FOREIGN KEY (node_id) REFERENCES node (id)
 |, 
 
 qq|
-ALTER TABLE metadata ADD COLUMN node_id INTEGER
+ALTER TABLE metadata ADD COLUMN node_id INTEGER;
+UPDATE metadata SET node_id = 
+	(SELECT id FROM node where node.name = metadata.node)
 |, qq|
-UPDATE metadata SET node_id = (SELECT id FROM node where node.name = metadata.node)
-|, qq|
-ALTER TABLE metadata ALTER COLUMN node_id SET NOT NULL
-|, qq|
-ALTER TABLE metadata DROP COLUMN node
-|, qq|
-ALTER TABLE metadata ADD CONSTRAINT fk_node_id FOREIGN KEY (node_id) REFERENCES node (id)
-|, qq|
+ALTER TABLE metadata ALTER COLUMN node_id SET NOT NULL;
+ALTER TABLE metadata DROP COLUMN node;
+ALTER TABLE metadata ADD CONSTRAINT fk_node_id FOREIGN KEY (node_id) REFERENCES node (id);
 CREATE INDEX metadata_index ON metadata (node_id, version, metadata_type, metadata_value)
 |
 ]
