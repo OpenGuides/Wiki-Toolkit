@@ -7,7 +7,7 @@ use vars qw( @ISA $VERSION );
 use CGI::Wiki::Setup::Database;
 
 @ISA = qw( CGI::Wiki::Setup::Database );
-$VERSION = '0.08';
+$VERSION = '0.09';
 
 use DBI;
 use Carp;
@@ -28,6 +28,7 @@ CREATE TABLE node (
   version   int(10)      NOT NULL default 0,
   text      mediumtext   NOT NULL default '',
   modified  datetime     default NULL,
+  moderate  bool         NOT NULL default '0',
   PRIMARY KEY (id)
 )
 | ],
@@ -39,6 +40,7 @@ CREATE TABLE content (
   text      mediumtext   NOT NULL default '',
   modified  datetime     default NULL,
   comment   mediumtext   NOT NULL default '',
+  moderated bool         NOT NULL default '1',
   PRIMARY KEY (node_id, version)
 )
 | ],

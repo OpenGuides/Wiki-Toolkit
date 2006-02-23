@@ -2,8 +2,12 @@ package CGI::Wiki::Setup::Pg;
 
 use strict;
 
-use vars qw( $VERSION );
-$VERSION = '0.08';
+use vars qw( @ISA $VERSION );
+
+use CGI::Wiki::Setup::Database;
+
+@ISA = qw( CGI::Wiki::Setup::Database );
+$VERSION = '0.09';
 
 use DBI;
 use Carp;
@@ -26,6 +30,7 @@ CREATE TABLE node (
   version   integer      NOT NULL default 0,
   text      text         NOT NULL default '',
   modified  timestamp without time zone    default NULL,
+  moderate  boolean      NOT NULL default '0',
   CONSTRAINT pk_id PRIMARY KEY (id)
 )
 |, qq|
@@ -39,6 +44,7 @@ CREATE TABLE content (
   text      text         NOT NULL default '',
   modified  timestamp without time zone    default NULL,
   comment   text         NOT NULL default '',
+  moderated boolean      NOT NULL default '1',
   CONSTRAINT pk_node_id PRIMARY KEY (node_id,version),
   CONSTRAINT fk_node_id FOREIGN KEY (node_id) REFERENCES node (id)
 )
@@ -102,8 +108,25 @@ ALTER TABLE metadata DROP COLUMN node;
 ALTER TABLE metadata ADD CONSTRAINT fk_node_id FOREIGN KEY (node_id) REFERENCES node (id);
 CREATE INDEX metadata_index ON metadata (node_id, version, metadata_type, metadata_value)
 |
-]
+],
+
+'8_to_9' => [ qq|
+ALTER TABLE node ADD COLUMN moderate boolean;
+UPDATE node SET moderate = '0';
+ALTER TABLE node ALTER COLUMN moderate SET DEFAULT '0';
+ALTER TABLE node ALTER COLUMN moderate SET NOT NULL;
+|, qq|
+ALTER TABLE content ADD COLUMN moderated boolean;
+UPDATE content SET moderated = '1';
+ALTER TABLE content ALTER COLUMN moderated SET DEFAULT '1';
+ALTER TABLE content ALTER COLUMN moderated SET NOT NULL;
+|
+],
+
 );
+
+my @old_to_9 = ($upgrades{'old_to_8'},$upgrades{'8_to_9'});
+$upgrades{'old_to_9'} = \@old_to_9;
 
 =head1 NAME
 
@@ -156,13 +179,13 @@ sub setup {
     my $disconnect_required = _disconnect_required( @args );
 
 	# Do we need to upgrade the schema of existing tables?
-	my $upgrade_schema = get_database_upgrade_required($dbh,$VERSION);
+	my $upgrade_schema = CGI::Wiki::Setup::Database::get_database_upgrade_required($dbh,$VERSION);
 
     # Check whether tables exist, set them up if not.
-    $sql = "SELECT tablename FROM pg_tables
+    my $sql = "SELECT tablename FROM pg_tables
                WHERE tablename in ("
             . join( ",", map { $dbh->quote($_) } keys %create_sql ) . ")";
-    $sth = $dbh->prepare($sql) or croak $dbh->errstr;
+    my $sth = $dbh->prepare($sql) or croak $dbh->errstr;
     $sth->execute;
     my %tables;
     while ( my $table = $sth->fetchrow_array ) {
