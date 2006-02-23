@@ -115,8 +115,12 @@ sub setup {
 	my $upgrade_schema = CGI::Wiki::Setup::Database::get_database_upgrade_required($dbh,$VERSION);
 	my @cur_data;
 	if($upgrade_schema) {
+		# Grab current data
 		print "Upgrading: $upgrade_schema\n";
 		@cur_data = eval("&CGI::Wiki::Setup::Database::fetch_upgrade_".$upgrade_schema."(\$dbh)");
+
+		# Drop the current tables
+		cleardb($dbh);
 	}
 
     # Check whether tables exist, set them up if not.

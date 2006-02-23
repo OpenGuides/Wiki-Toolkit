@@ -2,7 +2,11 @@ package CGI::Wiki::Setup::SQLite;
 
 use strict;
 
-use vars qw( $VERSION );
+use vars qw( @ISA $VERSION );
+
+use CGI::Wiki::Setup::Database;
+
+@ISA = qw( CGI::Wiki::Setup::Database );
 $VERSION = '0.08';
 
 use DBI;
@@ -13,7 +17,6 @@ my %create_sql = (
 CREATE TABLE schema_info (
   version   integer      NOT NULL default 0
 );
-INSERT INTO schema_info VALUES (". ($VERSION*100) .")
 ",
 
     node => "
@@ -96,6 +99,16 @@ sub setup {
     my $disconnect_required = _disconnect_required( @args );
 
 	# Do we need to upgrade the schema?
+	my $upgrade_schema = CGI::Wiki::Setup::Database::get_database_upgrade_required($dbh,$VERSION);
+	my @cur_data;
+	if($upgrade_schema) {
+		# Grab current data
+		print "Upgrading: $upgrade_schema\n";
+		@cur_data = eval("&CGI::Wiki::Setup::Database::fetch_upgrade_".$upgrade_schema."(\$dbh)");
+
+		# Drop the current tables
+		cleardb($dbh);
+	}
 
     # Check whether tables exist, set them up if not.
     my $sql = "SELECT name FROM sqlite_master
@@ -114,8 +127,17 @@ sub setup {
         } else {
             print "Creating table $required... done\n";
             $dbh->do($create_sql{$required}) or croak $dbh->errstr;
-        }
+		}
     }
+
+	# Schema version
+	$dbh->do("DELETE FROM schema_info");
+	$dbh->do("INSERT INTO schema_info VALUES (". ($VERSION*100) .")");
+
+	# If upgrading, load in the new data
+	if($upgrade_schema) {
+		CGI::Wiki::Setup::Database::bulk_data_insert($dbh,@cur_data);
+	}
 
     # Clean up if we made our own dbh.
     $dbh->disconnect if $disconnect_required;

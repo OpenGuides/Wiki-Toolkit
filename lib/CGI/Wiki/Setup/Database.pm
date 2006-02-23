@@ -79,14 +79,16 @@ sub fetch_upgrade_old_to_8 {
 sub get_database_version {
 	my $dbh = shift;
 	my $sql = "SELECT version FROM schema_info";
-	my $sth = $dbh->prepare($sql);
+	my $sth;
+	eval{ $sth = $dbh->prepare($sql) };
+	if($@) { return "old"; }
 	eval{ $sth->execute };
-	if($@) {
-		return "old";
-	} else {
-		my ($cur_schema) = $sth->fetchrow_array;
-		return $cur_schema;
-	}
+	if($@) { return "old"; }
+
+	my ($cur_schema) = $sth->fetchrow_array;
+	unless($cur_schema) { return "old"; }
+
+	return $cur_schema;
 }
 
 # Is an upgrade to the database required?
