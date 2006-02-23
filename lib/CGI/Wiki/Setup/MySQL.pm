@@ -2,7 +2,11 @@ package CGI::Wiki::Setup::MySQL;
 
 use strict;
 
-use vars qw( $VERSION );
+use vars qw( @ISA $VERSION );
+
+use CGI::Wiki::Setup::Database;
+
+@ISA = qw( CGI::Wiki::Setup::Database );
 $VERSION = '0.08';
 
 use DBI;
@@ -107,6 +111,14 @@ sub setup {
     my $dbh = _get_dbh( @args );
     my $disconnect_required = _disconnect_required( @args );
 
+	# Do we need to upgrade the schema of existing tables?
+	my $upgrade_schema = CGI::Wiki::Setup::Database::get_database_upgrade_required($dbh,$VERSION);
+	my @cur_data;
+	if($upgrade_schema) {
+		print "Upgrading: $upgrade_schema\n";
+		@cur_data = eval("&CGI::Wiki::Setup::Database::fetch_upgrade_".$upgrade_schema."(\$dbh)");
+	}
+
     # Check whether tables exist, set them up if not.
     my $sth = $dbh->prepare("SHOW TABLES") or croak $dbh->errstr;
     $sth->execute;
@@ -125,6 +137,11 @@ sub setup {
             }
         }
     }
+
+	# If upgrading, load in the new data
+	if($upgrade_schema) {
+		CGI::Wiki::Setup::Database::bulk_data_insert($dbh,@cur_data);
+	}
 
     # Clean up if we made our own dbh.
     $dbh->disconnect if $disconnect_required;

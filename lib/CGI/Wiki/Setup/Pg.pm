@@ -156,19 +156,7 @@ sub setup {
     my $disconnect_required = _disconnect_required( @args );
 
 	# Do we need to upgrade the schema of existing tables?
-	my @upgrade_schema = ();
-	my $sql = "SELECT version FROM schema_info";
-    my $sth = $dbh->prepare($sql);
-	eval{ $sth->execute };
-	if($@) {
-		@upgrade_schema = ("old", ($VERSION*100));;
-	}
-	unless(@upgrade_schema) {
-		my ($cur_schema) = $sth->fetchrow_array;
-		if($cur_schema != ($VERSION*100)) {
-			@upgrade_schema = ($cur_schema,($VERSION*100));
-		}
-	}
+	my $upgrade_schema = get_database_upgrade_required($dbh,$VERSION);
 
     # Check whether tables exist, set them up if not.
     $sql = "SELECT tablename FROM pg_tables
@@ -193,9 +181,9 @@ sub setup {
     }
 
 	# Do the upgrade if required
-	if(@upgrade_schema) {
-		print "Upgrading schema from $upgrade_schema[0] to $upgrade_schema[1]\n";
-		my @updates = @{$upgrades{$upgrade_schema[0]."_to_".$upgrade_schema[1]}};
+	if($upgrade_schema) {
+		print "Upgrading schema: $upgrade_schema\n";
+		my @updates = @{$upgrades{$upgrade_schema}};
 		foreach my $update (@updates) {
 			if(ref($update) eq "CODE") {
 				&$update($dbh);
