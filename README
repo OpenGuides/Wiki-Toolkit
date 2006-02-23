@@ -12,7 +12,7 @@ SEE ALSO
 
 SIGNIFICANT RECENT CHANGES
 
-0.70    ?? February 2006
+0.69    23 February 2006
         Change to the database schema. You need to run cgi-wiki-setupdb to
           upgrade your database to the new version
 
