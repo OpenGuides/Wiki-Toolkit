@@ -51,12 +51,13 @@ sub fetch_upgrade_old_to_8 {
 		$content{'text'} = $text;
 		$content{'modified'} = $modified;
 		$content{'comment'} = $comment;
-		$contents{$id} = \%content;
+		$contents{$id."-".$version} = \%content;
 	}
 
 	# Grab all the metadata, and upgrade to ID from node
 	$sth = $dbh->prepare("SELECT node,version,metadata_type,metadata_value FROM metadata");
 	$sth->execute;
+	my $i = 0;
 	while( my($node,$version,$metadata_type,$metadata_value) = $sth->fetchrow_array) {
 		my $id = $ids{$node};
 		unless($id) { die("Couldn't find ID for name/node '$node'"); }
@@ -65,7 +66,7 @@ sub fetch_upgrade_old_to_8 {
 		$metadata{'version'} = $version;
 		$metadata{'metadata_type'} = $metadata_type;
 		$metadata{'metadata_value'} = $metadata_value;
-		$metadatas{$id} = \%metadata;
+		$metadatas{$id."-".($i++)} = \%metadata;
 	}
 
 	print "done\n";
@@ -129,8 +130,8 @@ sub bulk_data_insert {
 
 	# Add content
 	$sth = $dbh->prepare("INSERT INTO content (node_id,version,text,modified,comment) VALUES (?,?,?,?,?)");
-	foreach my $id (keys %$contentsref) {
-		my %content = %{$contentsref->{$id}};
+	foreach my $key (keys %$contentsref) {
+		my %content = %{$contentsref->{$key}};
 		$sth->bind_param(1, $content{'id'});
 		$sth->bind_param(2, $content{'version'});
 		$sth->bind_param(3, $content{'text'});
@@ -140,9 +141,9 @@ sub bulk_data_insert {
 	}
 
 	# Add metadata
-	$sth = $dbh->prepare("INSERT INTO metadata (node_id,version,metadata_type,metadata_type) VALUES (?,?,?,?)");
-	foreach my $id (keys %$metadataref) {
-		my %metadata = %{$metadataref->{$id}};
+	$sth = $dbh->prepare("INSERT INTO metadata (node_id,version,metadata_type,metadata_value) VALUES (?,?,?,?)");
+	foreach my $key (keys %$metadataref) {
+		my %metadata = %{$metadataref->{$key}};
 		$sth->bind_param(1, $metadata{'id'});
 		$sth->bind_param(2, $metadata{'version'});
 		$sth->bind_param(3, $metadata{'metadata_type'});
