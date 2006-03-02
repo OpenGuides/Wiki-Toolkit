@@ -100,18 +100,6 @@ sub setup {
     my $dbh = _get_dbh( @args );
     my $disconnect_required = _disconnect_required( @args );
 
-	# Do we need to upgrade the schema?
-	my $upgrade_schema = CGI::Wiki::Setup::Database::get_database_upgrade_required($dbh,$VERSION);
-	my @cur_data;
-	if($upgrade_schema) {
-		# Grab current data
-		print "Upgrading: $upgrade_schema\n";
-		@cur_data = eval("&CGI::Wiki::Setup::Database::fetch_upgrade_".$upgrade_schema."(\$dbh)");
-
-		# Drop the current tables
-		cleardb($dbh);
-	}
-
     # Check whether tables exist, set them up if not.
     my $sql = "SELECT name FROM sqlite_master
                WHERE type='table' AND name in ("
@@ -123,6 +111,23 @@ sub setup {
         $tables{$table} = 1;
     }
 
+	# Do we need to upgrade the schema?
+	# (Don't check if no tables currently exist)
+	my $upgrade_schema;
+	my @cur_data; 
+	if(scalar keys %tables > 0) {
+		$upgrade_schema = CGI::Wiki::Setup::Database::get_database_upgrade_required($dbh,$VERSION);
+	}
+	if($upgrade_schema) {
+		# Grab current data
+		print "Upgrading: $upgrade_schema\n";
+		@cur_data = eval("&CGI::Wiki::Setup::Database::fetch_upgrade_".$upgrade_schema."(\$dbh)");
+
+		# Drop the current tables
+		cleardb($dbh);
+	}
+
+	# Set up tables if not found
     foreach my $required ( keys %create_sql ) {
         if ( $tables{$required} ) {
             print "Table $required already exists... skipping...\n";

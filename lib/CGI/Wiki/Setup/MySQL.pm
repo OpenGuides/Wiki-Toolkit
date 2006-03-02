@@ -113,9 +113,21 @@ sub setup {
     my $dbh = _get_dbh( @args );
     my $disconnect_required = _disconnect_required( @args );
 
+    # Check whether tables exist
+    my $sth = $dbh->prepare("SHOW TABLES") or croak $dbh->errstr;
+    $sth->execute;
+    my %tables;
+    while ( my $table = $sth->fetchrow_array ) {
+        $tables{$table} = 1;
+    }
+
 	# Do we need to upgrade the schema of existing tables?
-	my $upgrade_schema = CGI::Wiki::Setup::Database::get_database_upgrade_required($dbh,$VERSION);
+	# (Don't check if no tables currently exist)
+	my $upgrade_schema;
 	my @cur_data;
+	if(scalar keys %tables > 0) {
+		$upgrade_schema = CGI::Wiki::Setup::Database::get_database_upgrade_required($dbh,$VERSION);
+	}
 	if($upgrade_schema) {
 		# Grab current data
 		print "Upgrading: $upgrade_schema\n";
@@ -125,14 +137,7 @@ sub setup {
 		cleardb($dbh);
 	}
 
-    # Check whether tables exist, set them up if not.
-    my $sth = $dbh->prepare("SHOW TABLES") or croak $dbh->errstr;
-    $sth->execute;
-    my %tables;
-    while ( my $table = $sth->fetchrow_array ) {
-        $tables{$table} = 1;
-    }
-
+	# Set up tables if not found
     foreach my $required ( keys %create_sql ) {
         if ( $tables{$required} ) {
             print "Table $required already exists... skipping...\n";

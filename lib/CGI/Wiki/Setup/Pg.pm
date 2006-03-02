@@ -178,10 +178,7 @@ sub setup {
     my $dbh = _get_dbh( @args );
     my $disconnect_required = _disconnect_required( @args );
 
-	# Do we need to upgrade the schema of existing tables?
-	my $upgrade_schema = CGI::Wiki::Setup::Database::get_database_upgrade_required($dbh,$VERSION);
-
-    # Check whether tables exist, set them up if not.
+    # Check whether tables exist
     my $sql = "SELECT tablename FROM pg_tables
                WHERE tablename in ("
             . join( ",", map { $dbh->quote($_) } keys %create_sql ) . ")";
@@ -192,6 +189,16 @@ sub setup {
         $tables{$table} = 1;
     }
 
+	# Do we need to upgrade the schema of existing tables?
+	# (Don't check if no tables currently exist)
+	my $upgrade_schema;
+	if(scalar keys %tables > 0) {
+		$upgrade_schema = CGI::Wiki::Setup::Database::get_database_upgrade_required($dbh,$VERSION);
+	} else {
+		print "Skipping schema upgrade check - no tables found\n";
+	}
+
+	# Set up tables if not found
     foreach my $required ( reverse sort keys %create_sql ) {
         if ( $tables{$required} ) {
             print "Table $required already exists... skipping...\n";
