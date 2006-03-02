@@ -6,7 +6,7 @@ use Time::Piece;
 if ( scalar @CGI::Wiki::TestLib::wiki_info == 0 ) {
     plan skip_all => "no backends configured";
 } else {
-    plan tests => ( 10 * scalar @CGI::Wiki::TestLib::wiki_info );
+    plan tests => ( 12 * scalar @CGI::Wiki::TestLib::wiki_info );
 }
 
 my $iterator = CGI::Wiki::TestLib->new_wiki_maker;
@@ -36,9 +36,13 @@ while ( my $wiki = $iterator->new_wiki ) {
                                    $CGI::Wiki::Store::Database::timestamp_fmt);
     print "# [$lastmod] [$prev_lastmod]\n";
     ok( $lastmod > $prev_lastmod, "...as is last_modified" );
-    my $old_content = $wiki->retrieve_node( name    => "Home",
+    my %old_content = $wiki->retrieve_node( name    => "Home",
                                             version => 2 );
-    is( $old_content, "xx", "...and old versions are still available" );
+	is( $old_content{'version'}, "2",  "...and old versions are still available" );
+    is( $old_content{'content'}, "xx", "...and old versions have right content" );
+
+	# Ensure it's the same whichever way we fetch the new version
+	is_deeply(\%old_content, \%new_node_data, "New version the same however fetched");
 
     # Test retrieving with checksums.
     %node_data = $wiki->retrieve_node("Home");
@@ -56,5 +60,4 @@ while ( my $wiki = $iterator->new_wiki ) {
       or die "Couldn't write node";
     ok( ! $wiki->verify_checksum("Home", $node_data{checksum}),
         "...but not once we've changed the node content" );
-
 }
