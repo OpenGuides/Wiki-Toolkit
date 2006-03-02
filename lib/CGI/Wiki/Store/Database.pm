@@ -167,7 +167,7 @@ sub retrieve_node {
     # Note _retrieve_node_data is sensitive to calling context.
     return $self->_retrieve_node_data( %args ) unless wantarray;
     my %data = $self->_retrieve_node_data( %args );
-    $data{checksum} = $self->_checksum(%data);
+    $data{'checksum'} = $self->_checksum(%data);
     return %data;
 }
 
@@ -211,19 +211,26 @@ sub _retrieve_node_content {
     my $dbh = $self->dbh;
     my $sql;
     if ( $args{version} ) {
-        $sql = "SELECT content.text, content.version, content.modified "
+        $sql = "SELECT "
+             . "     content.text, content.version, "
+             . "     content.modified, content.moderated, "
+             . "     node.moderate "
              . "FROM node "
              . "INNER JOIN content ON (id = node_id) "
              . "WHERE name=" . $dbh->quote($self->charset_encode($args{name}))
              . " AND content.version=" . $dbh->quote($self->charset_encode($args{version}));
     } else {
-        $sql = "SELECT text, version, modified FROM node
-                WHERE name=" . $dbh->quote($self->charset_encode($args{name}));
+        $sql = "SELECT "
+             . "     text, version, "
+             . "     modified, 1 AS moderated, "
+             . "     moderate "
+             . " FROM node "
+             . " WHERE name=" . $dbh->quote($self->charset_encode($args{name}));
     }
     my @results = $self->charset_decode( $dbh->selectrow_array($sql) );
     @results = ("", 0, "") unless scalar @results;
     my %data;
-    @data{ qw( content version last_modified ) } = @results;
+    @data{ qw( content version last_modified moderated node_requires_moderation ) } = @results;
     return %data;
 }
 
