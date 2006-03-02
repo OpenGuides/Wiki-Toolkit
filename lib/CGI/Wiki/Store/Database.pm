@@ -210,23 +210,21 @@ sub _retrieve_node_content {
     croak "No valid node name supplied" unless $args{name};
     my $dbh = $self->dbh;
     my $sql;
+
+	my $version_sql_val;
     if ( $args{version} ) {
-        $sql = "SELECT "
-             . "     content.text, content.version, "
-             . "     content.modified, content.moderated, "
-             . "     node.moderate "
-             . "FROM node "
-             . "INNER JOIN content ON (id = node_id) "
-             . "WHERE name=" . $dbh->quote($self->charset_encode($args{name}))
-             . " AND content.version=" . $dbh->quote($self->charset_encode($args{version}));
-    } else {
-        $sql = "SELECT "
-             . "     text, version, "
-             . "     modified, 1 AS moderated, "
-             . "     moderate "
-             . " FROM node "
-             . " WHERE name=" . $dbh->quote($self->charset_encode($args{name}));
-    }
+		$version_sql_val = $dbh->quote($self->charset_encode($args{version}));
+	} else {
+		$version_sql_val = "node.version";
+	}
+    $sql = "SELECT "
+         . "     content.text, content.version, "
+         . "     content.modified, content.moderated, "
+         . "     node.moderate "
+         . "FROM node "
+         . "INNER JOIN content ON (id = node_id) "
+         . "WHERE name=" . $dbh->quote($self->charset_encode($args{name}))
+         . " AND content.version=" . $version_sql_val;
     my @results = $self->charset_decode( $dbh->selectrow_array($sql) );
     @results = ("", 0, "") unless scalar @results;
     my %data;
@@ -383,6 +381,7 @@ sub list_dangling_links {
                                    content  => $content,
                                    links_to => \@links_to,
                                    metadata => \%metadata,
+                                   requires_moderation => $requires_moderation,
                                    plugins  => \@plugins   )
       or handle_error();
 
@@ -401,7 +400,7 @@ calling C<list_backlinks> on the nodes in C<@links_to>. B<Note> that
 if you don't supply the ref then the store will assume that this node
 doesn't link to any others, and update itself accordingly.
 
-The metadata hashref is also optional.
+The metadata hashref is also optional, as is requires_moderation.
 
 B<Note> on the metadata hashref: Any data in here that you wish to
 access directly later must be a key-value pair in which the value is
@@ -428,13 +427,14 @@ I<only> be accessed via plugins.
 
 sub write_node_post_locking {
     my ($self, %args) = @_;
-    my ($node, $content, $links_to_ref, $metadata_ref) =
-                                @args{ qw( node content links_to metadata) };
+    my ($node, $content, $links_to_ref, $metadata_ref, $requires_moderation) =
+             @args{ qw( node content links_to metadata requires_moderation) };
     my $dbh = $self->dbh;
 
     my $timestamp = $self->_get_timestamp();
     my @links_to = @{ $links_to_ref || [] }; # default to empty array
     my $version;
+	unless($requires_moderation) { $requires_moderation = 0; }
 
     # Either inserting a new page or updating an old one.
     my $sql = "SELECT count(*) FROM node WHERE name=" . $dbh->quote($node);
@@ -453,10 +453,10 @@ sub write_node_post_locking {
 	$dbh->do($sql) or croak "Error updating database: " . DBI->errstr;
     } else {
         $version = 1;
-        $sql = "INSERT INTO node (name, version, text, modified)
+        $sql = "INSERT INTO node (name, version, text, modified, moderate)
                 VALUES ("
              . join(", ", map { $dbh->quote($self->charset_encode($_)) }
-		              ($node, $version, $content, $timestamp)
+		              ($node, $version, $content, $timestamp, $requires_moderation)
                    )
              . ")";
 	$dbh->do($sql) or croak "Error updating database: " . DBI->errstr;
