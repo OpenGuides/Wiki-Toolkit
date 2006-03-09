@@ -458,14 +458,15 @@ sub write_node_post_locking {
 		}
 
 		# Add the node and content
-        $sql = "INSERT INTO node "
-              ."    (name, version, text, modified, moderate) "
-              ."VALUES ("
-              . join(", ", map { $dbh->quote($self->charset_encode($_)) }
-		              ($node, $version, $node_content, $timestamp, $requires_moderation)
-                   )
-              .")";
-        $dbh->do($sql) or croak "Error updating database: " . DBI->errstr;
+        my $add_sql = 
+			 "INSERT INTO node "
+			."    (name, version, text, modified, moderate) "
+			."VALUES (?, ?, ?, ?, ?)";
+		my $add_sth = $dbh->prepare($add_sql);
+		$add_sth->execute(
+			map{ $self->charset_encode($_) }
+				($node, $version, $node_content, $timestamp, $requires_moderation)
+		) or croak "Error updating database: " . DBI->errstr;
     }
 
     # Get the ID of the node we've added / we're about to update
@@ -501,15 +502,18 @@ sub write_node_post_locking {
 
 
     # Now node is updated (if required), add to the history
-    $sql = "INSERT INTO content (node_id, version, text, modified, moderated)
-            VALUES ("
-         . join(", ", map { $dbh->quote($self->charset_encode($_)) }
-		          ($node_id, $version, $content, $timestamp, (1-$node_requires_moderation))
-               )
-         . ")";
-    $dbh->do($sql) or croak "Error updating database: " . DBI->errstr;
+    my $add_sql = 
+		 "INSERT INTO content "
+		."	(node_id, version, text, modified, moderated) "
+		."VALUES (?, ?, ?, ?, ?)";
+	my $add_sth = $dbh->prepare($add_sql);
+	$add_sth->execute(
+		map { $self->charset_encode($_) }
+			($node_id, $version, $content, $timestamp, (1-$node_requires_moderation))
+    ) or croak "Error updating database: " . DBI->errstr;
 
-    # And to the backlinks.
+
+    # Update the backlinks.
     $dbh->do("DELETE FROM internal_links WHERE link_from="
              . $dbh->quote($self->charset_encode($node)) ) or croak $dbh->errstr;
     foreach my $links_to ( @links_to ) {
@@ -536,7 +540,14 @@ sub write_node_post_locking {
         my $all_scalars = 1;
         foreach my $value (@values) {
             $all_scalars = 0 if ref $value;
-	}
+        }
+
+        # For adding to metadata
+        my $add_sql = 
+              "INSERT INTO metadata "
+             ."   (node_id, version, metadata_type, metadata_value) "
+             ."VALUES (?, ?, ?, ?)";
+        my $add_sth = $dbh->prepare($add_sql);
 
         # If all values for this type are scalars, strip out any duplicates
         # and store the data.
@@ -545,38 +556,33 @@ sub write_node_post_locking {
             @values = keys %unique;
 
             foreach my $value ( @values ) {
-                my $sql = "INSERT INTO metadata "
-                    . "(node_id, version, metadata_type, metadata_value) VALUES ("
-                    . join(", ", map { $dbh->quote($self->charset_encode($_)) }
-                                 ( $node_id, $version, $type, $value )
-                          )
-                    . ")";
-	        $dbh->do($sql) or croak $dbh->errstr;
-	    }
-	} else {
-        # Otherwise grab a checksum and store that.
+				$add_sth->execute(
+                    map { $self->charset_encode($_) }
+                        ( $node_id, $version, $type, $value )
+	            ) or croak $dbh->errstr;
+            }
+	    } else {
+            # Otherwise grab a checksum and store that.
             my $type_to_store  = "__" . $type . "__checksum";
             my $value_to_store = $self->_checksum_hashes( @values );
-            my $sql = "INSERT INTO metadata "
-                    . "(node_id, version, metadata_type, metadata_value) VALUES ("
-                    . join(", ", map { $dbh->quote($self->charset_encode($_)) }
-                           ( $node_id, $version, $type_to_store, $value_to_store )
-                          )
-                    . ")";
-	    $dbh->do($sql) or croak $dbh->errstr;
-	}
+            $add_sth->execute(
+                  map { $self->charset_encode($_) }
+                      ( $node_id, $version, $type_to_store, $value_to_store )
+            )  or croak $dbh->errstr;
+	    }
     }
 
     # Finally call post_write on any plugins.
     my @plugins = @{ $args{plugins} || [ ] };
     foreach my $plugin (@plugins) {
         if ( $plugin->can( "post_write" ) ) {
-            $plugin->post_write( node     => $node,
-                 node_id  => $node_id,
-				 version  => $version,
-				 content  => $content,
-				 metadata => $metadata_ref );
-	}
+            $plugin->post_write( 
+				node     => $node,
+				node_id  => $node_id,
+				version  => $version,
+				content  => $content,
+				metadata => $metadata_ref );
+        }
     }
 
     return 1;
