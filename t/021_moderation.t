@@ -50,7 +50,7 @@ while ( my $wiki = $iterator->new_wiki ) {
 	is( $mn_data{node_requires_moderation}, '1', "New node needs moderation" );
 
 	# Shouldn't have the text if fetched without the version
-	is( $mn_data{content}, "=== This page has yet to moderated. ===", "First version isn't moderated" );
+	is( $mn_data{content}, "=== This page has yet to be moderated. ===", "First version isn't moderated" );
 
 	# If we fetch with a version, we should get the text
     my %mnv_data = $wiki->retrieve_node(name=>"Moderation", version=>1);
@@ -71,7 +71,7 @@ while ( my $wiki = $iterator->new_wiki ) {
 
 	# Should still be the same as before (unmoderated v1)
 	is_deeply(\%mn_data,\%nmn_data, "Should still be the unmod first ver");
-	is( $nmn_data{content}, "=== This page has yet to moderated. ===", "No version is moderated" );
+	is( $nmn_data{content}, "=== This page has yet to be moderated. ===", "No version is moderated" );
 
 	# Check node requires it still
 	is( $nmnv_data{node_requires_moderation}, '1', "New node needs moderation" );
@@ -86,7 +86,7 @@ while ( my $wiki = $iterator->new_wiki ) {
     my %mn3_data = $wiki->retrieve_node("Moderation");
 	is( $mn3_data{node_requires_moderation}, '1', "New node needs moderation" );
 	is( $mn3_data{moderated}, '0', "Third version shouldn't be moderated" );
-	is( $mn3_data{content}, "=== This page has yet to moderated. ===", "No version is moderated" );
+	is( $mn3_data{content}, "=== This page has yet to be moderated. ===", "No version is moderated" );
 
 
 	# Moderate the second entry

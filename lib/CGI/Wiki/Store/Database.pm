@@ -454,7 +454,7 @@ sub write_node_post_locking {
 		# Handle initial moderation
 		my $node_content = $content;
 		if($requires_moderation) {
-			$node_content = "=== This page has yet to moderated. ===";
+			$node_content = "=== This page has yet to be moderated. ===";
 		}
 
 		# Add the node and content
