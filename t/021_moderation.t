@@ -6,7 +6,7 @@ use Time::Piece;
 if ( scalar @CGI::Wiki::TestLib::wiki_info == 0 ) {
     plan skip_all => "no backends configured";
 } else {
-    plan tests => ( 9 * scalar @CGI::Wiki::TestLib::wiki_info );
+    plan tests => ( 19 * scalar @CGI::Wiki::TestLib::wiki_info );
 }
 
 my $iterator = CGI::Wiki::TestLib->new_wiki_maker;
@@ -44,9 +44,43 @@ while ( my $wiki = $iterator->new_wiki ) {
 
 
 	# Now add a new node requiring moderation
-	# Update it
-	# Check node requires it still
-	# Check content not moderated
+    $wiki->write_node( "Moderation", "This is the moderated node.", undef, undef, 1);
+    my %mn_data = $wiki->retrieve_node("Moderation");
+	is( $mn_data{moderated}, '0', "First version shouldn't be moderated" );
+	is( $mn_data{node_requires_moderation}, '1', "New node needs moderation" );
 
-	# Moderate one entry
+	# Shouldn't have the text if fetched without the version
+	is( $mn_data{content}, "=== This page has yet to moderated. ===", "First version isn't moderated" );
+
+	# If we fetch with a version, we should get the text
+    my %mnv_data = $wiki->retrieve_node(name=>"Moderation", version=>1);
+	is( $mnv_data{content}, "This is the moderated node.", "Should get text if a version is given" );
+
+	is( $mnv_data{moderated}, '0', "First version shouldn't be moderated" );
+	is( $mnv_data{node_requires_moderation}, '1', "New node needs moderation" );
+
+
+	# Update it
+    ok( $wiki->write_node("Moderation", "yy", $mn_data{checksum}),
+		"Can update where moderation is enabled" );
+    my %nmn_data = $wiki->retrieve_node("Moderation");
+    my %nmnv_data = $wiki->retrieve_node(name=>"Moderation", version=>2);
+
+	# Should be the same, other than the content
+	my %a = %nmn_data;
+	my %b = %nmnv_data;
+	$a{content} = $b{content};
+	is_deeply(\%a,\%b, "Should be the same");
+
+	# Check node requires it still
+	is( $nmnv_data{node_requires_moderation}, '1', "New node needs moderation" );
+
+	# Check content not moderated
+	is( $nmnv_data{moderated}, '0', "Second version shouldn't be moderated" );
+
+	# Add the third entry
+
+	# Moderate the second entry
+
+	# Moderate the third entry
 }

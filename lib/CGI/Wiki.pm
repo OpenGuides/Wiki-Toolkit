@@ -639,7 +639,7 @@ sub get_registered_plugins {
 
 =item B<write_node>
 
-  my $written = $wiki->write_node($node, $content, $checksum, \%metadata);
+  my $written = $wiki->write_node($node, $content, $checksum, \%metadata, $requires_moderation);
   if ($written) {
       display_node($node);
   } else {
@@ -662,6 +662,10 @@ already exist and be nonempty, a conflict will be raised.
 The first two parameters are mandatory, the others optional. If you
 want to supply metadata but have no checksum (for a newly-created
 node), supply a checksum of C<undef>.
+
+The final parameter, $requires_moderation (which defaults to false),
+is ignored except on new nodes. For existing nodes, use 
+$wiki->toggle_node_moderation to change the node moderation flag.
 
 Returns 1 on success, 0 on conflict, croaks on error.
 
@@ -688,7 +692,7 @@ stored instead. Such data can I<only> be accessed via plugins.
 =cut
 
 sub write_node {
-    my ($self, $node, $content, $checksum, $metadata) = @_;
+    my ($self, $node, $content, $checksum, $metadata, $requires_moderation) = @_;
     croak "No valid node name supplied for writing" unless $node;
     croak "No content parameter supplied for writing" unless defined $content;
     $checksum = md5_hex("") unless defined $checksum;
@@ -707,7 +711,8 @@ sub write_node {
     my %data = ( node     => $node,
 		 content  => $content,
 		 checksum => $checksum,
-                 metadata => $metadata );
+		 metadata => $metadata,
+		 requires_moderation => $requires_moderation );
     $data{links_to} = \@links_to if scalar @links_to;
     my @plugins = $self->get_registered_plugins;
     $data{plugins} = \@plugins if scalar @plugins;

@@ -212,13 +212,18 @@ sub _retrieve_node_content {
     my $sql;
 
 	my $version_sql_val;
+	my $text_source;
     if ( $args{version} ) {
+		# Version given - get that version, and the content for that version
 		$version_sql_val = $dbh->quote($self->charset_encode($args{version}));
+		$text_source = "content";
 	} else {
+		# No version given, grab latest version (and content for that)
 		$version_sql_val = "node.version";
+		$text_source = "node";
 	}
     $sql = "SELECT "
-         . "     content.text, content.version, "
+         . "     $text_source.text, content.version, "
          . "     content.modified, content.moderated, "
          . "     node.moderate "
          . "FROM node "
@@ -450,27 +455,43 @@ sub write_node_post_locking {
 	     . ", text=" . $dbh->quote($self->charset_encode($content))
 	     . ", modified=" . $dbh->quote($timestamp)
 	     . " WHERE name=" . $dbh->quote($self->charset_encode($node));
-	$dbh->do($sql) or croak "Error updating database: " . DBI->errstr;
+        $dbh->do($sql) or croak "Error updating database: " . DBI->errstr;
+
+        if($requires_moderation) {
+           warn("Moderation not added to existing node '$node', use normal moderation methods instead");
+        }
     } else {
+		# Add in a new version
         $version = 1;
-        $sql = "INSERT INTO node (name, version, text, modified, moderate)
-                VALUES ("
-             . join(", ", map { $dbh->quote($self->charset_encode($_)) }
-		              ($node, $version, $content, $timestamp, $requires_moderation)
+
+		# Handle initial moderation
+		my $node_content = $content;
+		if($requires_moderation) {
+			$node_content = "=== This page has yet to moderated. ===";
+		}
+
+		# Add the node and content
+        $sql = "INSERT INTO node "
+              ."    (name, version, text, modified, moderate) "
+              ."VALUES ("
+              . join(", ", map { $dbh->quote($self->charset_encode($_)) }
+		              ($node, $version, $node_content, $timestamp, $requires_moderation)
                    )
-             . ")";
-	$dbh->do($sql) or croak "Error updating database: " . DBI->errstr;
+              .")";
+        $dbh->do($sql) or croak "Error updating database: " . DBI->errstr;
     }
 
     # Get the ID of the node we've just added / updated
-    $sql = "SELECT id FROM node WHERE name=" . $dbh->quote($node);
-    my $node_id = @{ $dbh->selectcol_arrayref($sql) }[0];
+	# Also get the moderation status for it
+    $sql = "SELECT id, moderate FROM node WHERE name=" . $dbh->quote($node);
+    my ($node_id,$node_requires_moderation) = $dbh->selectrow_array($sql);
+warn("\n'$node' '$node_requires_moderation'\n");
 
     # In either case we need to add to the history.
-    $sql = "INSERT INTO content (node_id, version, text, modified)
+    $sql = "INSERT INTO content (node_id, version, text, modified, moderated)
             VALUES ("
          . join(", ", map { $dbh->quote($self->charset_encode($_)) }
-		          ($node_id, $version, $content, $timestamp)
+		          ($node_id, $version, $content, $timestamp, (1-$node_requires_moderation))
                )
          . ")";
     $dbh->do($sql) or croak "Error updating database: " . DBI->errstr;
