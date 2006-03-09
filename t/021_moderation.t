@@ -6,7 +6,7 @@ use Time::Piece;
 if ( scalar @CGI::Wiki::TestLib::wiki_info == 0 ) {
     plan skip_all => "no backends configured";
 } else {
-    plan tests => ( 39 * scalar @CGI::Wiki::TestLib::wiki_info );
+    plan tests => ( 55 * scalar @CGI::Wiki::TestLib::wiki_info );
 }
 
 my $iterator = CGI::Wiki::TestLib->new_wiki_maker;
@@ -118,8 +118,33 @@ while ( my $wiki = $iterator->new_wiki ) {
 
 
 	# Moderate the third entry
-#	ok( $wiki->moderate_node(name=>"Moderation", version=>3), "Can't moderate 3rd version" );
+	ok( $wiki->moderate_node(name=>"Moderation", version=>3), "Can't moderate 3rd version" );
+	%node_data = $wiki->retrieve_node(name=>"Moderation");
+	my %mmn3 = $wiki->retrieve_node(name=>"Moderation",version=>3);
+
+	# Third entry should now be moderated, and node should've be changed
+	is( $mmn3{moderated}, '1', "Third version should now be moderated" );
+	is( $mmn3{node_requires_moderation}, '1', "Still requires moderation" );
+	is( $node_data{moderated}, '1', "Current version should still be moderated" );
+	is( $node_data{node_requires_moderation}, '1', "Still requires moderation" );
+	is( $node_data{content}, "foo foo", "Node should be third version" );
+	is( $node_data{version}, "3", "Node should be third version" );
 
 
 	# Add a 4th entry
+    ok( $wiki->write_node("Moderation", "bar bar", $node_data{checksum}),
+		"Can update where moderation is enabled" );
+    %node_data = $wiki->retrieve_node("Moderation");
+    my %mn4_data = $wiki->retrieve_node(name=>"Moderation", version=>4);
+
+	# Node should still be third entry, with 4th needing moderation
+	is( $node_data{moderated}, '1', "Current version should still be moderated" );
+	is( $node_data{node_requires_moderation}, '1', "Still requires moderation" );
+	is( $node_data{content}, "foo foo", "Node should still be third version" );
+	is( $node_data{version}, "3", "Node should still be third version" );
+
+	is( $mn4_data{moderated}, '0', "New version shouldn't be moderated" );
+	is( $mn4_data{node_requires_moderation}, '1', "Still requires moderation" );
+	is( $mn4_data{content}, "bar bar", "Content should have fourth version" );
+	is( $mn4_data{version}, "4", "Content should have fourth version" );
 }
