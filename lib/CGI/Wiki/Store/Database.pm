@@ -444,23 +444,10 @@ sub write_node_post_locking {
     # Either inserting a new page or updating an old one.
     my $sql = "SELECT count(*) FROM node WHERE name=" . $dbh->quote($node);
     my $exists = @{ $dbh->selectcol_arrayref($sql) }[0] || 0;
-    if ($exists) {
-        $sql = "SELECT max(content.version) FROM node
-                INNER JOIN content ON (id = node_id)
-                WHERE name=" . $dbh->quote($node);
-        $version = @{ $dbh->selectcol_arrayref($sql) }[0] || 0;
-        croak "Can't get version number" unless $version;
-        $version++;
-        $sql = "UPDATE node SET version=" . $dbh->quote($version)
-	     . ", text=" . $dbh->quote($self->charset_encode($content))
-	     . ", modified=" . $dbh->quote($timestamp)
-	     . " WHERE name=" . $dbh->quote($self->charset_encode($node));
-        $dbh->do($sql) or croak "Error updating database: " . DBI->errstr;
 
-        if($requires_moderation) {
-           warn("Moderation not added to existing node '$node', use normal moderation methods instead");
-        }
-    } else {
+
+	# If it doesn't exist, add it right now
+    if(! $exists) {
 		# Add in a new version
         $version = 1;
 
@@ -481,13 +468,39 @@ sub write_node_post_locking {
         $dbh->do($sql) or croak "Error updating database: " . DBI->errstr;
     }
 
-    # Get the ID of the node we've just added / updated
+    # Get the ID of the node we've added / we're about to update
 	# Also get the moderation status for it
     $sql = "SELECT id, moderate FROM node WHERE name=" . $dbh->quote($node);
     my ($node_id,$node_requires_moderation) = $dbh->selectrow_array($sql);
-warn("\n'$node' '$node_requires_moderation'\n");
 
-    # In either case we need to add to the history.
+	# Only update node if it exists, and moderation isn't enabled on the node
+	# Whatever happens, if it exists, generate a new version number
+    if($exists) {
+		# Get the new version number
+        $sql = "SELECT max(content.version) FROM node
+                INNER JOIN content ON (id = node_id)
+                WHERE name=" . $dbh->quote($node);
+        $version = @{ $dbh->selectcol_arrayref($sql) }[0] || 0;
+        croak "Can't get version number" unless $version;
+        $version++;
+
+		# Update the node only if node doesn't require moderation
+		if(!$node_requires_moderation) {
+			$sql = "UPDATE node SET version=" . $dbh->quote($version)
+			 . ", text=" . $dbh->quote($self->charset_encode($content))
+			 . ", modified=" . $dbh->quote($timestamp)
+			 . " WHERE name=" . $dbh->quote($self->charset_encode($node));
+			$dbh->do($sql) or croak "Error updating database: " . DBI->errstr;
+		}
+
+		# You can't use this to enable moderation on an existing node
+        if($requires_moderation) {
+           warn("Moderation not added to existing node '$node', use normal moderation methods instead");
+        }
+	}
+
+
+    # Now node is updated (if required), add to the history
     $sql = "INSERT INTO content (node_id, version, text, modified, moderated)
             VALUES ("
          . join(", ", map { $dbh->quote($self->charset_encode($_)) }
@@ -578,6 +591,73 @@ sub _get_timestamp {
 	$time = localtime($time); # Make it into an object for strftime
     }
     return $time->strftime($timestamp_fmt); # global
+}
+
+=item B<moderate_node>
+
+  $store->moderate_node(
+                         name    => $node,
+                         version => $version
+                       );
+
+Marks the given version of the node as moderated. If this is the
+highest moderated version, then update the node's contents to hold
+this version.
+=cut
+
+sub moderate_node {
+    my $self = shift;
+    my %args = scalar @_ == 2 ? ( name => $_[0], version => $_[1] ) : @_;
+    my $dbh = $self->dbh;
+
+	my ($name,$version) = ($args{name},$args{version});
+
+	# Get the ID of this node
+    my $id_sql = "SELECT id FROM node WHERE name=?";
+    my $id_sth = $dbh->prepare($id_sql);
+    $id_sth->execute($name);
+	my ($node_id) = $id_sth->fetchrow_array;
+
+	# Check what the current highest moderated version is
+	my $hv_sql = 
+		 "SELECT max(version) "
+		."FROM content "
+		."WHERE node_id = ? "
+		."AND moderated = ?";
+	my $hv_sth = $dbh->prepare($hv_sql);
+	$hv_sth->execute($node_id, "1") or croak $dbh->errstr;
+	my ($highest_mod_version) = $hv_sth->fetchrow_array;
+	unless($highest_mod_version) { $highest_mod_version = 0; }
+
+	# Mark this version as moderated
+	my $update_sql = 
+		 "UPDATE content "
+		."SET moderated = ? "
+		."WHERE node_id = ? "
+		."AND version = ?";
+	my $update_sth = $dbh->prepare($update_sql);
+	$update_sth->execute("1", $node_id, $version) or croak $dbh->errstr;
+
+	# Are we now the highest moderated version?
+	if(int($version) > int($highest_mod_version)) {
+		# Newly moderated version is newer than previous moderated version
+		# So, make the current version the latest version
+		my %new_data = $self->retrieve_node( name => $name, version => $version );
+
+		my $newv_sql = 
+			 "UPDATE node "
+			."SET version=?, text=?, modified=? "
+			."WHERE id = ?";
+		my $newv_sth = $dbh->prepare($newv_sql);
+		$newv_sth->execute(
+			$version, $self->charset_encode($new_data{content}), 
+			$new_data{last_modified}, $node_id
+		) or croak $dbh->errstr;
+	} else {
+		# A higher version is already moderated, so don't change node
+	}
+
+	return 1;
 }
 
 =item B<delete_node>

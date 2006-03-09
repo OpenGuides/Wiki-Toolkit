@@ -220,6 +220,20 @@ sub retrieve_node {
     $self->store->retrieve_node( @args );
 }
 
+=item B<moderate_node>
+
+  my $ok = $wiki->moderate_node(name => $node, version => $version);
+
+Marks the given version of the node as moderated. If this is the
+highest moderated version, then update the node's contents to hold
+this version.
+=cut
+
+sub moderate_node {
+    my ($self, @args) = @_;
+    $self->store->moderate_node( @args );
+}
+
 =item B<verify_checksum>
 
   my $ok = $wiki->verify_checksum($node, $checksum);
