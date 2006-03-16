@@ -650,6 +650,9 @@ sub moderate_node {
 		# So, make the current version the latest version
 		my %new_data = $self->retrieve_node( name => $name, version => $version );
 
+		# Make sure last modified is properly null, if not set
+		unless($new_data{last_modified}) { $new_data{last_modified} = undef; }
+
 		my $newv_sql = 
 			 "UPDATE node "
 			."SET version=?, text=?, modified=? "
@@ -662,6 +665,8 @@ sub moderate_node {
 	} else {
 		# A higher version is already moderated, so don't change node
 	}
+
+	# TODO: Do something about internal links, if required
 
     # Finally call post_moderate on any plugins.
     my @plugins = @{ $args{plugins} || [ ] };
@@ -752,13 +757,12 @@ sub delete_node {
 
     # Trivial case - delete the whole node and all its history.
     unless ( $version ) {
-        my $name = $dbh->quote($name);
         my $sql;
         # Should start a transaction here.  FIXME.
         # Do deletes
         $sql = "DELETE FROM content WHERE node_id = $node_id";
         $dbh->do($sql) or croak "Deletion failed: " . DBI->errstr;
-        $sql = "DELETE FROM internal_links WHERE link_from=$name";
+        $sql = "DELETE FROM internal_links WHERE link_from=".$dbh->quote($name);
         $dbh->do($sql) or croak $dbh->errstr;
         $sql = "DELETE FROM metadata WHERE node_id = $node_id";
         $dbh->do($sql) or croak $dbh->errstr;
@@ -772,7 +776,10 @@ sub delete_node {
 
     # Skip out early if we're trying to delete a nonexistent version.
     my %verdata = $self->retrieve_node( name => $name, version => $version );
-    return 1 unless $verdata{version};
+	unless($verdata{version}) {
+		warn("Asked to delete non existant version $version of node $node_id ($name)");
+		return 1;
+	}
 
     # Reduce to trivial case if deleting the only version.
     my $sql = "SELECT COUNT(*) FROM content WHERE node_id = $node_id";
@@ -781,7 +788,7 @@ sub delete_node {
     my ($count) = $sth->fetchrow_array;
 	if($count == 1) {
 		# Only one version, so can do the non version delete
-	    return $self->delete_node( $name );
+	    return $self->delete_node( name=>$name, plugins=>$args{plugins} );
 	}
 
     # Check whether we're deleting the latest (moderated) version.

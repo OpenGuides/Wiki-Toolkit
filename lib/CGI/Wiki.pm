@@ -230,8 +230,11 @@ this version.
 =cut
 
 sub moderate_node {
-    my ($self, @args) = @_;
-    $self->store->moderate_node( @args );
+    my ($self, %args) = @_;
+    my @plugins = $self->get_registered_plugins;
+    $args{plugins} = \@plugins if scalar @plugins;
+
+    $self->store->moderate_node( %args );
 }
 
 =item B<set_node_moderation>
@@ -499,11 +502,15 @@ sub delete_node {
     # Backwards compatibility.
     my %args = ( scalar @_ == 1 ) ? ( name => $_[0] ) : @_;
 
+    my @plugins = $self->get_registered_plugins;
+	my $plugins_ref = \@plugins if scalar @plugins;
+
     return 1 unless $self->node_exists( $args{name} );
     $self->store->delete_node(
                                name    => $args{name},
                                version => $args{version},
                                wiki    => $self,
+                               plugins => $plugins_ref,
                              );
 
     if ( my $search = $self->search_obj ) {
