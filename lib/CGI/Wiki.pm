@@ -234,6 +234,22 @@ sub moderate_node {
     $self->store->moderate_node( @args );
 }
 
+=item B<set_node_moderation>
+
+  my $ok = $wiki->set_node_moderation(name => $node, required => $required);
+
+Sets if a node requires moderation or not. 
+(Moderation is required when $required is true).
+
+When moderation is required, new versions of a node will sit about
+until they're tagged as moderated, when they will become the new node.
+=cut
+
+sub set_node_moderation {
+    my ($self, @args) = @_;
+    $self->store->set_node_moderation( @args );
+}
+
 =item B<verify_checksum>
 
   my $ok = $wiki->verify_checksum($node, $checksum);

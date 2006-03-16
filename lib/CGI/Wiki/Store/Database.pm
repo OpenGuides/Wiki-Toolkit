@@ -663,6 +663,51 @@ sub moderate_node {
 		# A higher version is already moderated, so don't change node
 	}
 
+    # Finally call post_moderate on any plugins.
+    my @plugins = @{ $args{plugins} || [ ] };
+    foreach my $plugin (@plugins) {
+        if ( $plugin->can( "post_moderate" ) ) {
+            $plugin->post_moderate( 
+				node     => $name,
+				node_id  => $node_id,
+				version  => $version );
+        }
+    }
+
+	return 1;
+}
+
+=item B<set_node_moderation>
+
+  $store->set_node_moderation(
+                         name     => $node,
+                         required => $required
+                       );
+
+Sets if new node versions will require moderation or not
+=cut
+
+sub set_node_moderation {
+    my $self = shift;
+    my %args = scalar @_ == 2 ? ( name => $_[0], required => $_[1] ) : @_;
+    my $dbh = $self->dbh;
+
+	my ($name,$required) = ($args{name},$args{required});
+
+	# Get the ID of this node
+    my $id_sql = "SELECT id FROM node WHERE name=?";
+    my $id_sth = $dbh->prepare($id_sql);
+    $id_sth->execute($name);
+	my ($node_id) = $id_sth->fetchrow_array;
+
+	# Mark it as requiring / not requiring moderation
+	my $mod_sql = 
+		 "UPDATE node "
+		."SET moderate = ? "
+		."WHERE id = ? ";
+	my $mod_sth = $dbh->prepare($mod_sql);
+	$mod_sth->execute("$required", $node_id) or croak $dbh->errstr;
+
 	return 1;
 }
 
@@ -719,7 +764,9 @@ sub delete_node {
         $dbh->do($sql) or croak $dbh->errstr;
         $sql = "DELETE FROM node WHERE id = $node_id";
         $dbh->do($sql) or croak "Deletion failed: " . DBI->errstr;
+
         # And finish it here.
+		post_delete_node($name,$node_id,$version,$args{plugins});
         return 1;
     }
 
@@ -737,15 +784,15 @@ sub delete_node {
 	    return $self->delete_node( $name );
 	}
 
-    # Check whether we're deleting the latest version.
+    # Check whether we're deleting the latest (moderated) version.
     my %currdata = $self->retrieve_node( name => $name );
     if ( $currdata{version} == $version ) {
 		# Deleting latest version, so need to update the copy in node
         # (Can't just grab version ($version - 1) since it may have been
-        #  deleted itself.)
+        #  deleted itself, or might not be moderated.)
         my $try = $version - 1;
         my %prevdata;
-        until ( $prevdata{version} ) {
+        until ( $prevdata{version} && $prevdata{moderated} ) {
             %prevdata = $self->retrieve_node(
                                               name    => $name,
                                               version => $try,
@@ -755,7 +802,7 @@ sub delete_node {
 
         # Move to new (old) version
         my $sql="UPDATE node 
-                 SET version=?, text=?, modified=? 
+                 SET version=?, text=?, modified=?
                  WHERE name=?";
         my $sth = $dbh->prepare( $sql );
         $sth->execute( @prevdata{ qw( version content last_modified ) }, $name)
@@ -798,6 +845,9 @@ sub delete_node {
         $sth = $dbh->prepare( $sql );
         $sth->execute()
           or croak "Deletion failed: " . $dbh->errstr;
+
+		# All done
+		post_delete_node($name,$node_id,$version,$args{plugins});
         return 1;
     }
 
@@ -816,7 +866,25 @@ sub delete_node {
     $sth->execute( $version )
       or croak "Deletion failed: " . $dbh->errstr;
 
+	# All done
+	post_delete_node($name,$node_id,$version,$args{plugins});
     return 1;
+}
+
+# Internal Method
+sub post_delete_node {
+	my ($name,$node_id,$version,$plugins) = @_;
+
+    # Call post_delete on any plugins, having done the delete
+    my @plugins = @{ $plugins || [ ] };
+    foreach my $plugin (@plugins) {
+        if ( $plugin->can( "post_delete" ) ) {
+            $plugin->post_delete( 
+				node     => $name,
+				node_id  => $node_id,
+				version  => $version );
+        }
+    }
 }
 
 =item B<list_recent_changes>

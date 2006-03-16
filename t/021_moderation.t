@@ -6,7 +6,7 @@ use Time::Piece;
 if ( scalar @CGI::Wiki::TestLib::wiki_info == 0 ) {
     plan skip_all => "no backends configured";
 } else {
-    plan tests => ( 55 * scalar @CGI::Wiki::TestLib::wiki_info );
+    plan tests => ( 82 * scalar @CGI::Wiki::TestLib::wiki_info );
 }
 
 my $iterator = CGI::Wiki::TestLib->new_wiki_maker;
@@ -147,4 +147,64 @@ while ( my $wiki = $iterator->new_wiki ) {
 	is( $mn4_data{node_requires_moderation}, '1', "Still requires moderation" );
 	is( $mn4_data{content}, "bar bar", "Content should have fourth version" );
 	is( $mn4_data{version}, "4", "Content should have fourth version" );
+
+
+	# Add the 5th entry, and moderate it
+    ok( $wiki->write_node("Moderation", "I shall be deleted", $node_data{checksum}),
+		"Can update where moderation is enabled" );
+    %node_data = $wiki->retrieve_node("Moderation");
+
+	# Moderate it
+	ok( $wiki->moderate_node(name=>"Moderation", version=>5), "Can't moderate 5th version" );
+    my %mn5_data = $wiki->retrieve_node(name=>"Moderation", version=>5);
+	is( $mn5_data{moderated}, '1', "Current version should be moderated" );
+	is( $mn5_data{node_requires_moderation}, '1', "Still requires moderation" );
+	is( $mn5_data{content}, "I shall be deleted", "Node should be fifth version" );
+	is( $mn5_data{version}, "5", "Node should be fifth version" );
+
+
+	# Delete the 5th entry - should fall back to the 3rd
+	is( 1, $wiki->delete_node(name=>"Moderation", version=>5), "Can't delete 5th version" );
+    %node_data = $wiki->retrieve_node("Moderation");
+
+	is( $node_data{moderated}, '1', "Current version should still be moderated" );
+	is( $node_data{node_requires_moderation}, '1', "Still requires moderation" );
+	is( $node_data{content}, "foo foo", "Node should now be third version" );
+	is( $node_data{version}, "3", "Node should now be third version" );
+
+	# Delete the 4th version, should remain the 3rd version
+
+
+	# Now mark this node as not needing moderation, and add a new version
+	is( 1, $wiki->set_node_moderation(name=>"Moderation", required=>0), "Can set as not needing moderation" );
+
+    %node_data = $wiki->retrieve_node("Moderation");
+
+	is( $node_data{moderated}, '1', "Current version should still be moderated" );
+	is( $node_data{node_requires_moderation}, '0', "Doesn't requires moderation" );
+	is( $node_data{content}, "foo foo", "Node should now be third version" );
+	is( $node_data{version}, "3", "Node should now be third version" );
+
+	# Check now not moderated
+    ok( $wiki->write_node("Moderation", "No moderation", $node_data{checksum}),
+		"Can update where moderation is disabled again" );
+    my %mn5b_data = $wiki->retrieve_node(name=>"Moderation", version=>5);
+    %node_data = $wiki->retrieve_node("Moderation");
+	is_deeply( \%mn5b_data, \%node_data, "Version 5 (again) is the latest" );
+
+	is( $node_data{moderated}, '1', "Current version should be moderated" );
+	is( $node_data{node_requires_moderation}, '0', "Doesn't requires moderation" );
+	is( $node_data{content}, "No moderation", "Node should now be fifth version" );
+	is( $node_data{version}, "5", "Node should now be fifth version" );
+
+
+	# Now turn moderation back on
+	is( 1, $wiki->set_node_moderation(name=>"Moderation", required=>1), "Can set as needing moderation" );
+
+    %node_data = $wiki->retrieve_node("Moderation");
+
+	is( $node_data{moderated}, '1', "Current version should be moderated" );
+	is( $node_data{node_requires_moderation}, '1', "Now requires moderation" );
+	is( $node_data{content}, "No moderation", "Node should now be fifth version" );
+	is( $node_data{version}, "5", "Node should now be fifth version" );
 }
