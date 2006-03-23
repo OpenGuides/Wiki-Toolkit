@@ -164,10 +164,27 @@ even if that type of metadata only has one value.
 sub retrieve_node {
     my $self = shift;
     my %args = scalar @_ == 1 ? ( name => $_[0] ) : @_;
+	unless($args{'version'}) { $args{'version'} = undef; }
+
+    # Call pre_retrieve on any plugins, in case they want to tweak anything
+    my @plugins = @{ $args{plugins} || [ ] };
+    foreach my $plugin (@plugins) {
+        if ( $plugin->can( "pre_retrieve" ) ) {
+            $plugin->pre_retrieve( 
+				node     => \$args{'name'},
+				version  => \$args{'version'}
+			);
+        }
+    }
+
     # Note _retrieve_node_data is sensitive to calling context.
-    return $self->_retrieve_node_data( %args ) unless wantarray;
+	unless(wantarray) {
+		# Scalar context, will return just the content
+		return $self->_retrieve_node_data( %args );
+	}
+
     my %data = $self->_retrieve_node_data( %args );
-    $data{'checksum'} = $self->_checksum(%data);
+	$data{'checksum'} = $self->_checksum(%data);
     return %data;
 }
 
@@ -175,7 +192,10 @@ sub retrieve_node {
 sub _retrieve_node_data {
     my ($self, %args) = @_;
     my %data = $self->_retrieve_node_content( %args );
-    return $data{content} unless wantarray;
+	unless(wantarray) {
+		# Scalar context, return just the content
+		return $data{content};
+	}
 
     # If we want additional data then get it.  Note that $data{version}
     # will already have been set by C<_retrieve_node_content>, if it wasn't
@@ -184,11 +204,11 @@ sub _retrieve_node_data {
     my $sql = "SELECT metadata_type, metadata_value "
          . "FROM node "
          . "INNER JOIN metadata ON (node_id = id) "
-         . "WHERE "
-         . "name=" . $dbh->quote($self->charset_encode($args{name})) . " AND "
-         . "metadata.version=" . $dbh->quote($self->charset_encode($data{version}));
+         . "WHERE name=? "
+         . "AND metadata.version=?";
     my $sth = $dbh->prepare($sql);
-    $sth->execute or croak $dbh->errstr;
+    $sth->execute($args{name},$data{version}) or croak $dbh->errstr;
+
     my %metadata;
     while ( my ($type, $val) = $self->charset_decode( $sth->fetchrow_array ) ) {
         if ( defined $metadata{$type} ) {
@@ -441,6 +461,17 @@ sub write_node_post_locking {
     my $version;
 	unless($requires_moderation) { $requires_moderation = 0; }
 
+    # Call pre_write on any plugins, in case they want to tweak anything
+    my @preplugins = @{ $args{plugins} || [ ] };
+    foreach my $plugin (@preplugins) {
+        if ( $plugin->can( "pre_write" ) ) {
+            $plugin->pre_write( 
+				node     => \$node,
+				content  => \$content,
+				metadata => \$metadata_ref );
+        }
+    }
+
     # Either inserting a new page or updating an old one.
     my $sql = "SELECT count(*) FROM node WHERE name=" . $dbh->quote($node);
     my $exists = @{ $dbh->selectcol_arrayref($sql) }[0] || 0;
@@ -573,8 +604,8 @@ sub write_node_post_locking {
     }
 
     # Finally call post_write on any plugins.
-    my @plugins = @{ $args{plugins} || [ ] };
-    foreach my $plugin (@plugins) {
+    my @postplugins = @{ $args{plugins} || [ ] };
+    foreach my $plugin (@postplugins) {
         if ( $plugin->can( "post_write" ) ) {
             $plugin->post_write( 
 				node     => $node,

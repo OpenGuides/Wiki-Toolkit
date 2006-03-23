@@ -216,8 +216,14 @@ even if that type of metadata only has one value.
 =cut
 
 sub retrieve_node {
-    my ($self, @args) = @_;
-    $self->store->retrieve_node( @args );
+    my ($self, @rawargs) = @_;
+
+	my %args = scalar @rawargs == 1 ? ( name => $rawargs[0] ) : @rawargs;
+
+    my @plugins = $self->get_registered_plugins;
+    $args{plugins} = \@plugins if scalar @plugins;
+
+    $self->store->retrieve_node( %args );
 }
 
 =item B<moderate_node>

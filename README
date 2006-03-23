@@ -16,6 +16,7 @@ SIGNIFICANT RECENT CHANGES
         Support for moderation on a per-node basis.
         Change to the database schema. You need to run cgi-wiki-setupdb to
           upgrade your database to the new version
+		Many more plugin points
         
 0.69    23 February 2006
         Change to the database schema. You need to run cgi-wiki-setupdb to

@@ -5,7 +5,7 @@ use Test::More;
 if ( scalar @CGI::Wiki::TestLib::wiki_info == 0 ) {
     plan skip_all => "no backends configured";
 } else {
-    plan tests => ( 17 * scalar @CGI::Wiki::TestLib::wiki_info );
+    plan tests => ( 26 * scalar @CGI::Wiki::TestLib::wiki_info );
 }
 
 my $iterator = CGI::Wiki::TestLib->new_wiki_maker;
@@ -25,6 +25,8 @@ while ( my $wiki = $iterator->new_wiki ) {
                            $self->{__seen_nodes} = [ ];
                            $self->{__deleted_nodes} = [ ];
                            $self->{__moderated_nodes} = [ ];
+                           $self->{__pre_write_nodes} = [ ];
+                           $self->{__pre_retrieve_nodes} = [ ];
                            }
                       );
         eval { $wiki->register_plugin; };
@@ -47,8 +49,11 @@ while ( my $wiki = $iterator->new_wiki ) {
         my $regref = $wiki->get_registered_plugins;
         is( ref $regref, "ARRAY", "...returns arrayref in scalar context" );
 
+# ===========================================================================
 
 		# Test the post_write (adding/updating a node) plugin call
+		# (Writes a node, and ensures the post_write plugin was called
+		#  with the appropriate options)
         $plugin->mock( "post_write",
 						sub {
 							my ($self, %args) = @_;
@@ -74,9 +79,11 @@ while ( my $wiki = $iterator->new_wiki ) {
                                metadata => { bar => "baz" } },
                    "...with the right arguments" );
 
-
+# ===========================================================================
 
 		# Test the post_delete (deletion) plugin call
+		# (Deletes nodes with and without versions, and ensured that
+		#  post_delete was called with the appropriate options)
         $plugin->mock( "post_delete",
 						sub {
 							my ($self, %args) = @_;
@@ -132,8 +139,11 @@ while ( my $wiki = $iterator->new_wiki ) {
                                version => undef },
                    "...with the right arguments" );
 
+# ===========================================================================
 
 		# Test the moderation plugin
+		# (Adds nodes that require moderation and moderates them,
+		#  ensuring post_moderate is called with the appropriate options)
         $plugin->mock( "post_moderate",
 						sub {
 							my ($self, %args) = @_;
@@ -155,5 +165,103 @@ while ( my $wiki = $iterator->new_wiki ) {
                                node_id => 2,
                                version => 2 },
                    "...with the right arguments" );
+
+# ===========================================================================
+
+		# Test using pre_write to alter things
+		# (Adds a pre_write plugin that alters the settings, writes, and
+		#  ensure that pre_write gets the unaltered stuff, and post_write
+		#  the altered)
+        $plugin->mock( "pre_write",
+						sub {
+							my ($self, %args) = @_;
+
+							# Tweak
+							${$args{node}} = "CHANGED_NAME";
+							${$args{content}} = "Changed: ".${$args{content}};
+							${$args{metadata}}->{foo} = "bar";
+							
+							# Save
+							push @{ $self->{__pre_write_nodes} },
+							{ node     => ${$args{node}},
+							  content  => ${$args{content}},
+							  metadata  => ${$args{metadata}},
+							};
+						}
+        );
+
+        $wiki->write_node( "Test Node", "foo", undef, {bar => "baz"} )
+            or die "Can't write node with pre_write";
+        ok( $plugin->called("pre_write"), "->pre_write method called" );
+
+        my @changed = @{ $plugin->{__pre_write_nodes} };
+        is_deeply( $changed[0], { node => "CHANGED_NAME",
+                               content => "Changed: foo",
+                               metadata => { bar=>"baz", foo=>"bar" } },
+                   "...with the right (changed) arguments" );
+
+        @seen = @{ $plugin->{__seen_nodes} };
+        is_deeply( $seen[3], { node => "CHANGED_NAME",
+                               node_id => 3,
+                               version => 1,
+                               content => "Changed: foo",
+                               metadata => { bar=>"baz", foo=>"bar" } },
+                   "...with the right (changed) arguments" );
+
+# ===========================================================================
+
+		# Test using pre_retrieve to alter things
+		# (Adds a pre_retrieve plugin that alters the settings, and
+		#  ensure that pre_retrieve gets the unaltered stuff, and the read
+		#  gets the altered)
+
+		# Do a normal fetch
+		my %nv = $wiki->retrieve_node(name=>"CHANGED_NAME",version=>1);
+
+		# Register the plugin
+        $plugin->mock( "pre_retrieve",
+						sub {
+							my ($self, %args) = @_;
+
+							my $orig_node = ${$args{node}};
+							my $orig_ver = ${$args{version}};
+
+							# Tweak
+							${$args{node}} = "CHANGED_NAME";
+							${$args{version}} = 1;
+							
+							# Save
+							push @{ $self->{__pre_retrieve_nodes} },
+							{ node      => ${$args{node}},
+							  version   => ${$args{version}},
+							  orig_node => $orig_node,
+							  orig_ver  => $orig_ver,
+							};
+						}
+        );
+
+		# Do a fetch with no version
+		my %dnv = $wiki->retrieve_node("foo");
+        my @ret = @{ $plugin->{__pre_retrieve_nodes} };
+        is_deeply( $ret[0], { node => "CHANGED_NAME",
+                               version => 1,
+                               orig_node => "foo",
+                               orig_ver => undef },
+                   "...with the right (changed) arguments" );
+
+		is($dnv{'content'}, "Changed: foo", "Retrieve was altered" );
+        is_deeply( \%dnv, \%nv, "Retrieve was altered" );
+
+		# And with too high a version
+		my %dv = $wiki->retrieve_node(name=>"foo", version=>22);
+        @ret = @{ $plugin->{__pre_retrieve_nodes} };
+        is_deeply( $ret[1], { node => "CHANGED_NAME",
+                               version => 1,
+                               orig_node => "foo",
+                               orig_ver => 22 },
+                   "...with the right (changed) arguments" );
+
+		is($dv{'content'}, "Changed: foo", "Retrieve was altered" );
+        is_deeply( \%dv, \%nv, "Retrieve was altered" );
     }
 }
