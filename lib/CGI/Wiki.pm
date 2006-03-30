@@ -284,7 +284,7 @@ sub rename_node {
 
     my @plugins = $self->get_registered_plugins;
     $args{plugins} = \@plugins if scalar @plugins;
-	$args{formatter} = $self->{_formatter};
+	$args{wiki} = $self;
 
     $self->store->rename_node( %args );
 

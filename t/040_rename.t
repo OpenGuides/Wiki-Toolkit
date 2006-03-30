@@ -6,7 +6,7 @@ use Time::Piece;
 if ( scalar @CGI::Wiki::TestLib::wiki_info == 0 ) {
     plan skip_all => "no backends configured";
 } else {
-    plan tests => ( 20 * scalar @CGI::Wiki::TestLib::wiki_info );
+    plan tests => ( 35 * scalar @CGI::Wiki::TestLib::wiki_info );
 }
 
 my $iterator = CGI::Wiki::TestLib->new_wiki_maker;
@@ -101,6 +101,7 @@ while ( my $wiki = $iterator->new_wiki ) {
 	%asnodef = $wiki->retrieve_node("NodeFooBar");
 	$nodetwo2{checksum} = $asnodef{checksum};
 	$nodetwo2{content} = "This is the second version of the second node, which links to [NodeFooBar|itself] and NodeOne";
+	$nodetwo2{last_modified} = $asnodef{last_modified};
 
 	is_deeply( \%asnode2, \%non_existant_node, "Renamed to NodeFooBar" );
 	is_deeply( \%asnodef, \%nodetwo2, "Renamed to NodeFooBar" );
@@ -120,13 +121,15 @@ while ( my $wiki = $iterator->new_wiki ) {
 	ok( $wiki->rename_node(new_name=>"NodeTwo", old_name=>"NodeFooBar", create_new_versions=>1), "Rename node");
 	%asnode2 = $wiki->retrieve_node("NodeTwo");
 	%asnodef = $wiki->retrieve_node("NodeFooBar");
-	$nodetwo2{checksum} = $asnodef{checksum};
+	$nodetwo2{checksum} = $asnode2{checksum};
 	$nodetwo2{content} = "This is the second version of the second node, which links to [NodeTwo|itself] and NodeOne";
-	nodetwo2{version} = 3;
+	$nodetwo2{version} = 3;
+	$nodetwo2{last_modified} = $asnode2{last_modified};
 
-	is_deeply( \%asnodef, \%non_existant_node, "Renamed to NodeFooBar" );
-	is_deeply( \%asnode2, \%nodetwo2, "Renamed to NodeFooBar" );
-	is( $asnodef{"content"}, $nodetwo2{content}, "node was changed" );
+	is_deeply( \%asnodef, \%non_existant_node, "Renamed back to NodeTwo" );
+	is_deeply( \%asnode2, \%nodetwo2, "Renamed back to NodeTwo" );
+	is( $asnode2{"content"}, $nodetwo2{content}, "node was changed" );
+	is( $asnode2{"version"}, 3, "new node version" );
 
 	# Check the other two nodes
 	my %anode1 = $wiki->retrieve_node("NodeOne");

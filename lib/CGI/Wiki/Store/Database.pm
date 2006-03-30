@@ -635,7 +635,7 @@ sub _get_timestamp {
   $store->rename_node(
                          old_name  => $node,
                          new_name  => $new_node,
-                         formatter => $formatter,
+                         wiki      => $wiki,
                          create_new_versions => $create_new_versions,
                        );
 
@@ -647,9 +647,10 @@ one, and re-writes any wiki links in these to point to the new name.
 =cut
 sub rename_node {
     my ($self, %args) = @_;
-    my ($old_name,$new_name,$formatter,$create_new_versions) = 
-		@args{ qw( old_name new_name formatter create_new_versions ) };
+    my ($old_name,$new_name,$wiki,$create_new_versions) = 
+		@args{ qw( old_name new_name wiki create_new_versions ) };
     my $dbh = $self->dbh;
+	my $formatter = $wiki->{_formatter};
 
     my $timestamp = $self->_get_timestamp();
 
@@ -698,7 +699,14 @@ sub rename_node {
 	$sth->execute($new_name,$node_id);
 
 
-	# Update the internal links, if the formatter supports it
+	# Fix the internal links from this page
+	# (Otherwise write_node will get confused if we rename links later on)
+	$sql = "UPDATE internal_links SET link_from=? WHERE link_from=?";
+	$sth = $dbh->prepare($sql);
+	$sth->execute($new_name,$old_name);
+
+
+	# Update the text of internal links, if the formatter supports it
 	if($formatter->can("rename_links")) {
 		# Update the linked pages (may include renamed page)
 		foreach my $l (@links) {
@@ -715,26 +723,29 @@ sub rename_node {
 			my $new_content = 
 				$formatter->rename_links($old_name,$new_name,$page{'content'});
 
-			# Write the updated page out
-			if($create_new_versions) {
-				# Write out as a new version of the node
-				# (This will also fix our internal links)
-				$self->write_node(
-							$page_name, 
-							$new_content,
-							$page{checksum},
-							$page{metadata}
-				);
-			} else {
-				# Just update the content
-				my $update_sql_a = "UPDATE node SET text=? WHERE id=?";
-				my $update_sql_b = "UPDATE content SET text=? ".
-								   "WHERE node_id=? AND version=?";
+			# Did it change?
+			if($new_content ne $page{'content'}) {
+				# Write the updated page out
+				if($create_new_versions) {
+					# Write out as a new version of the node
+					# (This will also fix our internal links)
+					$wiki->write_node(
+								$page_name, 
+								$new_content,
+								$page{checksum},
+								$page{metadata}
+					);
+				} else {
+					# Just update the content
+					my $update_sql_a = "UPDATE node SET text=? WHERE id=?";
+					my $update_sql_b = "UPDATE content SET text=? ".
+									   "WHERE node_id=? AND version=?";
 
-				my $u_sth = $dbh->prepare($update_sql_a);
-				$u_sth->execute($new_content,$page_id);
-				$u_sth = $dbh->prepare($update_sql_b);
-				$u_sth->execute($new_content,$page_id,$page_version);
+					my $u_sth = $dbh->prepare($update_sql_a);
+					$u_sth->execute($new_content,$page_id);
+					$u_sth = $dbh->prepare($update_sql_b);
+					$u_sth->execute($new_content,$page_id,$page_version);
+				}
 			}
 		}
 
