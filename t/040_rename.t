@@ -58,9 +58,11 @@ while ( my $wiki = $iterator->new_wiki ) {
 	# NodeTwo linked implicitly
 	my %anode2 = $wiki->retrieve_node("NodeTwo");
 	is( "This is the second version of the second node, which links to [NodeTwo|itself] and NodeFoo", $anode2{'content'}, "implicit link was updated" );
+	is( 2, $anode2{'version'}, "no new version" );
 	# NodeThree linked implicitly
 	my %anode3 = $wiki->retrieve_node("NodeThree");
 	is( "This is the third node, which links to all 3 via NodeFoo, NodeTwo and [NodeThree]", $anode3{'content'}, "implicit link was updated" );
+	is( 1, $anode3{'version'}, "no new version" );
 
 
 
@@ -80,8 +82,10 @@ while ( my $wiki = $iterator->new_wiki ) {
 	# Now check two and three changed back
 	%anode2 = $wiki->retrieve_node("NodeTwo");
 	is( "This is the second version of the second node, which links to [NodeTwo|itself] and NodeOne", $anode2{'content'}, "implicit link was updated" );
+	is( 2, $anode2{'version'}, "no new version" );
 	%anode3 = $wiki->retrieve_node("NodeThree");
 	is( "This is the third node, which links to all 3 via NodeOne, NodeTwo and [NodeThree]", $anode3{'content'}, "implicit link was updated" );
+	is( 1, $anode3{'version'}, "no new version" );
 
 
 
@@ -100,14 +104,38 @@ while ( my $wiki = $iterator->new_wiki ) {
 
 	is_deeply( \%asnode2, \%non_existant_node, "Renamed to NodeFooBar" );
 	is_deeply( \%asnodef, \%nodetwo2, "Renamed to NodeFooBar" );
-	is( $asnodef{"content"}, $nodetwo2{content}, "no change needed to node" );
+	is( $asnodef{"content"}, $nodetwo2{content}, "node was changed" );
 
 	# Check the other two nodes
 	my %anode1 = $wiki->retrieve_node("NodeOne");
 	is( "This is the second version of the first node, which links to NodeTwo, NodeThree, [NodeFooBar], [NodeFour|Node Four] and [NodeThree | Node Three].", $anode1{'content'}, "explicit link was updated, implicit not" );
+	is( 2, $anode1{'version'}, "no new version" );
 	%anode3 = $wiki->retrieve_node("NodeThree");
 	is( "This is the third node, which links to all 3 via NodeOne, NodeTwo and [NodeThree]", $anode3{'content'}, "no explicit to update, implicit link not" );
+	is( 1, $anode3{'version'}, "no new version" );
 
 
-	# Now have the new version stuff active
+	# Now rename back, but with the new version stuff
+	# (Nodes 1 and 2 should get new versions, but not node 3)
+	ok( $wiki->rename_node(new_name=>"NodeTwo", old_name=>"NodeFooBar", create_new_versions=>1), "Rename node");
+	%asnode2 = $wiki->retrieve_node("NodeTwo");
+	%asnodef = $wiki->retrieve_node("NodeFooBar");
+	$nodetwo2{checksum} = $asnodef{checksum};
+	$nodetwo2{content} = "This is the second version of the second node, which links to [NodeTwo|itself] and NodeOne";
+	nodetwo2{version} = 3;
+
+	is_deeply( \%asnodef, \%non_existant_node, "Renamed to NodeFooBar" );
+	is_deeply( \%asnode2, \%nodetwo2, "Renamed to NodeFooBar" );
+	is( $asnodef{"content"}, $nodetwo2{content}, "node was changed" );
+
+	# Check the other two nodes
+	my %anode1 = $wiki->retrieve_node("NodeOne");
+	is( "This is the second version of the first node, which links to NodeTwo, NodeThree, [NodeTwo], [NodeFour|Node Four] and [NodeThree | Node Three].", $anode1{'content'}, "explicit link was updated, implicit not" );
+	is( 3, $anode1{'version'}, "new version" );
+	%anode3 = $wiki->retrieve_node("NodeThree");
+	is( "This is the third node, which links to all 3 via NodeOne, NodeTwo and [NodeThree]", $anode3{'content'}, "no explicit to update, implicit link not" );
+	is( 1, $anode3{'version'}, "no new version" );
+
+
+	# Now with implicit and explicit
 }
