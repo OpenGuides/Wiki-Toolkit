@@ -670,13 +670,13 @@ sub rename_node {
 	my $sth = $dbh->prepare($sql);
 	$sth->execute($old_name);
 	my ($node_id) = $sth->fetchrow_array;
-	
-	# Rename that node
-	$sql = "UPDATE node SET name=? WHERE id=?";
-	$sth = $dbh->prepare($sql);
-	$sth->execute($new_name,$node_id);
 
-	# Update the internal links, if the formatter supports it
+
+	# If the formatter supports it, get a list of the internal
+	#  links to the page, which will have their links re-written
+	# (Do now before we update the name of the node, in case of
+	#  self links)
+	my @links;
 	if($formatter->can("rename_links")) {
 		# Get a list of the pages that link to the page
 		$sql = "SELECT id, name, version "
@@ -688,12 +688,23 @@ sub rename_node {
 		$sth->execute($old_name);
 
 		# Grab them all, then update, so no locking problems
-		my @links;
 		while(my @l = $sth->fetchrow_array) { push (@links, \@l); }
+	}
 
-		# Now update the linked pages
+	
+	# Rename the node
+	$sql = "UPDATE node SET name=? WHERE id=?";
+	$sth = $dbh->prepare($sql);
+	$sth->execute($new_name,$node_id);
+
+
+	# Update the internal links, if the formatter supports it
+	if($formatter->can("rename_links")) {
+		# Update the linked pages (may include renamed page)
 		foreach my $l (@links) {
 			my ($page_id, $page_name, $page_version) = @$l;
+			# Self link special case
+			if($page_name eq $old_name) { $page_name = $new_name; }
 
 			# Grab the latest version of that page
 			my %page = $self->retrieve_node(

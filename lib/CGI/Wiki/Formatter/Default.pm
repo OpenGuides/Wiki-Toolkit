@@ -148,7 +148,6 @@ C<extended_links> etc.)
 sub rename_links {
     my ($self, $from, $to, $content) = @_;
 
-#warn("\n'$content'\n");
 	# If we support extended (square bracket) links, update those
 	if($self->{_extended_links}) {
 		$content =~ s/\[$from\]/\[$to\]/g;
@@ -161,9 +160,6 @@ sub rename_links {
 		$content =~ s/^$from\b/$to/gm;
 		$content =~ s/\b$from$/$to/gm;
 	}
-#warn("'$from' '$to'\n");
-#warn("'$content'\n");
-#warn("'".$self->{_extended_links}."' '".$self->{_implicit_links}."'\n");
 
 	return $content;
 }

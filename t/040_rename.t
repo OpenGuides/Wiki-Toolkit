@@ -6,7 +6,7 @@ use Time::Piece;
 if ( scalar @CGI::Wiki::TestLib::wiki_info == 0 ) {
     plan skip_all => "no backends configured";
 } else {
-    plan tests => ( 13 * scalar @CGI::Wiki::TestLib::wiki_info );
+    plan tests => ( 20 * scalar @CGI::Wiki::TestLib::wiki_info );
 }
 
 my $iterator = CGI::Wiki::TestLib->new_wiki_maker;
@@ -48,6 +48,7 @@ while ( my $wiki = $iterator->new_wiki ) {
 	# Should be able to find it as NodeFoo, but not NodeOne
 	my %asnode1 = $wiki->retrieve_node("NodeOne");
 	my %asnodef = $wiki->retrieve_node("NodeFoo");
+	$nodeone2{checksum} = $asnodef{checksum};
 
 	is_deeply( \%asnode1, \%non_existant_node, "Renamed to NodeFoo" );
 	is_deeply( \%asnodef, \%nodeone2, "Renamed to NodeFoo" );
@@ -70,6 +71,7 @@ while ( my $wiki = $iterator->new_wiki ) {
 	# Should be able to find it as NodeOne again, but not NodeFoo
 	%asnode1 = $wiki->retrieve_node("NodeOne");
 	%asnodef = $wiki->retrieve_node("NodeFoo");
+	$nodeone2{checksum} = $asnode1{checksum};
 
 	is_deeply( \%asnodef, \%non_existant_node, "Renamed to NodeOne" );
 	is_deeply( \%asnode1, \%nodeone2, "Renamed to NodeFoo" );
@@ -82,9 +84,29 @@ while ( my $wiki = $iterator->new_wiki ) {
 	is( "This is the third node, which links to all 3 via NodeOne, NodeTwo and [NodeThree]", $anode3{'content'}, "implicit link was updated" );
 
 
+
 	# Tweak the formatter - swap to extended links from implicit
+	$wiki->{_formatter} = CGI::Wiki::Formatter::Default->new( extended_links=>1, implicit_links=>0 );
+	ok( $wiki->{_formatter}->can("rename_links"), "The formatter must be able to rename links for these tests to work" );
 
 	# Rename NodeTwo to NodeFooBar
+	ok( $wiki->rename_node(old_name=>"NodeTwo", new_name=>"NodeFooBar"), "Rename node");
+
+	# Check NodeTwo is now as expected
+	my %asnode2 = $wiki->retrieve_node("NodeTwo");
+	%asnodef = $wiki->retrieve_node("NodeFooBar");
+	$nodetwo2{checksum} = $asnodef{checksum};
+	$nodetwo2{content} = "This is the second version of the second node, which links to [NodeFooBar|itself] and NodeOne";
+
+	is_deeply( \%asnode2, \%non_existant_node, "Renamed to NodeFooBar" );
+	is_deeply( \%asnodef, \%nodetwo2, "Renamed to NodeFooBar" );
+	is( $asnodef{"content"}, $nodetwo2{content}, "no change needed to node" );
+
+	# Check the other two nodes
+	my %anode1 = $wiki->retrieve_node("NodeOne");
+	is( "This is the second version of the first node, which links to NodeTwo, NodeThree, [NodeFooBar], [NodeFour|Node Four] and [NodeThree | Node Three].", $anode1{'content'}, "explicit link was updated, implicit not" );
+	%anode3 = $wiki->retrieve_node("NodeThree");
+	is( "This is the third node, which links to all 3 via NodeOne, NodeTwo and [NodeThree]", $anode3{'content'}, "no explicit to update, implicit link not" );
 
 
 	# Now have the new version stuff active
