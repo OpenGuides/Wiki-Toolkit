@@ -630,6 +630,126 @@ sub _get_timestamp {
     return $time->strftime($timestamp_fmt); # global
 }
 
+=item B<rename_node>
+
+  $store->rename_node(
+                         old_name  => $node,
+                         new_name  => $new_node,
+                         formatter => $formatter,
+                         create_new_versions => $create_new_versions,
+                       );
+
+Renames a node, updating any references to it as required (assuming your
+chosen formatter supports rename, that is).
+
+Uses the internal_links table to identify the nodes that link to this
+one, and re-writes any wiki links in these to point to the new name.
+=cut
+sub rename_node {
+    my ($self, %args) = @_;
+    my ($old_name,$new_name,$formatter,$create_new_versions) = 
+		@args{ qw( old_name new_name formatter create_new_versions ) };
+    my $dbh = $self->dbh;
+
+    my $timestamp = $self->_get_timestamp();
+
+    # Call pre_rename on any plugins, in case they want to tweak anything
+    my @preplugins = @{ $args{plugins} || [ ] };
+    foreach my $plugin (@preplugins) {
+        if ( $plugin->can( "pre_rename" ) ) {
+            $plugin->pre_rename( 
+				old_name => \$old_name,
+				new_name => \$new_name,
+				create_new_versions => \$create_new_versions,
+			);
+        }
+    }
+
+	# Get the ID of the node
+	my $sql = "SELECT id FROM node WHERE name=?";
+	my $sth = $dbh->prepare($sql);
+	$sth->execute($old_name);
+	my ($node_id) = $sth->fetchrow_array;
+	
+	# Rename that node
+	$sql = "UPDATE node SET name=? WHERE id=?";
+	$sth = $dbh->prepare($sql);
+	$sth->execute($new_name,$node_id);
+
+	# Update the internal links, if the formatter supports it
+	if($formatter->can("rename_links")) {
+		# Get a list of the pages that link to the page
+		$sql = "SELECT id, name, version "
+			."FROM internal_links "
+			."INNER JOIN node "
+			."	ON (link_from = name) "
+			."WHERE link_to = ?";
+		$sth = $dbh->prepare($sql);
+		$sth->execute($old_name);
+
+		# Grab them all, then update, so no locking problems
+		my @links;
+		while(my @l = $sth->fetchrow_array) { push (@links, \@l); }
+
+		# Now update the linked pages
+		foreach my $l (@links) {
+			my ($page_id, $page_name, $page_version) = @$l;
+
+			# Grab the latest version of that page
+			my %page = $self->retrieve_node(
+					name=>$page_name, version=>$page_version
+			);
+
+			# Update the content of the page
+			my $new_content = 
+				$formatter->rename_links($old_name,$new_name,$page{'content'});
+
+			# Write the updated page out
+			if($create_new_versions) {
+				# Write out as a new version of the node
+				# (This will also fix our internal links)
+				$self->write_node(
+							$page_name, 
+							$new_content,
+							$page{checksum},
+							$page{metadata}
+				);
+			} else {
+				# Just update the content
+				my $update_sql_a = "UPDATE node SET text=? WHERE id=?";
+				my $update_sql_b = "UPDATE content SET text=? ".
+								   "WHERE node_id=? AND version=?";
+
+				my $u_sth = $dbh->prepare($update_sql_a);
+				$u_sth->execute($new_content,$page_id);
+				$u_sth = $dbh->prepare($update_sql_b);
+				$u_sth->execute($new_content,$page_id,$page_version);
+			}
+		}
+
+		# Fix the internal links if we didn't create new versions of the node
+		if(! $create_new_versions) {
+			$sql = "UPDATE internal_links SET link_to=? WHERE link_to=?";
+			$sth = $dbh->prepare($sql);
+			$sth->execute($new_name,$old_name);
+		}
+	} else {
+		warn("Internal links not updated following node rename - unsupported by formatter");
+	}
+
+    # Call post_rename on any plugins, in case they want to do anything
+    my @postplugins = @{ $args{plugins} || [ ] };
+    foreach my $plugin (@postplugins) {
+        if ( $plugin->can( "post_rename" ) ) {
+            $plugin->post_rename( 
+				old_name => $old_name,
+				new_name => $new_name,
+				node_id => $node_id,
+			);
+        }
+    }
+}
+
 =item B<moderate_node>
 
   $store->moderate_node(

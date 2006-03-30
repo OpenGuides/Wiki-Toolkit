@@ -259,6 +259,38 @@ sub set_node_moderation {
     $self->store->set_node_moderation( @args );
 }
 
+=item B<rename_node>
+
+  my $ok = $wiki->rename_node(old_name => $old_name, new_name => $new_name, create_new_versions => $create_new_versions );
+
+Renames a node, updating any references to it as required.
+
+Uses the internal_links table to identify the nodes that link to this
+one, and re-writes any wiki links in these to point to the new name. If
+required, it can mark these updates to other pages as a new version.
+=cut
+
+sub rename_node {
+    my ($self, @argsarray) = @_;
+	my %args = @argsarray;
+	if((scalar @argsarray) == 2 || (scalar @argsarray) == 3) {
+		# Missing keys
+		%args = (
+			old_name => $argsarray[0],
+			new_name => $argsarray[1],
+			create_new_versions => $argsarray[2]
+		);
+	}
+
+    my @plugins = $self->get_registered_plugins;
+    $args{plugins} = \@plugins if scalar @plugins;
+	$args{formatter} = $self->{_formatter};
+
+    $self->store->rename_node( %args );
+
+	return 1;
+}
+
 =item B<verify_checksum>
 
   my $ok = $wiki->verify_checksum($node, $checksum);
