@@ -1,12 +1,12 @@
-package CGI::Wiki::Setup::Pg;
+package Wiki::Toolkit::Setup::Pg;
 
 use strict;
 
 use vars qw( @ISA $VERSION );
 
-use CGI::Wiki::Setup::Database;
+use Wiki::Toolkit::Setup::Database;
 
-@ISA = qw( CGI::Wiki::Setup::Database );
+@ISA = qw( Wiki::Toolkit::Setup::Database );
 $VERSION = '0.09';
 
 use DBI;
@@ -130,18 +130,18 @@ $upgrades{'old_to_9'} = \@old_to_9;
 
 =head1 NAME
 
-CGI::Wiki::Setup::Pg - Set up tables for a CGI::Wiki store in a Postgres database.
+Wiki::Toolkit::Setup::Pg - Set up tables for a Wiki::Toolkit store in a Postgres database.
 
 =head1 SYNOPSIS
 
-  use CGI::Wiki::Setup::Pg;
-  CGI::Wiki::Setup::Pg::setup($dbname, $dbuser, $dbpass, $dbhost);
+  use Wiki::Toolkit::Setup::Pg;
+  Wiki::Toolkit::Setup::Pg::setup($dbname, $dbuser, $dbpass, $dbhost);
 
 Omit $dbhost if the database is local.
 
 =head1 DESCRIPTION
 
-Set up a Postgres database for use as a CGI::Wiki store.
+Set up a Postgres database for use as a Wiki::Toolkit store.
 
 =head1 FUNCIONS
 
@@ -149,12 +149,12 @@ Set up a Postgres database for use as a CGI::Wiki store.
 
 =item B<setup>
 
-  use CGI::Wiki::Setup::Pg;
-  CGI::Wiki::Setup::Pg::setup($dbname, $dbuser, $dbpass, $dbhost);
+  use Wiki::Toolkit::Setup::Pg;
+  Wiki::Toolkit::Setup::Pg::setup($dbname, $dbuser, $dbpass, $dbhost);
 
 or
 
-  CGI::Wiki::Setup::Pg::setup( $dbh );
+  Wiki::Toolkit::Setup::Pg::setup( $dbh );
 
 You can either provide an active database handle C<$dbh> or connection
 parameters.                                                                    
@@ -167,8 +167,8 @@ The $dbhost argument is optional -- omit it if the database is local.
 
 B<NOTE:> If a table that the module wants to create already exists,
 C<setup> will leave it alone. This means that you can safely run this
-on an existing L<CGI::Wiki> database to bring the schema up to date
-with the current L<CGI::Wiki> version. If you wish to completely start
+on an existing L<Wiki::Toolkit> database to bring the schema up to date
+with the current L<Wiki::Toolkit> version. If you wish to completely start
 again with a fresh database, run C<cleardb> first.
 
 =cut
@@ -193,7 +193,7 @@ sub setup {
 	# (Don't check if no tables currently exist)
 	my $upgrade_schema;
 	if(scalar keys %tables > 0) {
-		$upgrade_schema = CGI::Wiki::Setup::Database::get_database_upgrade_required($dbh,$VERSION);
+		$upgrade_schema = Wiki::Toolkit::Setup::Database::get_database_upgrade_required($dbh,$VERSION);
 	} else {
 		print "Skipping schema upgrade check - no tables found\n";
 	}
@@ -229,14 +229,14 @@ sub setup {
 
 =item B<cleardb>
 
-  use CGI::Wiki::Setup::Pg;
+  use Wiki::Toolkit::Setup::Pg;
 
-  # Clear out all CGI::Wiki tables from the database.
-  CGI::Wiki::Setup::Pg::cleardb($dbname, $dbuser, $dbpass, $dbhost);
+  # Clear out all Wiki::Toolkit tables from the database.
+  Wiki::Toolkit::Setup::Pg::cleardb($dbname, $dbuser, $dbpass, $dbhost);
 
 or
 
-  CGI::Wiki::Setup::Pg::cleardb( $dbh );
+  Wiki::Toolkit::Setup::Pg::cleardb( $dbh );
 
 You can either provide an active database handle C<$dbh> or connection
 parameters.                                                                    
@@ -247,12 +247,12 @@ username must be able to drop tables in the database.
 
 The $dbhost argument is optional -- omit it if the database is local.
 
-Clears out all L<CGI::Wiki> store tables from the database. B<NOTE>
+Clears out all L<Wiki::Toolkit> store tables from the database. B<NOTE>
 that this will lose all your data; you probably only want to use this
 for testing purposes or if you really screwed up somewhere. Note also
-that it doesn't touch any L<CGI::Wiki> search backend tables; if you
+that it doesn't touch any L<Wiki::Toolkit> search backend tables; if you
 have any of those in the same or a different database see
-L<CGI::Wiki::Setup::DBIxFTS> or L<CGI::Wiki::Setup::SII>, depending on
+L<Wiki::Toolkit::Setup::DBIxFTS> or L<Wiki::Toolkit::Setup::SII>, depending on
 which search backend you're using.
 
 =cut
@@ -374,7 +374,7 @@ under the same terms as Perl itself.
 
 =head1 SEE ALSO
 
-L<CGI::Wiki>, L<CGI::Wiki::Setup::DBIxFTS>, L<CGI::Wiki::Setup::SII>
+L<Wiki::Toolkit>, L<Wiki::Toolkit::Setup::DBIxFTS>, L<Wiki::Toolkit::Setup::SII>
 
 =cut
 

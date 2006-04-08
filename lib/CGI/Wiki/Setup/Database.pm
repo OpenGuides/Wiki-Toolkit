@@ -1,4 +1,4 @@
-package CGI::Wiki::Setup::Database;
+package Wiki::Toolkit::Setup::Database;
 
 use strict;
 
@@ -8,8 +8,8 @@ $VERSION = 0.08;
 
 =head1 NAME
 
-CGI::Wiki::Setup::Database - parent class for database storage setup
-classes for CGI::Wiki
+Wiki::Toolkit::Setup::Database - parent class for database storage setup
+classes for Wiki::Toolkit
 
 =cut
 

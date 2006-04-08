@@ -1,15 +1,15 @@
 use strict;
-use CGI::Wiki::TestLib;
+use Wiki::Toolkit::TestLib;
 use Test::More;
 use Time::Piece;
 
-if ( scalar @CGI::Wiki::TestLib::wiki_info == 0 ) {
+if ( scalar @Wiki::Toolkit::TestLib::wiki_info == 0 ) {
     plan skip_all => "no backends configured";
 } else {
-    plan tests => ( 82 * scalar @CGI::Wiki::TestLib::wiki_info );
+    plan tests => ( 82 * scalar @Wiki::Toolkit::TestLib::wiki_info );
 }
 
-my $iterator = CGI::Wiki::TestLib->new_wiki_maker;
+my $iterator = Wiki::Toolkit::TestLib->new_wiki_maker;
 
 while ( my $wiki = $iterator->new_wiki ) {
     # Put some test data in.

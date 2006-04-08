@@ -1,4 +1,4 @@
-package CGI::Wiki::Search::Base;
+package Wiki::Toolkit::Search::Base;
 
 use strict;
 use Carp "croak";
@@ -15,11 +15,11 @@ $VERSION = 0.01;
 
 =head1 NAME
 
-CGI::Wiki::Search::Base - Base class for CGI::Wiki search plugins.
+Wiki::Toolkit::Search::Base - Base class for Wiki::Toolkit search plugins.
 
 =head1 SYNOPSIS
 
-  my $search = CGI::Wiki::Search::XXX->new( @args );
+  my $search = Wiki::Toolkit::Search::XXX->new( @args );
   my %wombat_nodes = $search->search_nodes("wombat");
 
 This class details the methods that need to be overriden by search plugins.
@@ -32,7 +32,7 @@ This class details the methods that need to be overriden by search plugins.
 
 =item B<new>
 
-  my $search = CGI::Wiki::Search::XXX->new( @args );
+  my $search = Wiki::Toolkit::Search::XXX->new( @args );
 
 Creates a new searcher. By default the arguments are just passed to
 C<_init>, so you may wish to override that instead.
@@ -221,7 +221,7 @@ sub supports_fuzzy_searches { shift->_abstract };
 
 =head1 SEE ALSO
 
-L<CGI::Wiki>
+L<Wiki::Toolkit>
 
 =cut
 

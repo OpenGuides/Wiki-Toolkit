@@ -1,22 +1,22 @@
 use strict;
-use CGI::Wiki;
-use CGI::Wiki::Setup::SQLite;
-use CGI::Wiki::Store::SQLite;
-use CGI::Wiki::TestConfig;
+use Wiki::Toolkit;
+use Wiki::Toolkit::Setup::SQLite;
+use Wiki::Toolkit::Store::SQLite;
+use Wiki::Toolkit::TestConfig;
 use Test::More tests => 9;
 
-my $class = "CGI::Wiki::Store::SQLite";
+my $class = "Wiki::Toolkit::Store::SQLite";
 
 eval { $class->new; };
 ok( $@, "Failed creation dies" );
 
-my $dbname = $CGI::Wiki::TestConfig::config{SQLite}{dbname};
+my $dbname = $Wiki::Toolkit::TestConfig::config{SQLite}{dbname};
 
 SKIP: {
     skip "No SQLite database configured for testing", 8 unless $dbname;
 
-    CGI::Wiki::Setup::SQLite::cleardb( $dbname );
-    CGI::Wiki::Setup::SQLite::setup( $dbname );
+    Wiki::Toolkit::Setup::SQLite::cleardb( $dbname );
+    Wiki::Toolkit::Setup::SQLite::setup( $dbname );
 
     my $store = eval { $class->new( dbname => $dbname ) };
     is( $@, "", "Creation doesn't die when given connection parameters" );
@@ -33,7 +33,7 @@ SKIP: {
         eval { require Hook::LexWrap; require Test::MockObject; };
         skip "either Hook::LexWrap or Test::MockObject not installed", 2 if $@;
 
-        my $wiki = CGI::Wiki->new( store => $store );
+        my $wiki = Wiki::Toolkit->new( store => $store );
 
         # Write some test data.
         $wiki->write_node( "Home", "This is the home node." )
@@ -45,12 +45,12 @@ SKIP: {
 
         my $temp;
         $temp = Hook::LexWrap::wrap( # fully qualify since we're requiring
-            'CGI::Wiki::Store::Database::verify_checksum',
+            'Wiki::Toolkit::Store::Database::verify_checksum',
             post => sub {
                 undef $temp; # Don't want to wrap our sneaking-in
                 my $node = $_[1];
                 my $evil_store = $class->new( dbname => $dbname );
-                my $evil_wiki = CGI::Wiki->new( store => $evil_store );
+                my $evil_wiki = Wiki::Toolkit->new( store => $evil_store );
                 my %node_data = $evil_wiki->retrieve_node($node);
                 $evil_wiki->write_node($node, "foo", $node_data{checksum})
                     or die "Evil wiki got conflict on writing";

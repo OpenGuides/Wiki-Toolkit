@@ -1,4 +1,4 @@
-package CGI::Wiki::Search::Plucene;
+package Wiki::Toolkit::Search::Plucene;
 
 use strict;
 use Carp "croak";
@@ -14,18 +14,18 @@ use Plucene::Search::HitCollector;
 use vars qw( @ISA $VERSION );
 
 $VERSION = '0.01';
-use base 'CGI::Wiki::Search::Base';
+use base 'Wiki::Toolkit::Search::Base';
 
 =head1 NAME
 
-CGI::Wiki::Search::Plucene - Use Plucene to search your CGI::Wiki wiki.
+Wiki::Toolkit::Search::Plucene - Use Plucene to search your Wiki::Toolkit wiki.
 
 =head1 SYNOPSIS
 
-  my $search = CGI::Wiki::Search::Plucene->new( path => "/var/plucene/wiki" );
+  my $search = Wiki::Toolkit::Search::Plucene->new( path => "/var/plucene/wiki" );
   my %wombat_nodes = $search->search_nodes("wombat");
 
-Provides search-related methods for L<CGI::Wiki>.
+Provides search-related methods for L<Wiki::Toolkit>.
 
 =cut
 
@@ -35,7 +35,7 @@ Provides search-related methods for L<CGI::Wiki>.
 
 =item B<new>
 
-  my $search = CGI::Wiki::Search::Plucene->new( path => "/var/plucene/wiki" );
+  my $search = Wiki::Toolkit::Search::Plucene->new( path => "/var/plucene/wiki" );
 
 Takes only one parameter, which is mandatory. C<path> must be a directory
 for storing the indexed data.  It should exist and be writeable.
@@ -152,7 +152,7 @@ sub supports_fuzzy_searches  { return 1; }
 
 =head1 SEE ALSO
 
-L<CGI::Wiki>, L<CGI::Wiki::Search::Base>.
+L<Wiki::Toolkit>, L<Wiki::Toolkit::Search::Base>.
 
 =cut
 

@@ -1,9 +1,9 @@
-package CGI::Wiki::Search::SII;
+package Wiki::Toolkit::Search::SII;
 
 use strict;
 use Search::InvertedIndex;
 use Carp "croak";
-use base 'CGI::Wiki::Search::Base';
+use base 'Wiki::Toolkit::Search::Base';
 
 use vars qw( @ISA $VERSION );
 
@@ -11,17 +11,17 @@ $VERSION = 0.09;
 
 =head1 NAME
 
-CGI::Wiki::Search::SII - Search::InvertedIndex plugin for CGI::Wiki.
+Wiki::Toolkit::Search::SII - Search::InvertedIndex plugin for Wiki::Toolkit.
 
 =head1 SYNOPSIS
 
   my $indexdb = Search::InvertedIndex::DB::Mysql->new( ... );
-  my $search = CGI::Wiki::Search::SII->new( indexdb => $indexdb );
+  my $search = Wiki::Toolkit::Search::SII->new( indexdb => $indexdb );
   my %wombat_nodes = $search->search_nodes("wombat");
 
-Provides search-related methods for L<CGI::Wiki>.
+Provides search-related methods for L<Wiki::Toolkit>.
 
-See also L<CGI::Wiki::Search::Base>, for methods not documented here.
+See also L<Wiki::Toolkit::Search::Base>, for methods not documented here.
 
 =cut
 
@@ -49,7 +49,7 @@ See also L<CGI::Wiki::Search::Base>, for methods not documented here.
 
   # THEN
 
-  my $search = CGI::Wiki::Search::SII->new( indexdb => $indexdb );
+  my $search = Wiki::Toolkit::Search::SII->new( indexdb => $indexdb );
 
 Takes only one parameter, which is mandatory. C<indexdb> must be a
 C<Search::InvertedIndex::DB::*> object.
@@ -150,7 +150,7 @@ sub supports_fuzzy_searches  { return 1; }
 
 =head1 SEE ALSO
 
-L<CGI::Wiki>, L<CGI::Wiki::Search::Base>.
+L<Wiki::Toolkit>, L<Wiki::Toolkit::Search::Base>.
 
 =cut
 

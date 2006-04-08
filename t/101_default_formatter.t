@@ -1,16 +1,16 @@
 use strict;
-use CGI::Wiki::TestConfig;
+use Wiki::Toolkit::TestConfig;
 use Test::More tests => 11;
 
 # These are standalone tests for the default formatter module,
-# CGI::Wiki::Formatter::Default -- they can be adapted to test any
+# Wiki::Toolkit::Formatter::Default -- they can be adapted to test any
 # formatter object without the need for the rest of the distribution.
 
-use_ok( "CGI::Wiki::Formatter::Default" );
+use_ok( "Wiki::Toolkit::Formatter::Default" );
 
 # Test that the implicit_links flag gets passed through right.
 my $raw = "This paragraph has StudlyCaps in.";
-my $formatter = CGI::Wiki::Formatter::Default->new(
+my $formatter = Wiki::Toolkit::Formatter::Default->new(
 			    implicit_links  => 1,
 			    node_prefix     => "wiki.cgi?node=" );
 
@@ -18,7 +18,7 @@ my $cooked = $formatter->format( $raw );
 like( $cooked, qr!StudlyCaps</a>!,
       "StudlyCaps turned into link when we specify implicit_links=1" );
 
-$formatter = CGI::Wiki::Formatter::Default->new(
+$formatter = Wiki::Toolkit::Formatter::Default->new(
 			    implicit_links  => 0,
 			    node_prefix     => "wiki.cgi?node=" );
 
@@ -34,7 +34,7 @@ and contains a WikiWord.
 
 EOT
 
-$formatter = CGI::Wiki::Formatter::Default->new(
+$formatter = Wiki::Toolkit::Formatter::Default->new(
     implicit_links => 1,
     extended_links => 1,
     node_prefix    => "wiki.cgi?node=" );
@@ -46,7 +46,7 @@ ok( $links_hash{"Another Node"},  "...and titled extended link" );
 ok( $links_hash{"WikiWord"},      "...and implicit link" );
 is( scalar @links_to, 3, "...and has found the right number of links" );
 
-$formatter = CGI::Wiki::Formatter::Default->new(
+$formatter = Wiki::Toolkit::Formatter::Default->new(
     implicit_links => 1,
     extended_links => 0,
     node_prefix    => "wiki.cgi?node=" );
@@ -58,7 +58,7 @@ ok( ! $links_hash{"Extended Link"},
 ok( ! $links_hash{"Another Node"},  "...or titled ones" );
 ok( $links_hash{"WikiWord"},      "...but does find implicit links" );
 
-$formatter = CGI::Wiki::Formatter::Default->new(
+$formatter = Wiki::Toolkit::Formatter::Default->new(
     implicit_links => 0,
     node_prefix    => "wiki.cgi?node=" );
 @links_to = $formatter->find_internal_links( $raw );

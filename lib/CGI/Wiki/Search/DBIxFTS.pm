@@ -1,9 +1,9 @@
-package CGI::Wiki::Search::DBIxFTS;
+package Wiki::Toolkit::Search::DBIxFTS;
 
 use strict;
 use DBIx::FullTextSearch;
 use Carp "croak";
-use base 'CGI::Wiki::Search::Base';
+use base 'Wiki::Toolkit::Search::Base';
 
 use vars qw( @ISA $VERSION );
 
@@ -11,7 +11,7 @@ $VERSION = 0.05;
 
 =head1 NAME
 
-CGI::Wiki::Search::DBIxFTS - DBIx::FullTextSearch search plugin for CGI::Wiki.
+Wiki::Toolkit::Search::DBIxFTS - DBIx::FullTextSearch search plugin for Wiki::Toolkit.
 
 =head1 REQUIRES
 
@@ -19,14 +19,14 @@ DBIx::FullTextSearch
 
 =head1 SYNOPSIS
 
-  my $store = CGI::Wiki::Store::MySQL->new(
+  my $store = Wiki::Toolkit::Store::MySQL->new(
                                     dbname => "wiki", dbpass=>"wiki" );
-  my $search = CGI::Wiki::Search::DBIxFTS->new( dbh => $store->dbh );
+  my $search = Wiki::Toolkit::Search::DBIxFTS->new( dbh => $store->dbh );
   my %wombat_nodes = $search->search_nodes("wombat");
 
-Provides search-related methods for CGI::Wiki.
+Provides search-related methods for Wiki::Toolkit.
 
-See also L<CGI::Wiki::Search::Base>, for methods not documented here.
+See also L<Wiki::Toolkit::Search::Base>, for methods not documented here.
 
 =cut
 
@@ -36,7 +36,7 @@ See also L<CGI::Wiki::Search::Base>, for methods not documented here.
 
 =item B<new>
 
-  my $search = CGI::Wiki::Search::DBIxFTS->new( dbh => $dbh );
+  my $search = Wiki::Toolkit::Search::DBIxFTS->new( dbh => $dbh );
 
 You must supply a handle to a database that has the
 DBIx::FullTextSearch indexes already set up. (Currently though there's
@@ -115,7 +115,7 @@ sub supports_fuzzy_searches  { return 0; }
 
 =head1 SEE ALSO
 
-L<CGI::Wiki>,  L<CGI::Wiki::Search::Base>.
+L<Wiki::Toolkit>,  L<Wiki::Toolkit::Search::Base>.
 
 =cut
 

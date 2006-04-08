@@ -1,4 +1,4 @@
-package CGI::Wiki::Setup::DBIxFTSMySQL;
+package Wiki::Toolkit::Setup::DBIxFTSMySQL;
 
 use strict;
 
@@ -11,25 +11,25 @@ use Carp;
 
 =head1 NAME
 
-CGI::Wiki::Setup::DBIxFTSMySQL - set up fulltext indexes for CGI::Wiki
+Wiki::Toolkit::Setup::DBIxFTSMySQL - set up fulltext indexes for Wiki::Toolkit
 
 =head1 SYNOPSIS
 
-  use CGI::Wiki::Setup::DBIxFTSMySQL;
-  CGI::Wiki::Setup::DBIxFTSMySQL::setup($dbname, $dbuser, $dbpass, $dbhost);
+  use Wiki::Toolkit::Setup::DBIxFTSMySQL;
+  Wiki::Toolkit::Setup::DBIxFTSMySQL::setup($dbname, $dbuser, $dbpass, $dbhost);
 
 Omit $dbhost if the database is local.
 
 =head1 DESCRIPTION
 
-Set up DBIx::FullTextSearch indexes for use with CGI::Wiki. Has only
+Set up DBIx::FullTextSearch indexes for use with Wiki::Toolkit. Has only
 one function, C<setup>, which takes as arguments B<either> the
 database name, the username and the password B<or> a database handle
 . The username must be able to create and drop tables in the database.
 
 The $dbhost argument is optional -- omit it if the database is local.
 
-Note that any pre-existing L<CGI::Wiki> indexes stored in the database
+Note that any pre-existing L<Wiki::Toolkit> indexes stored in the database
 will be I<cleared> by this function, so if you have existing data you
 probably want to use the C<store> parameter to get it re-indexed.
 
@@ -96,7 +96,7 @@ under the same terms as Perl itself.
 
 =head1 SEE ALSO
 
-L<CGI::Wiki>, L<CGI::Wiki::Setup::MySQL>, L<DBIx::FullTextSearch>
+L<Wiki::Toolkit>, L<Wiki::Toolkit::Setup::MySQL>, L<DBIx::FullTextSearch>
 
 =cut
 

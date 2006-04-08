@@ -1,4 +1,4 @@
-package CGI::Wiki::Plugin::Foo;
-use base qw( CGI::Wiki::Plugin );
+package Wiki::Toolkit::Plugin::Foo;
+use base qw( Wiki::Toolkit::Plugin );
 
 1;

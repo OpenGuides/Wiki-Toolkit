@@ -1,4 +1,4 @@
-package CGI::Wiki::Store::Database;
+package Wiki::Toolkit::Store::Database;
 
 use strict;
 
@@ -26,15 +26,15 @@ BEGIN {
 
 =head1 NAME
 
-CGI::Wiki::Store::Database - parent class for database storage backends
-for CGI::Wiki
+Wiki::Toolkit::Store::Database - parent class for database storage backends
+for Wiki::Toolkit
 
 =head1 SYNOPSIS
 
 Can't see yet why you'd want to use the backends directly, but:
 
   # See below for parameter details.
-  my $store = CGI::Wiki::Store::MySQL->new( %config );
+  my $store = Wiki::Toolkit::Store::MySQL->new( %config );
 
 =head1 METHODS
 
@@ -42,14 +42,14 @@ Can't see yet why you'd want to use the backends directly, but:
 
 =item B<new>
 
-  my $store = CGI::Wiki::Store::MySQL->new( dbname  => "wiki",
+  my $store = Wiki::Toolkit::Store::MySQL->new( dbname  => "wiki",
 					    dbuser  => "wiki",
 					    dbpass  => "wiki",
                                             dbhost  => "db.example.com",
                                             charset => "iso-8859-1" );
 or
 
-  my $store = CGI::Wiki::Store::MySQL->new( dbh => $dbh );
+  my $store = Wiki::Toolkit::Store::MySQL->new( dbh => $dbh );
 
 C<charset> is optional, defaults to C<iso-8859-1>, and does nothing
 unless you're using perl 5.8 or newer.
@@ -1005,7 +1005,7 @@ sub delete_node {
         my $formatter = $wiki->formatter;
         if ( $formatter->can( "find_internal_links" ) ) {
             # Supply $metadata to formatter in case it's needed to alter the
-            # behaviour of the formatter, eg for CGI::Wiki::Formatter::Multiple
+            # behaviour of the formatter, eg for Wiki::Toolkit::Formatter::Multiple
             my @all = $formatter->find_internal_links(
                                     $prevdata{content}, $prevdata{metadata} );
             my %unique = map { $_ => 1 } @all;

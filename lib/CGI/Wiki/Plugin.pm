@@ -1,4 +1,4 @@
-package CGI::Wiki::Plugin;
+package Wiki::Toolkit::Plugin;
 
 use strict;
 
@@ -7,22 +7,22 @@ $VERSION = '0.03';
 
 =head1 NAME
 
-CGI::Wiki::Plugin - A base class for CGI::Wiki plugins.
+Wiki::Toolkit::Plugin - A base class for Wiki::Toolkit plugins.
 
 =head1 DESCRIPTION
 
 Provides methods for accessing the backend store, search and formatter
-objects of the L<CGI::Wiki> object that a plugin instance is
+objects of the L<Wiki::Toolkit> object that a plugin instance is
 registered with.
 
 =head1 SYNOPSIS
 
-  package CGI::Wiki::Plugin::Foo;
-  use base qw( CGI::Wiki::Plugin);
+  package Wiki::Toolkit::Plugin::Foo;
+  use base qw( Wiki::Toolkit::Plugin);
 
   # And then in your script:
-  my $wiki = CGI::Wiki->new( ... );
-  my $plugin = CGI::Wiki::Plugin::Foo->new;
+  my $wiki = Wiki::Toolkit->new( ... );
+  my $plugin = Wiki::Toolkit::Plugin::Foo->new;
   $wiki->register_plugin( plugin => $plugin );
   my $node = $plugin->datastore->retrieve_node( "Home" );
 
@@ -53,7 +53,7 @@ sub new {
 =item B<datastore>
 
 Returns the backend store object, or C<undef> if the C<register_plugin>
-method hasn't been called on a L<CGI::Wiki> object yet.
+method hasn't been called on a L<Wiki::Toolkit> object yet.
 
 =cut
 
@@ -66,7 +66,7 @@ sub datastore {
 =item B<indexer>
 
 Returns the backend search object, or C<undef> if the
-C<register_plugin> method hasn't been called on a L<CGI::Wiki> object
+C<register_plugin> method hasn't been called on a L<Wiki::Toolkit> object
 yet, or if the wiki object had no search object defined.
 
 =cut
@@ -80,7 +80,7 @@ sub indexer {
 =item B<formatter>
 
 Returns the backend formatter object, or C<undef> if the C<register_plugin>
-method hasn't been called on a L<CGI::Wiki> object yet.
+method hasn't been called on a L<Wiki::Toolkit> object yet.
 
 =cut
 
@@ -94,7 +94,7 @@ sub formatter {
 
 =head1 SEE ALSO
 
-L<CGI::Wiki>
+L<Wiki::Toolkit>
 
 =head1 AUTHOR
 

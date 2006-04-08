@@ -1,5 +1,5 @@
-package CGI::Wiki::Plugin::Bar;
-use base qw( CGI::Wiki::Plugin );
+package Wiki::Toolkit::Plugin::Bar;
+use base qw( Wiki::Toolkit::Plugin );
 
 sub on_register {
     my $self = shift;

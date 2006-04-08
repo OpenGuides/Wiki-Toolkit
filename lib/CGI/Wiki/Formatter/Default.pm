@@ -1,4 +1,4 @@
-package CGI::Wiki::Formatter::Default;
+package Wiki::Toolkit::Formatter::Default;
 
 use strict;
 
@@ -12,18 +12,18 @@ use HTML::PullParser;
 
 =head1 NAME
 
-CGI::Wiki::Formatter::Default - A formatter for CGI::Wiki.
+Wiki::Toolkit::Formatter::Default - A formatter for Wiki::Toolkit.
 
 =head1 DESCRIPTION
 
-A formatter backend for L<CGI::Wiki>.
+A formatter backend for L<Wiki::Toolkit>.
 
 =head1 SYNOPSIS
 
-  my $store     = CGI::Wiki::Store::SQLite->new( ... );
+  my $store     = Wiki::Toolkit::Store::SQLite->new( ... );
   # See below for parameter details.
-  my $formatter = CGI::Wiki::Formatter::Default->new( %config );
-  my $wiki      = CGI::Wiki->new( store     => $store,
+  my $formatter = Wiki::Toolkit::Formatter::Default->new( %config );
+  my $wiki      = Wiki::Toolkit->new( store     => $store,
                                   formatter => $formatter );
 
 =head1 METHODS
@@ -32,7 +32,7 @@ A formatter backend for L<CGI::Wiki>.
 
 =item B<new>
 
-  my $formatter = CGI::Wiki::Formatter::Default->new(
+  my $formatter = Wiki::Toolkit::Formatter::Default->new(
                  extended_links  => 0,
                  implicit_links  => 1,
                  allowed_tags    => [qw(b i)],  # defaults to none
@@ -186,7 +186,7 @@ sub find_internal_links {
 					my $title;
 					($link, $title) = split(/\|/, $link, 2)
 						if $opts->{extended};
-					push @CGI::Wiki::Formatter::Default::_links_found,
+					push @Wiki::Toolkit::Formatter::Default::_links_found,
 						$link;
 					return ""; # don't care about output
 				}
@@ -207,7 +207,7 @@ sub find_internal_links {
 
 =head1 SEE ALSO
 
-L<CGI::Wiki>
+L<Wiki::Toolkit>
 
 =head1 AUTHOR
 

@@ -1,28 +1,28 @@
-package CGI::Wiki::TestConfig::Utilities;
+package Wiki::Toolkit::TestConfig::Utilities;
 
 use strict;
 
-use CGI::Wiki::TestConfig;
+use Wiki::Toolkit::TestConfig;
 
 use vars qw( $num_stores $num_combinations $VERSION );
 $VERSION = '0.06';
 
 =head1 NAME
 
-CGI::Wiki::TestConfig::Utilities - Utilities for testing CGI::Wiki things (deprecated).
+Wiki::Toolkit::TestConfig::Utilities - Utilities for testing Wiki::Toolkit things (deprecated).
 
 =head1 DESCRIPTION
 
-Deprecated - use L<CGI::Wiki::TestLib> instead.
+Deprecated - use L<Wiki::Toolkit::TestLib> instead.
 
 =cut
 
 my %stores;
 
 foreach my $dbtype (qw( MySQL Pg SQLite )) {
-    if ($CGI::Wiki::TestConfig::config{$dbtype}->{dbname}) {
-        my %config = %{$CGI::Wiki::TestConfig::config{$dbtype}};
-	my $store_class = "CGI::Wiki::Store::$dbtype";
+    if ($Wiki::Toolkit::TestConfig::config{$dbtype}->{dbname}) {
+        my %config = %{$Wiki::Toolkit::TestConfig::config{$dbtype}};
+	my $store_class = "Wiki::Toolkit::Store::$dbtype";
 	eval "require $store_class";
 	my $store = $store_class->new( dbname => $config{dbname},
 				       dbuser => $config{dbuser},
@@ -39,19 +39,19 @@ $num_stores = scalar keys %stores;
 my %searches;
 
 # DBIxFTS only works with MySQL.
-if ( $CGI::Wiki::TestConfig::config{dbixfts} && $stores{MySQL} ) {
-    require CGI::Wiki::Search::DBIxFTS;
+if ( $Wiki::Toolkit::TestConfig::config{dbixfts} && $stores{MySQL} ) {
+    require Wiki::Toolkit::Search::DBIxFTS;
     my $dbh = $stores{MySQL}->dbh;
-    $searches{DBIxFTSMySQL} = CGI::Wiki::Search::DBIxFTS->new( dbh => $dbh );
+    $searches{DBIxFTSMySQL} = Wiki::Toolkit::Search::DBIxFTS->new( dbh => $dbh );
 } else {
     $searches{DBIxFTSMySQL} = undef;
 }
 
 # Test the MySQL SII backend, if we can.
-if ( $CGI::Wiki::TestConfig::config{search_invertedindex} && $stores{MySQL} ) {
+if ( $Wiki::Toolkit::TestConfig::config{search_invertedindex} && $stores{MySQL} ) {
     require Search::InvertedIndex::DB::Mysql;
-    require CGI::Wiki::Search::SII;
-    my %dbconfig = %{$CGI::Wiki::TestConfig::config{MySQL}};
+    require Wiki::Toolkit::Search::SII;
+    my %dbconfig = %{$Wiki::Toolkit::TestConfig::config{MySQL}};
     my $indexdb = Search::InvertedIndex::DB::Mysql->new(
                        -db_name    => $dbconfig{dbname},
                        -username   => $dbconfig{dbuser},
@@ -59,7 +59,7 @@ if ( $CGI::Wiki::TestConfig::config{search_invertedindex} && $stores{MySQL} ) {
 	   	       -hostname   => $dbconfig{dbhost} || "",
                        -table_name => 'siindex',
                        -lock_mode  => 'EX' );
-    $searches{SIIMySQL} = CGI::Wiki::Search::SII->new( indexdb => $indexdb );
+    $searches{SIIMySQL} = Wiki::Toolkit::Search::SII->new( indexdb => $indexdb );
 } else {
     $searches{SIIMySQL} = undef;
 }
@@ -67,11 +67,11 @@ if ( $CGI::Wiki::TestConfig::config{search_invertedindex} && $stores{MySQL} ) {
 # Test the Pg SII backend, if we can.
 eval { require Search::InvertedIndex::DB::Pg; };
 my $sii_pg = $@ ? 0 : 1;
-if ( $CGI::Wiki::TestConfig::config{search_invertedindex} && $stores{Pg}
+if ( $Wiki::Toolkit::TestConfig::config{search_invertedindex} && $stores{Pg}
      && $sii_pg ) {
     require Search::InvertedIndex::DB::Pg;
-    require CGI::Wiki::Search::SII;
-    my %dbconfig = %{$CGI::Wiki::TestConfig::config{Pg}};
+    require Wiki::Toolkit::Search::SII;
+    my %dbconfig = %{$Wiki::Toolkit::TestConfig::config{Pg}};
     my $indexdb = Search::InvertedIndex::DB::Pg->new(
                        -db_name    => $dbconfig{dbname},
                        -username   => $dbconfig{dbuser},
@@ -79,19 +79,19 @@ if ( $CGI::Wiki::TestConfig::config{search_invertedindex} && $stores{Pg}
 	   	       -hostname   => $dbconfig{dbhost},
                        -table_name => 'siindex',
                        -lock_mode  => 'EX' );
-    $searches{SIIPg} = CGI::Wiki::Search::SII->new( indexdb => $indexdb );
+    $searches{SIIPg} = Wiki::Toolkit::Search::SII->new( indexdb => $indexdb );
 } else {
     $searches{SIIPg} = undef;
 }
 
 # Also test the default DB_File backend, if we have S::II installed at all.
-if ( $CGI::Wiki::TestConfig::config{search_invertedindex} ) {
+if ( $Wiki::Toolkit::TestConfig::config{search_invertedindex} ) {
     require Search::InvertedIndex;
-    require CGI::Wiki::Search::SII;
+    require Wiki::Toolkit::Search::SII;
     my $indexdb = Search::InvertedIndex::DB::DB_File_SplitHash->new(
                        -map_name  => 't/sii-db-file-test.db',
                        -lock_mode  => 'EX' );
-    $searches{SII} = CGI::Wiki::Search::SII->new( indexdb => $indexdb );
+    $searches{SII} = Wiki::Toolkit::Search::SII->new( indexdb => $indexdb );
 } else {
     $searches{SII} = undef;
 }
@@ -143,7 +143,7 @@ sub reinitialise_stores {
         my $dbhost = $store->dbhost;
 
         # Clear out the test database, then set up tables afresh.
-        my $setup_class = "CGI::Wiki::Setup::$store_name";
+        my $setup_class = "Wiki::Toolkit::Setup::$store_name";
         eval "require $setup_class";
         {
           no strict "refs";
@@ -163,7 +163,7 @@ sub combinations {
 
 =head1 SEE ALSO
 
-L<CGI::Wiki::TestLib>, the replacement for this module.
+L<Wiki::Toolkit::TestLib>, the replacement for this module.
 
 =head1 AUTHOR
 

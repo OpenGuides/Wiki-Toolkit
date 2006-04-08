@@ -36,9 +36,9 @@ HOW TO INSTALL THIS:
          *****************************************************
          ****                                             ****
          ****  THE DATABASE VALUES YOU GIVE HERE WILL BE  ****
-         **** STORED IN CGI::Wiki::TestConfig AND WILL BE ****
-         ****    USED FOR FUTURE INSTALLS OF THIS AND     ****
-         ****             RELATED MODULES.                ****
+         ****   STORED IN Wiki::Toolkit::TestConfig AND   ****
+         ****   WILL BE USED FOR FUTURE INSTALLS OF THIS  ****
+         ****            AND RELATED MODULES.             ****
          ****                                             ****
          *****************************************************
 
@@ -48,27 +48,27 @@ HOW TO INSTALL THIS:
   Leave them blank or explicitly set them to 'undef' if you don't want
   to test that particular backend.
 
-    CGI_WIKI_MYSQL_DBNAME   # If 'undef', following two variables are ignored
-    CGI_WIKI_MYSQL_DBUSER
-    CGI_WIKI_MYSQL_DBPASS
-    CGI_WIKI_MYSQL_DBHOST   # Leave blank if database is local
-    CGI_WIKI_PG_DBNAME      # If 'undef', following two variables are ignored
-    CGI_WIKI_PG_DBUSER
-    CGI_WIKI_PG_DBPASS
-    CGI_WIKI_PG_DBHOST      # Leave blank if database is local
-    CGI_WIKI_DBIXFTS_MYSQL  # NOTE: Any non-blank value other than 'undef'
+    WIKI_TOOLKIT_MYSQL_DBNAME   # If 'undef', following two variables are ignored
+    WIKI_TOOLKIT_MYSQL_DBUSER
+    WIKI_TOOLKIT_MYSQL_DBPASS
+    WIKI_TOOLKIT_MYSQL_DBHOST   # Leave blank if database is local
+    WIKI_TOOLKIT_PG_DBNAME      # If 'undef', following two variables are ignored
+    WIKI_TOOLKIT_PG_DBUSER
+    WIKI_TOOLKIT_PG_DBPASS
+    WIKI_TOOLKIT_PG_DBHOST      # Leave blank if database is local
+    WIKI_TOOLKIT_DBIXFTS_MYSQL  # NOTE: Any non-blank value other than 'undef'
                             # or '0' signifies 'test this'
 
   Second and subsequent successful runs of 'perl Makefile.PL' will use
   the testing setup specified in the first run and hence will not ask
   questions or look for options in environment variables.  To over-ride
   this behaviour and be asked the questions again, do 'perl Makefile.PL -s'
-  or set the environment variable CGI_WIKI_RERUN_CONFIG to something
+  or set the environment variable WIKI_TOOLKIT_RERUN_CONFIG to something
   non-blank.  If you do this then your previous answers will be offered
   as defaults.
 
   When re-running configuration (ie with the '-s' flag or
-  CGI_WIKI_RERUN_CONFIG set), explicit settings in environment variables
+  WIKI_TOOLKIT_RERUN_CONFIG set), explicit settings in environment variables
   will over-ride settings specified during previous runs.
 
   If you provide settings for a backend that you don't have the drivers
@@ -77,13 +77,13 @@ HOW TO INSTALL THIS:
 
 POST INSTALL:
 
-  You'll want to run the cgi-wiki-setupdb script to set up the initial
+  You'll want to run the wiki-toolkit-setupdb script to set up the initial
   database tables.  This script will have been installed with the rest
   of the distribution.  There is a hole in this documentation here.
 
-  If you are upgrading from an earlier version of CGI::Wiki, and there
+  If you are upgrading from an earlier version of Wiki::Toolkit, and there
   has been no change to the database schema in the newer releases,
-  cgi-wiki-setupdb will do nothing. If there has been a change to the
+  wiki-toolkit-setupdb will do nothing. If there has been a change to the
   schema, it will leave your existing data alone but update the table schema.
 
     user-setup-mysql-dbixfts.pl
@@ -92,8 +92,8 @@ POST INSTALL:
   attempt to index any existing data.  Because of this, it must be run *after*
   user-setup-mysql.pl
 
-  Note that installing CGI::Wiki *does* install cgi-wiki-setupdb for you,
-  but does *not* install user-setup-mysql-dbixfts.pl (this is mainly
+  Note that installing Wiki::Toolkit *does* install wiki-toolkit-setupdb for
+  you, but does *not* install user-setup-mysql-dbixfts.pl (this is mainly
   because the name is really ugly).
 
 TESTING NOTES:
@@ -106,12 +106,12 @@ TESTING NOTES:
 Postgres notes:
 
   You can create a database from the shell:
-  shell$ createdb cgi_wiki_test
+  shell$ createdb wiki_toolkit_test
 
   And give a user password access by editing pg_hba.conf (which lives
   somewhere like /var/lib/postgres/data/pg_hba.conf) to contain the line:
 
-  local        cgi_wiki_test                            md5
+  local        wiki_toolkit_test                            md5
 
   Then in psql run something like:
   postgres=# create user wiki with password 'wiki';
@@ -121,7 +121,7 @@ Postgres notes:
 
 MySQL notes:
 
-  Something like "grant all privileges on cgi_wiki_test.* to
+  Something like "grant all privileges on wiki_toolkit_test.* to
   wiki@localhost identified by 'wiki'" will create a suitable user and
   give it password access to, and all required privileges on the test
   database.

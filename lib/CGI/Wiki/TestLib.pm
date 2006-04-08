@@ -1,31 +1,31 @@
-package CGI::Wiki::TestLib;
+package Wiki::Toolkit::TestLib;
 
 use strict;
 use Carp "croak";
-use CGI::Wiki;
-use CGI::Wiki::TestConfig;
+use Wiki::Toolkit;
+use Wiki::Toolkit::TestConfig;
 
 use vars qw( $VERSION @wiki_info );
 $VERSION = '0.03';
 
 =head1 NAME
 
-CGI::Wiki::TestLib - Utilities for writing CGI::Wiki tests.
+Wiki::Toolkit::TestLib - Utilities for writing Wiki::Toolkit tests.
 
 =head1 DESCRIPTION
 
-When 'perl Makefile.PL' is run on a CGI::Wiki distribution,
+When 'perl Makefile.PL' is run on a Wiki::Toolkit distribution,
 information will be gathered about test databases etc that can be used
-for running tests. CGI::Wiki::TestLib gives convenient access to this
+for running tests. Wiki::Toolkit::TestLib gives convenient access to this
 information.
 
 =head1 SYNOPSIS
 
   use strict;
-  use CGI::Wiki::TestLib;
+  use Wiki::Toolkit::TestLib;
   use Test::More;
 
-  my $iterator = CGI::Wiki::TestLib->new_wiki_maker;
+  my $iterator = Wiki::Toolkit::TestLib->new_wiki_maker;
   plan tests => ( $iterator->number * 6 );
 
   while ( my $wiki = $iterator->new_wiki ) {
@@ -39,14 +39,14 @@ search and storage backends.
 
 =cut
 
-my %configured = %CGI::Wiki::TestConfig::config;
+my %configured = %Wiki::Toolkit::TestConfig::config;
 
 my %datastore_info;
 foreach my $dbtype (qw( MySQL Pg SQLite )) {
     if ( $configured{$dbtype}{dbname} ) {
         my %config = %{ $configured{$dbtype} };
-	my $store_class = "CGI::Wiki::Store::$dbtype";
-	my $setup_class = "CGI::Wiki::Setup::$dbtype";
+	my $store_class = "Wiki::Toolkit::Store::$dbtype";
+	my $setup_class = "Wiki::Toolkit::Setup::$dbtype";
         $datastore_info{$dbtype} = {
                                      class  => $store_class,
                                      setup_class => $setup_class,
@@ -161,7 +161,7 @@ foreach my $dbtype ( qw( MySQL Pg SQLite ) ) {
 
 =item B<new_wiki_maker>
 
-  my $iterator = CGI::Wiki::TestLib->new_wiki_maker;
+  my $iterator = Wiki::Toolkit::TestLib->new_wiki_maker;
 
 =cut
 
@@ -176,7 +176,7 @@ sub new_wiki_maker {
 =item B<number>
 
   use Test::More;
-  my $iterator = CGI::Wiki::TestLib->new_wiki_maker;
+  my $iterator = Wiki::Toolkit::TestLib->new_wiki_maker;
   plan tests => ( $iterator->number * 6 );
 
 Returns the number of new wikis that your iterator will be able to give you.
@@ -218,41 +218,41 @@ sub new_wiki {
     # Set up and clear search object (if required).
     if ( $details->{dbixfts_info} ) {
         my %fts_info = %{ $details->{dbixfts_info} };
-        require CGI::Wiki::Store::MySQL;
+        require Wiki::Toolkit::Store::MySQL;
         my %dbconfig = %{ $fts_info{db_params} };
-        my $dsn = CGI::Wiki::Store::MySQL->_dsn( $dbconfig{dbname},
+        my $dsn = Wiki::Toolkit::Store::MySQL->_dsn( $dbconfig{dbname},
                                                  $dbconfig{dbhost}  );
         my $dbh = DBI->connect( $dsn, $dbconfig{dbuser}, $dbconfig{dbpass},
                        { PrintError => 0, RaiseError => 1, AutoCommit => 1 } )
           or croak "Can't connect to $dbconfig{dbname} using $dsn: " . DBI->errstr;
-        require CGI::Wiki::Setup::DBIxFTSMySQL;
-        CGI::Wiki::Setup::DBIxFTSMySQL::setup(
+        require Wiki::Toolkit::Setup::DBIxFTSMySQL;
+        Wiki::Toolkit::Setup::DBIxFTSMySQL::setup(
                                  @dbconfig{ qw( dbuser dbname dbpass dbhost ) }
                                              );
-        require CGI::Wiki::Search::DBIxFTS;
-        $wiki_config{search} = CGI::Wiki::Search::DBIxFTS->new( dbh => $dbh );
+        require Wiki::Toolkit::Search::DBIxFTS;
+        $wiki_config{search} = Wiki::Toolkit::Search::DBIxFTS->new( dbh => $dbh );
     } elsif ( $details->{sii_info} ) {
         my %sii_info = %{ $details->{sii_info} };
         my $db_class = $sii_info{db_class};
         eval "use $db_class";
         my %db_params = %{ $sii_info{db_params} };
         my $indexdb = $db_class->new( %db_params );
-        require CGI::Wiki::Setup::SII;
-        CGI::Wiki::Setup::SII::setup( indexdb => $indexdb );
-        $wiki_config{search} = CGI::Wiki::Search::SII->new(indexdb =>$indexdb);
+        require Wiki::Toolkit::Setup::SII;
+        Wiki::Toolkit::Setup::SII::setup( indexdb => $indexdb );
+        $wiki_config{search} = Wiki::Toolkit::Search::SII->new(indexdb =>$indexdb);
     } elsif ( $details->{plucene_path} ) {
-        require CGI::Wiki::Search::Plucene;
+        require Wiki::Toolkit::Search::Plucene;
         my $dir = $details->{plucene_path};
         unlink <$dir/*>; # don't die if false since there may be no files
         if ( -d $dir ) {
             rmdir $dir or die $!;
 	}
         mkdir $dir or die $!;
-        $wiki_config{search} = CGI::Wiki::Search::Plucene->new( path => $dir );
+        $wiki_config{search} = Wiki::Toolkit::Search::Plucene->new( path => $dir );
     }
 
     # Make a wiki.
-    my $wiki = CGI::Wiki->new( %wiki_config );
+    my $wiki = Wiki::Toolkit->new( %wiki_config );
     $$self++;
     return $wiki;
 }
@@ -261,7 +261,7 @@ sub new_wiki {
 
 =head1 SEE ALSO
 
-L<CGI::Wiki>
+L<Wiki::Toolkit>
 
 =head1 AUTHOR
 
@@ -277,7 +277,7 @@ under the same terms as Perl itself.
 =head1 CAVEATS
 
 If you have the L<Search::InvertedIndex> backend configured (see
-L<CGI::Wiki::Search::SII>) then your tests will raise warnings like
+L<Wiki::Toolkit::Search::SII>) then your tests will raise warnings like
 
   (in cleanup) Search::InvertedIndex::DB::Mysql::lock() -
     testdb is not open. Can't lock.

@@ -1,14 +1,14 @@
 use strict;
-use CGI::Wiki::TestLib;
+use Wiki::Toolkit::TestLib;
 use Test::More;
 
-if ( scalar @CGI::Wiki::TestLib::wiki_info == 0 ) {
+if ( scalar @Wiki::Toolkit::TestLib::wiki_info == 0 ) {
     plan skip_all => "no backends configured";
 } else {
-    plan tests => ( 5 * scalar @CGI::Wiki::TestLib::wiki_info );
+    plan tests => ( 5 * scalar @Wiki::Toolkit::TestLib::wiki_info );
 }
 
-my $iterator = CGI::Wiki::TestLib->new_wiki_maker;
+my $iterator = Wiki::Toolkit::TestLib->new_wiki_maker;
 
 while ( my $wiki = $iterator->new_wiki ) {
     $wiki->write_node("A Node", "Node content.") or die "Can't write node";

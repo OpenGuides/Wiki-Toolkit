@@ -1,16 +1,16 @@
 use strict;
-use CGI::Wiki;
-use CGI::Wiki::Store::Pg;
-use CGI::Wiki::Setup::Pg;
-use CGI::Wiki::TestConfig;
+use Wiki::Toolkit;
+use Wiki::Toolkit::Store::Pg;
+use Wiki::Toolkit::Setup::Pg;
+use Wiki::Toolkit::TestConfig;
 use Test::More tests => 9;
 
-my $class = "CGI::Wiki::Store::Pg";
+my $class = "Wiki::Toolkit::Store::Pg";
 
 eval { $class->new; };
 ok( $@, "Failed creation dies" );
 
-my %config = %{$CGI::Wiki::TestConfig::config{Pg}};
+my %config = %{$Wiki::Toolkit::TestConfig::config{Pg}};
 my ($dbname, $dbuser, $dbpass, $dbhost) = @config{qw(dbname dbuser dbpass dbhost)};
 
 SKIP: {
@@ -38,11 +38,11 @@ SKIP: {
       $dbh->disconnect;
     }
 
-    CGI::Wiki::Setup::Pg::cleardb({ dbname => $dbname,
+    Wiki::Toolkit::Setup::Pg::cleardb({ dbname => $dbname,
                                     dbuser => $dbuser,
                                     dbpass => $dbpass,
                                     dbhost => $dbhost });
-    CGI::Wiki::Setup::Pg::setup({ dbname => $dbname,
+    Wiki::Toolkit::Setup::Pg::setup({ dbname => $dbname,
                                   dbuser => $dbuser,
                                   dbpass => $dbpass,
                                   dbhost => $dbhost });
@@ -55,7 +55,7 @@ SKIP: {
                                  dbuser => $dbuser,
                                  dbpass => $dbpass,
                                  dbhost => $dbhost );
-        my $wiki = CGI::Wiki->new( store => $store );
+        my $wiki = Wiki::Toolkit->new( store => $store );
 
         # Write some test data.
         $wiki->write_node( "Home", "This is the home node." )
@@ -66,7 +66,7 @@ SKIP: {
         # writes to the node before letting us have control back.
         my $temp;
         $temp = Hook::LexWrap::wrap( # fully qualify since we're requiring
-            'CGI::Wiki::Store::Database::verify_checksum',
+            'Wiki::Toolkit::Store::Database::verify_checksum',
             post => sub {
                 undef $temp; # Don't want to wrap our sneaking-in
                 my $node = $_[1];
@@ -74,7 +74,7 @@ SKIP: {
                                               dbuser => $dbuser,
                                               dbpass => $dbpass,
                                               dbhost => $dbhost );
-                my $evil_wiki = CGI::Wiki->new( store => $evil_store );
+                my $evil_wiki = Wiki::Toolkit->new( store => $evil_store );
                 my %node_data = $evil_wiki->retrieve_node($node);
                 $evil_wiki->write_node($node, "foo", $node_data{checksum})
                     or die "Evil wiki got conflict on writing";

@@ -2,18 +2,18 @@
 
 use strict;
 use Test::More tests => 13;
-use CGI::Wiki::TestConfig;
+use Wiki::Toolkit::TestConfig;
 
 my $class;
 BEGIN {
-    $class = "CGI::Wiki::Store::MySQL";
+    $class = "Wiki::Toolkit::Store::MySQL";
     use_ok($class);
 }
 
 eval { $class->new; };
 ok( $@, "Failed creation dies" );
 
-my %config = %{$CGI::Wiki::TestConfig::config{MySQL}};
+my %config = %{$Wiki::Toolkit::TestConfig::config{MySQL}};
 my ($dbname, $dbuser, $dbpass, $dbhost) =
                                       @config{qw(dbname dbuser dbpass dbhost)};
 

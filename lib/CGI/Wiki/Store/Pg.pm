@@ -1,26 +1,26 @@
-package CGI::Wiki::Store::Pg;
+package Wiki::Toolkit::Store::Pg;
 
 use strict;
 
 use vars qw( @ISA $VERSION );
 
-use CGI::Wiki::Store::Database;
+use Wiki::Toolkit::Store::Database;
 use Carp qw/carp croak/;
 
-@ISA = qw( CGI::Wiki::Store::Database );
+@ISA = qw( Wiki::Toolkit::Store::Database );
 $VERSION = 0.05;
 
 =head1 NAME
 
-CGI::Wiki::Store::Pg - Postgres storage backend for CGI::Wiki
+Wiki::Toolkit::Store::Pg - Postgres storage backend for Wiki::Toolkit
 
 =head1 REQUIRES
 
-Subclasses CGI::Wiki::Store::Database.
+Subclasses Wiki::Toolkit::Store::Database.
 
 =head1 SYNOPSIS
 
-See CGI::Wiki::Store::Database
+See Wiki::Toolkit::Store::Database
 
 =cut
 

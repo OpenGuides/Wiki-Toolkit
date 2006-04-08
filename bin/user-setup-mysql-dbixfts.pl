@@ -2,7 +2,7 @@
 
 use strict;
 use Getopt::Long;
-use CGI::Wiki::Setup::DBIxFTSMySQL;
+use Wiki::Toolkit::Setup::DBIxFTSMySQL;
 
 my ($dbname, $dbuser, $dbpass, $help);
 GetOptions("name=s" => \$dbname,
@@ -21,11 +21,11 @@ if ($help) {
     exit 0;
 }
 
-CGI::Wiki::Setup::DBIxFTSMySQL::setup($dbname, $dbuser, $dbpass);
+Wiki::Toolkit::Setup::DBIxFTSMySQL::setup($dbname, $dbuser, $dbpass);
 
 =head1 NAME
 
-user-setup-mysql-dbixfts - set up a DBIx::FullTextSearch backend for CGI::Wiki
+user-setup-mysql-dbixfts - set up a DBIx::FullTextSearch backend for Wiki::Toolkit
 
 =head1 SYNOPSIS
 
@@ -67,7 +67,7 @@ under the same terms as Perl itself.
 
 =head1 SEE ALSO
 
-L<CGI::Wiki>, L<CGI::Wiki::Setup::DBIxFTSMySQL>
+L<Wiki::Toolkit>, L<Wiki::Toolkit::Setup::DBIxFTSMySQL>
 
 =cut
 

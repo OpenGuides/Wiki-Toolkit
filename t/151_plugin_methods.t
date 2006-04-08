@@ -1,23 +1,23 @@
 use strict;
-use CGI::Wiki::TestLib;
+use Wiki::Toolkit::TestLib;
 use Test::More;
 
 use lib "t/lib";
-use CGI::Wiki::Plugin::Foo;
-use CGI::Wiki::Plugin::Bar;
+use Wiki::Toolkit::Plugin::Foo;
+use Wiki::Toolkit::Plugin::Bar;
 
-if ( scalar @CGI::Wiki::TestLib::wiki_info == 0 ) {
+if ( scalar @Wiki::Toolkit::TestLib::wiki_info == 0 ) {
     plan skip_all => "no backends configured";
 } else {
-    plan tests => ( 6 * scalar @CGI::Wiki::TestLib::wiki_info );
+    plan tests => ( 6 * scalar @Wiki::Toolkit::TestLib::wiki_info );
 }
 
-my $iterator = CGI::Wiki::TestLib->new_wiki_maker;
+my $iterator = Wiki::Toolkit::TestLib->new_wiki_maker;
 
 while ( my $wiki = $iterator->new_wiki ) {
-    my $plugin = CGI::Wiki::Plugin::Foo->new;
-    isa_ok( $plugin, "CGI::Wiki::Plugin::Foo" );
-    isa_ok( $plugin, "CGI::Wiki::Plugin" );
+    my $plugin = Wiki::Toolkit::Plugin::Foo->new;
+    isa_ok( $plugin, "Wiki::Toolkit::Plugin::Foo" );
+    isa_ok( $plugin, "Wiki::Toolkit::Plugin" );
     can_ok( $plugin, qw( datastore indexer formatter ) );
 
     $wiki->register_plugin( plugin => $plugin );
@@ -27,7 +27,7 @@ while ( my $wiki = $iterator->new_wiki ) {
 
     # Check that the datastore etc attrs are set up before on_register
     # is called.
-    my $plugin_2 = CGI::Wiki::Plugin::Bar->new;
+    my $plugin_2 = Wiki::Toolkit::Plugin::Bar->new;
     eval { $wiki->register_plugin( plugin => $plugin_2 ); };
     is( $@, "", "->on_register can access datastore" );
 }

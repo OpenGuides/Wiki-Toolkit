@@ -1,12 +1,12 @@
-package CGI::Wiki::Setup::SQLite;
+package Wiki::Toolkit::Setup::SQLite;
 
 use strict;
 
 use vars qw( @ISA $VERSION );
 
-use CGI::Wiki::Setup::Database;
+use Wiki::Toolkit::Setup::Database;
 
-@ISA = qw( CGI::Wiki::Setup::Database );
+@ISA = qw( Wiki::Toolkit::Setup::Database );
 $VERSION = '0.09';
 
 use DBI;
@@ -59,16 +59,16 @@ CREATE TABLE metadata (
 
 =head1 NAME
 
-CGI::Wiki::Setup::SQLite - Set up tables for a CGI::Wiki store in a SQLite database.
+Wiki::Toolkit::Setup::SQLite - Set up tables for a Wiki::Toolkit store in a SQLite database.
 
 =head1 SYNOPSIS
 
-  use CGI::Wiki::Setup::SQLite;
-  CGI::Wiki::Setup::MySQLite::setup($dbfile);
+  use Wiki::Toolkit::Setup::SQLite;
+  Wiki::Toolkit::Setup::MySQLite::setup($dbfile);
 
 =head1 DESCRIPTION
 
-Set up a SQLite database for use as a CGI::Wiki store.
+Set up a SQLite database for use as a Wiki::Toolkit store.
 
 =head1 FUNCIONS
 
@@ -76,21 +76,21 @@ Set up a SQLite database for use as a CGI::Wiki store.
 
 =item B<setup>
 
-  use CGI::Wiki::Setup::SQLite;
+  use Wiki::Toolkit::Setup::SQLite;
 
-  CGI::Wiki::Setup::SQLite::setup( $filename );
+  Wiki::Toolkit::Setup::SQLite::setup( $filename );
 
 or
 
-  CGI::Wiki::Setup::SQLite::setup( $dbh );
+  Wiki::Toolkit::Setup::SQLite::setup( $dbh );
 
 Takes one argument - B<either> the name of the file that the SQLite
 database is stored in B<or> an active database handle.
 
 B<NOTE:> If a table that the module wants to create already exists,
 C<setup> will leave it alone. This means that you can safely run this
-on an existing L<CGI::Wiki> database to bring the schema up to date
-with the current L<CGI::Wiki> version. If you wish to completely start
+on an existing L<Wiki::Toolkit> database to bring the schema up to date
+with the current L<Wiki::Toolkit> version. If you wish to completely start
 again with a fresh database, run C<cleardb> first.
 
 =cut
@@ -116,12 +116,12 @@ sub setup {
 	my $upgrade_schema;
 	my @cur_data; 
 	if(scalar keys %tables > 0) {
-		$upgrade_schema = CGI::Wiki::Setup::Database::get_database_upgrade_required($dbh,$VERSION);
+		$upgrade_schema = Wiki::Toolkit::Setup::Database::get_database_upgrade_required($dbh,$VERSION);
 	}
 	if($upgrade_schema) {
 		# Grab current data
 		print "Upgrading: $upgrade_schema\n";
-		@cur_data = eval("&CGI::Wiki::Setup::Database::fetch_upgrade_".$upgrade_schema."(\$dbh)");
+		@cur_data = eval("&Wiki::Toolkit::Setup::Database::fetch_upgrade_".$upgrade_schema."(\$dbh)");
 
 		# Drop the current tables
 		cleardb($dbh);
@@ -143,7 +143,7 @@ sub setup {
 
 	# If upgrading, load in the new data
 	if($upgrade_schema) {
-		CGI::Wiki::Setup::Database::bulk_data_insert($dbh,@cur_data);
+		Wiki::Toolkit::Setup::Database::bulk_data_insert($dbh,@cur_data);
 	}
 
     # Clean up if we made our own dbh.
@@ -152,24 +152,24 @@ sub setup {
 
 =item B<cleardb>
 
-  use CGI::Wiki::Setup::SQLite;
+  use Wiki::Toolkit::Setup::SQLite;
 
-  # Clear out all CGI::Wiki tables from the database.
-  CGI::Wiki::Setup::SQLite::cleardb( $filename );
+  # Clear out all Wiki::Toolkit tables from the database.
+  Wiki::Toolkit::Setup::SQLite::cleardb( $filename );
 
 or
 
-  CGI::Wiki::Setup::SQLite::cleardb( $dbh );
+  Wiki::Toolkit::Setup::SQLite::cleardb( $dbh );
 
 Takes one argument - B<either> the name of the file that the SQLite
 database is stored in B<or> an active database handle.
 
-Clears out all L<CGI::Wiki> store tables from the database. B<NOTE>
+Clears out all L<Wiki::Toolkit> store tables from the database. B<NOTE>
 that this will lose all your data; you probably only want to use this
 for testing purposes or if you really screwed up somewhere. Note also
-that it doesn't touch any L<CGI::Wiki> search backend tables; if you
+that it doesn't touch any L<Wiki::Toolkit> search backend tables; if you
 have any of those in the same or a different database see
-L<CGI::Wiki::Setup::DBIxFTS> or L<CGI::Wiki::Setup::SII>, depending on
+L<Wiki::Toolkit::Setup::DBIxFTS> or L<Wiki::Toolkit::Setup::SII>, depending on
 which search backend you're using.
 
 =cut
@@ -272,7 +272,7 @@ under the same terms as Perl itself.
 
 =head1 SEE ALSO
 
-L<CGI::Wiki>, L<CGI::Wiki::Setup::DBIxFTS>, L<CGI::Wiki::Setup::SII>
+L<Wiki::Toolkit>, L<Wiki::Toolkit::Setup::DBIxFTS>, L<Wiki::Toolkit::Setup::SII>
 
 =cut
 

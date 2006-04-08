@@ -1,9 +1,9 @@
 use strict;
-use CGI::Wiki;
-use CGI::Wiki::TestConfig::Utilities;
-use Test::More tests => (9 * $CGI::Wiki::TestConfig::Utilities::num_stores);
+use Wiki::Toolkit;
+use Wiki::Toolkit::TestConfig::Utilities;
+use Test::More tests => (9 * $Wiki::Toolkit::TestConfig::Utilities::num_stores);
 
-my %stores = CGI::Wiki::TestConfig::Utilities->stores;
+my %stores = Wiki::Toolkit::TestConfig::Utilities->stores;
 
 my ($store_name, $store);
 while ( ($store_name, $store) = each %stores ) {
@@ -15,8 +15,8 @@ while ( ($store_name, $store) = each %stores ) {
 
         # Test that a Wiki object created without an explicit formatter sets
         # defaults sensibly in its default formatter.
-        $wiki = CGI::Wiki->new( store => $store );
-        isa_ok( $wiki->formatter, "CGI::Wiki::Formatter::Default",
+        $wiki = Wiki::Toolkit->new( store => $store );
+        isa_ok( $wiki->formatter, "Wiki::Toolkit::Formatter::Default",
 		"default formatter used if not specified" );
         # White box testing.
         foreach my $want_defined ( qw ( extended_links implicit_links
@@ -27,7 +27,7 @@ while ( ($store_name, $store) = each %stores ) {
 
         # Test that the implicit_links flag gets passed through right.
         my $raw = "This paragraph has StudlyCaps in.";
-        $wiki = CGI::Wiki->new( store           => $store,
+        $wiki = Wiki::Toolkit->new( store           => $store,
                                 implicit_links  => 1,
                                 node_prefix     => "wiki.cgi?node=" );
 
@@ -35,7 +35,7 @@ while ( ($store_name, $store) = each %stores ) {
         like( $cooked, qr!StudlyCaps</a>!,
           "StudlyCaps turned into link when we specify implicit_links=1" );
 
-        $wiki = CGI::Wiki->new( store           => $store,
+        $wiki = Wiki::Toolkit->new( store           => $store,
                                 implicit_links  => 0,
                                 node_prefix     => "wiki.cgi?node=" );
 
@@ -52,7 +52,7 @@ while ( ($store_name, $store) = each %stores ) {
                                          return uc( $raw );
                                        }
                         );
-            $wiki = CGI::Wiki->new( store     => $store,
+            $wiki = Wiki::Toolkit->new( store     => $store,
                                     formatter => $mock );
             $cooked = $wiki->format(
                                 "in the [future] there will be <b>robots</b>");

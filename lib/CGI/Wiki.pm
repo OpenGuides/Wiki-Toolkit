@@ -1,4 +1,4 @@
-package CGI::Wiki;
+package Wiki::Toolkit;
 
 use strict;
 
@@ -21,7 +21,7 @@ BEGIN {
 
 =head1 NAME
 
-CGI::Wiki - A toolkit for building Wikis.
+Wiki::Toolkit - A toolkit for building Wikis.
 
 =head1 DESCRIPTION
 
@@ -35,15 +35,15 @@ you.  You will still need to write some code - this isn't an instant Wiki.
   # combination can be used on systems with no access to an actual
   # database server.
 
-  my $store     = CGI::Wiki::Store::SQLite->new(
+  my $store     = Wiki::Toolkit::Store::SQLite->new(
       dbname => "/home/wiki/store.db" );
   my $indexdb   = Search::InvertedIndex::DB::DB_File_SplitHash->new(
       -map_name  => "/home/wiki/indexes.db",
       -lock_mode => "EX" );
-  my $search    = CGI::Wiki::Search::SII->new(
+  my $search    = Wiki::Toolkit::Search::SII->new(
       indexdb => $indexdb );
 
-  my $wiki      = CGI::Wiki->new( store     => $store,
+  my $wiki      = Wiki::Toolkit->new( store     => $store,
                                   search    => $search );
 
   # Do all the CGI stuff.
@@ -80,37 +80,37 @@ you.  You will still need to write some code - this isn't an instant Wiki.
 =item B<new>
 
   # Set up store, search and formatter objects.
-  my $store     = CGI::Wiki::Store::SQLite->new(
+  my $store     = Wiki::Toolkit::Store::SQLite->new(
       dbname => "/home/wiki/store.db" );
   my $indexdb   = Search::InvertedIndex::DB::DB_File_SplitHash->new(
       -map_name  => "/home/wiki/indexes.db",
       -lock_mode => "EX" );
-  my $search    = CGI::Wiki::Search::SII->new(
+  my $search    = Wiki::Toolkit::Search::SII->new(
       indexdb => $indexdb );
   my $formatter = My::HomeMade::Formatter->new;
 
-  my $wiki = CGI::Wiki->new(
+  my $wiki = Wiki::Toolkit->new(
       store     => $store,     # mandatory
       search    => $search,    # defaults to undef
       formatter => $formatter  # defaults to something suitable
   );
 
-C<store> must be an object of type C<CGI::Wiki::Store::*> and
-C<search> if supplied must be of type C<CGI::Wiki::Search::*> (though
+C<store> must be an object of type C<Wiki::Toolkit::Store::*> and
+C<search> if supplied must be of type C<Wiki::Toolkit::Search::*> (though
 this isn't checked yet - FIXME). If C<formatter> isn't supplied, it
-defaults to an object of class L<CGI::Wiki::Formatter::Default>.
+defaults to an object of class L<Wiki::Toolkit::Formatter::Default>.
 
 You can get a searchable Wiki up and running on a system without an
 actual database server by using the SQLite storage backend with the
 SII/DB_File search backend - cut and paste the lines above for a quick
-start, and see L<CGI::Wiki::Store::SQLite>, L<CGI::Wiki::Search::SII>,
+start, and see L<Wiki::Toolkit::Store::SQLite>, L<Wiki::Toolkit::Search::SII>,
 and L<Search::InvertedIndex::DB::DB_File_SplitHash> when you want to
 learn the details.
 
 C<formatter> can be any object that behaves in the right way; this
 essentially means that it needs to provide a C<format> method which
 takes in raw text and returns the formatted version. See
-L<CGI::Wiki::Formatter::Default> for a simple example. Note that you can
+L<Wiki::Toolkit::Formatter::Default> for a simple example. Note that you can
 create a suitable object from a sub very quickly by using
 L<Test::MockObject> like so:
 
@@ -136,11 +136,11 @@ sub new {
 sub _init {
     my ($self, %args) = @_;
 
-    # Check for scripts written with old versions of CGI::Wiki
+    # Check for scripts written with old versions of Wiki::Toolkit
     foreach my $obsolete_param ( qw( storage_backend search_backend ) ) {
         carp "You seem to be using a script written for a pre-0.10 version "
-           . "of CGI::Wiki - the $obsolete_param parameter is no longer used. "
-           . "Please read the documentation with 'perldoc CGI::Wiki'"
+           . "of Wiki::Toolkit - the $obsolete_param parameter is no longer used. "
+           . "Please read the documentation with 'perldoc Wiki::Toolkit'"
           if $args{$obsolete_param};
     }
 
@@ -152,7 +152,7 @@ sub _init {
 
     # Make a default formatter object if none was actually supplied.
     unless ( $args{formatter} ) {
-        require CGI::Wiki::Formatter::Default;
+        require Wiki::Toolkit::Formatter::Default;
         # Ensure backwards compatibility - versions prior to 0.11 allowed the
         # following options to alter the default behaviour of Text::WikiFormat.
         my %config;
@@ -160,7 +160,7 @@ sub _init {
 		    macros node_prefix ) ) {
             $config{$_} = $args{$_} if defined $args{$_};
 	}
-        $self->{_formatter} = CGI::Wiki::Formatter::Default->new( %config );
+        $self->{_formatter} = Wiki::Toolkit::Formatter::Default->new( %config );
     }
 
     # Make a place to store plugins.
@@ -629,7 +629,7 @@ sub supports_fuzzy_searches {
 
 B<NOTE:> This section of the documentation assumes you are using a
 search engine which supports fuzzy matching. (See above.) The 
-L<CGI::Wiki::Search::DBIxFTS> backend in particular does not.
+L<Wiki::Toolkit::Search::DBIxFTS> backend in particular does not.
 
   $wiki->write_node( "King's Cross St Pancras", "A station." );
   my %matches = $wiki->fuzzy_title_match( "Kings Cross St. Pancras" );
@@ -665,19 +665,19 @@ sub fuzzy_title_match {
 
 =item B<register_plugin>
 
-  my $plugin = CGI::Wiki::Plugin::Foo->new;
+  my $plugin = Wiki::Toolkit::Plugin::Foo->new;
   $wiki->register_plugin( plugin => $plugin );
 
 Registers the plugin with the wiki as one that needs to be informed
 when we write a node.
 
-If the plugin C<isa> L<CGI::Wiki::Plugin>, calls the methods set up by
+If the plugin C<isa> L<Wiki::Toolkit::Plugin>, calls the methods set up by
 that parent class to let it know about the backend store, search and
 formatter objects.
 
 Finally, calls the plugin class's C<on_register> method, which should
 be used to check tables are set up etc. Note that because of the order
-these things are done in, C<on_register> for L<CGI::Wiki::Plugin>
+these things are done in, C<on_register> for L<Wiki::Toolkit::Plugin>
 subclasses can use the C<datastore>, C<indexer> and C<formatter>
 methods as it needs to.
 
@@ -687,7 +687,7 @@ sub register_plugin {
     my ($self, %args) = @_;
     my $plugin = $args{plugin} || "";
     croak "no plugin supplied" unless $plugin;
-    if ( $plugin->isa( "CGI::Wiki::Plugin" ) ) {
+    if ( $plugin->isa( "Wiki::Toolkit::Plugin" ) ) {
         $plugin->datastore( $self->store      );
         $plugin->indexer(   $self->search_obj );
         $plugin->formatter( $self->formatter  );
@@ -777,7 +777,7 @@ sub write_node {
     my @links_to;
     if ( $formatter->can( "find_internal_links" ) ) {
         # Supply $metadata to formatter in case it's needed to alter the
-        # behaviour of the formatter, eg for CGI::Wiki::Formatter::Multiple.
+        # behaviour of the formatter, eg for Wiki::Toolkit::Formatter::Multiple.
         my @all_links_to = $formatter->find_internal_links($content,$metadata);
         my %unique = map { $_ => 1 } @all_links_to;
         @links_to = keys %unique;
@@ -875,23 +875,23 @@ sub formatter {
 =head1 SEE ALSO
 
 For a very quick Wiki startup without any of that icky programming
-stuff, see Tom Insam's L<CGI::Wiki::Kwiki>, an instant wiki based on
-CGI::Wiki.
+stuff, see Tom Insam's L<Wiki::Toolkit::Kwiki>, an instant wiki based on
+Wiki::Toolkit.
 
 Or for the specialised application of a wiki about a city, see the
 L<OpenGuides> distribution.
 
-L<CGI::Wiki> allows you to use different formatting modules. 
+L<Wiki::Toolkit> allows you to use different formatting modules. 
 L<Text::WikiFormat> might be useful for anyone wanting to write a
 custom formatter. Existing formatters include:
 
 =over 4
 
-=item * L<CGI::Wiki::Formatter::Default> (in this distro)
+=item * L<Wiki::Toolkit::Formatter::Default> (in this distro)
 
-=item * L<CGI::Wiki::Formatter::Pod>
+=item * L<Wiki::Toolkit::Formatter::Pod>
 
-=item * L<CGI::Wiki::Formatter::UseMod>
+=item * L<Wiki::Toolkit::Formatter::UseMod>
 
 =back
 
@@ -900,13 +900,13 @@ database-backed.
 
 =over 4
 
-=item * L<CGI::Wiki::Store::MySQL> (in this distro)
+=item * L<Wiki::Toolkit::Store::MySQL> (in this distro)
 
-=item * L<CGI::Wiki::Store::Pg> (in this distro)
+=item * L<Wiki::Toolkit::Store::Pg> (in this distro)
 
-=item * L<CGI::Wiki::Store::SQLite> (in this distro)
+=item * L<Wiki::Toolkit::Store::SQLite> (in this distro)
 
-=item * L<CGI::Wiki::Store::Database> (parent class for the above - in this distro)
+=item * L<Wiki::Toolkit::Store::Database> (parent class for the above - in this distro)
 
 =back
 
@@ -914,9 +914,9 @@ A search backend is optional:
 
 =over 4
 
-=item * L<CGI::Wiki::Search::DBIxFTS> (in this distro, uses L<DBIx::FullTextSearch>)
+=item * L<Wiki::Toolkit::Search::DBIxFTS> (in this distro, uses L<DBIx::FullTextSearch>)
 
-=item * L<CGI::Wiki::Search::SII> (in this distro, uses L<Search::InvertedIndex>)
+=item * L<Wiki::Toolkit::Search::SII> (in this distro, uses L<Search::InvertedIndex>)
 
 =back
 
@@ -926,13 +926,13 @@ soon. Plugins written so far and available from CPAN:
 
 =over 4
 
-=item * L<CGI::Wiki::Plugin::GeoCache>
+=item * L<Wiki::Toolkit::Plugin::GeoCache>
 
-=item * L<CGI::Wiki::Plugin::Categoriser>
+=item * L<Wiki::Toolkit::Plugin::Categoriser>
 
-=item * L<CGI::Wiki::Plugin::Locator::UK>
+=item * L<Wiki::Toolkit::Plugin::Locator::UK>
 
-=item * L<CGI::Wiki::Plugin::RSS::ModWiki>
+=item * L<Wiki::Toolkit::Plugin::RSS::ModWiki>
 
 =back
 
@@ -941,7 +941,7 @@ all possible backends:
 
 =over 4
 
-=item * L<CGI::Wiki::TestConfig::Utilities> (in this distro)
+=item * L<Wiki::Toolkit::TestConfig::Utilities> (in this distro)
 
 =back
 

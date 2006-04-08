@@ -1,14 +1,16 @@
 NAME
-    CGI::Wiki - A toolkit for building Wikis.
+    Wiki::Toolkit - A toolkit for building Wikis.
 
 DESCRIPTION
     Helps you develop Wikis quickly by taking care of the boring bits
     for you.  You will still need to write some code - this isn't an
     instant Wiki.
 
+    Wiki::Toolkit used to be called CGI::Wiki.
+
 SEE ALSO
-    Tom Insam's CGI::Wiki::Kwiki is however an instant wiki, running
-    on a CGI::Wiki backend.
+    Tom Insam's Wiki::Toolkit::Kwiki is however an instant wiki, running
+    on a Wiki::Toolkit backend.
 
 SIGNIFICANT RECENT CHANGES
 
@@ -41,15 +43,15 @@ SYNOPSIS
       # combination can be used on systems with no access to an actual
       # database server.
 
-      my $store     = CGI::Wiki::Store::SQLite->new(
+      my $store     = Wiki::Toolkit::Store::SQLite->new(
           dbname => "/home/wiki/store.db" );
       my $indexdb   = Search::InvertedIndex::DB::DB_File_SplitHash->new(
           -map_name  => "/home/wiki/indexes.db",
           -lock_mode => "EX" );
-      my $search    = CGI::Wiki::Search::SII->new(
+      my $search    = Wiki::Toolkit::Search::SII->new(
           indexdb => $indexdb );
 
-      my $wiki      = CGI::Wiki->new( store     => $store,
+      my $wiki      = Wiki::Toolkit->new( store     => $store,
                                       search    => $search );
 
 

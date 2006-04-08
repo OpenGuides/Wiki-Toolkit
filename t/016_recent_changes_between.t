@@ -1,18 +1,18 @@
 use strict;
-use CGI::Wiki::Store::Database;
-use CGI::Wiki::TestLib;
+use Wiki::Toolkit::Store::Database;
+use Wiki::Toolkit::TestLib;
 use DBI;
 use Test::More;
 use Time::Piece;
 use Time::Seconds;
 
-if ( scalar @CGI::Wiki::TestLib::wiki_info == 0 ) {
+if ( scalar @Wiki::Toolkit::TestLib::wiki_info == 0 ) {
     plan skip_all => "no backends configured";
 } else {
-    plan tests => ( 1 * scalar @CGI::Wiki::TestLib::wiki_info );
+    plan tests => ( 1 * scalar @Wiki::Toolkit::TestLib::wiki_info );
 }
 
-my $iterator = CGI::Wiki::TestLib->new_wiki_maker;
+my $iterator = Wiki::Toolkit::TestLib->new_wiki_maker;
 
 while ( my $wiki = $iterator->new_wiki ) {
     # Write directly to the database so we can fake having written something
@@ -28,9 +28,9 @@ while ( my $wiki = $iterator->new_wiki ) {
     my $now = localtime; # overloaded by Time::Piece
     my $two_days_ago = $now - (2 * ONE_DAY );
     my $week_ago = $now - ONE_WEEK;
-    my $ts_now = CGI::Wiki::Store::Database->_get_timestamp;
-    my $ts_two_days_ago = CGI::Wiki::Store::Database->_get_timestamp( $two_days_ago );
-    my $ts_week_ago = CGI::Wiki::Store::Database->_get_timestamp( $week_ago );
+    my $ts_now = Wiki::Toolkit::Store::Database->_get_timestamp;
+    my $ts_two_days_ago = Wiki::Toolkit::Store::Database->_get_timestamp( $two_days_ago );
+    my $ts_week_ago = Wiki::Toolkit::Store::Database->_get_timestamp( $week_ago );
 
     $node_sth->execute( 10, "Home", 3, "foo", $ts_now ) or die $dbh->errstr;
     $content_sth->execute( 10, 1, "foo", $ts_week_ago )

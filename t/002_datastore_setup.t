@@ -1,19 +1,19 @@
 use strict;
 use Test::More tests => 27;
-use CGI::Wiki;
-use CGI::Wiki::TestConfig;
+use Wiki::Toolkit;
+use Wiki::Toolkit::TestConfig;
 use DBI;
 
 foreach my $dbtype (qw( MySQL Pg SQLite )) {
 
     SKIP: {
         skip "$dbtype backend not configured", 8
-            unless $CGI::Wiki::TestConfig::config{$dbtype}->{dbname};
+            unless $Wiki::Toolkit::TestConfig::config{$dbtype}->{dbname};
 
-        my %config = %{$CGI::Wiki::TestConfig::config{$dbtype}};
-        my $setup_class = "CGI::Wiki::Setup::$dbtype";
+        my %config = %{$Wiki::Toolkit::TestConfig::config{$dbtype}};
+        my $setup_class = "Wiki::Toolkit::Setup::$dbtype";
         eval "require $setup_class";
-        my $store_class = "CGI::Wiki::Store::$dbtype";
+        my $store_class = "Wiki::Toolkit::Store::$dbtype";
         eval "require $store_class";
         {
             no strict 'refs';
@@ -63,14 +63,14 @@ foreach my $dbtype (qw( MySQL Pg SQLite )) {
 
 SKIP: {
     skip "SQLite backend not configured", 3
-        unless $CGI::Wiki::TestConfig::config{SQLite};
+        unless $Wiki::Toolkit::TestConfig::config{SQLite};
 
     my @mistakes = <HASH*>;
-    is( scalar @mistakes, 0, "CGI::Wiki::Setup::SQLite doesn't create erroneous files called things like 'HASH(0x80fd394)'" );
+    is( scalar @mistakes, 0, "Wiki::Toolkit::Setup::SQLite doesn't create erroneous files called things like 'HASH(0x80fd394)'" );
 
     @mistakes = <ARRAY*>;
-    is( scalar @mistakes, 0, "CGI::Wiki::Setup::SQLite doesn't create erroneous files called things like 'ARRAY(0x83563fc)'" );
+    is( scalar @mistakes, 0, "Wiki::Toolkit::Setup::SQLite doesn't create erroneous files called things like 'ARRAY(0x83563fc)'" );
 
     @mistakes = <4*>;
-    is( scalar @mistakes, 0, "CGI::Wiki::Setup::SQLite doesn't create erroneous files called '4'" );
+    is( scalar @mistakes, 0, "Wiki::Toolkit::Setup::SQLite doesn't create erroneous files called '4'" );
 }

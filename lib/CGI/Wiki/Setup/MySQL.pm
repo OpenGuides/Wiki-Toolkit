@@ -1,12 +1,12 @@
-package CGI::Wiki::Setup::MySQL;
+package Wiki::Toolkit::Setup::MySQL;
 
 use strict;
 
 use vars qw( @ISA $VERSION );
 
-use CGI::Wiki::Setup::Database;
+use Wiki::Toolkit::Setup::Database;
 
-@ISA = qw( CGI::Wiki::Setup::Database );
+@ISA = qw( Wiki::Toolkit::Setup::Database );
 $VERSION = '0.09';
 
 use DBI;
@@ -65,18 +65,18 @@ CREATE INDEX metadata_index ON metadata(node_id, version, metadata_type, metadat
 
 =head1 NAME
 
-CGI::Wiki::Setup::MySQL - Set up tables for a CGI::Wiki store in a MySQL database.
+Wiki::Toolkit::Setup::MySQL - Set up tables for a Wiki::Toolkit store in a MySQL database.
 
 =head1 SYNOPSIS
 
-  use CGI::Wiki::Setup::MySQL;
-  CGI::Wiki::Setup::MySQL::setup($dbname, $dbuser, $dbpass, $dbhost);
+  use Wiki::Toolkit::Setup::MySQL;
+  Wiki::Toolkit::Setup::MySQL::setup($dbname, $dbuser, $dbpass, $dbhost);
 
 Omit $dbhost if the database is local.
 
 =head1 DESCRIPTION
 
-Set up a MySQL database for use as a CGI::Wiki store.
+Set up a MySQL database for use as a Wiki::Toolkit store.
 
 =head1 FUNCIONS
 
@@ -84,12 +84,12 @@ Set up a MySQL database for use as a CGI::Wiki store.
 
 =item B<setup>
 
-  use CGI::Wiki::Setup::MySQL;
-  CGI::Wiki::Setup::MySQL::setup($dbname, $dbuser, $dbpass, $dbhost);
+  use Wiki::Toolkit::Setup::MySQL;
+  Wiki::Toolkit::Setup::MySQL::setup($dbname, $dbuser, $dbpass, $dbhost);
 
 or
 
-  CGI::Wiki::Setup::Mysql::setup( $dbh );
+  Wiki::Toolkit::Setup::Mysql::setup( $dbh );
 
 You can either provide an active database handle C<$dbh> or connection
 parameters.                                                                    
@@ -102,8 +102,8 @@ The $dbhost argument is optional -- omit it if the database is local.
 
 B<NOTE:> If a table that the module wants to create already exists,
 C<setup> will leave it alone. This means that you can safely run this
-on an existing L<CGI::Wiki> database to bring the schema up to date
-with the current L<CGI::Wiki> version. If you wish to completely start
+on an existing L<Wiki::Toolkit> database to bring the schema up to date
+with the current L<Wiki::Toolkit> version. If you wish to completely start
 again with a fresh database, run C<cleardb> first.
 
 =cut
@@ -126,12 +126,12 @@ sub setup {
 	my $upgrade_schema;
 	my @cur_data;
 	if(scalar keys %tables > 0) {
-		$upgrade_schema = CGI::Wiki::Setup::Database::get_database_upgrade_required($dbh,$VERSION);
+		$upgrade_schema = Wiki::Toolkit::Setup::Database::get_database_upgrade_required($dbh,$VERSION);
 	}
 	if($upgrade_schema) {
 		# Grab current data
 		print "Upgrading: $upgrade_schema\n";
-		@cur_data = eval("&CGI::Wiki::Setup::Database::fetch_upgrade_".$upgrade_schema."(\$dbh)");
+		@cur_data = eval("&Wiki::Toolkit::Setup::Database::fetch_upgrade_".$upgrade_schema."(\$dbh)");
 
 		# Drop the current tables
 		cleardb($dbh);
@@ -151,7 +151,7 @@ sub setup {
 
 	# If upgrading, load in the new data
 	if($upgrade_schema) {
-		CGI::Wiki::Setup::Database::bulk_data_insert($dbh,@cur_data);
+		Wiki::Toolkit::Setup::Database::bulk_data_insert($dbh,@cur_data);
 	}
 
     # Clean up if we made our own dbh.
@@ -160,14 +160,14 @@ sub setup {
 
 =item B<cleardb>
 
-  use CGI::Wiki::Setup::MySQL;
+  use Wiki::Toolkit::Setup::MySQL;
 
-  # Clear out all CGI::Wiki tables from the database.
-  CGI::Wiki::Setup::MySQL::cleardb($dbname, $dbuser, $dbpass, $dbhost);
+  # Clear out all Wiki::Toolkit tables from the database.
+  Wiki::Toolkit::Setup::MySQL::cleardb($dbname, $dbuser, $dbpass, $dbhost);
 
 or
 
-  CGI::Wiki::Setup::Mysql::cleardb( $dbh );
+  Wiki::Toolkit::Setup::Mysql::cleardb( $dbh );
 
 You can either provide an active database handle C<$dbh> or connection
 parameters.                                                                    
@@ -178,12 +178,12 @@ username must be able to drop tables in the database.
 
 The $dbhost argument is optional -- omit if the database is local.
 
-Clears out all L<CGI::Wiki> store tables from the database. B<NOTE>
+Clears out all L<Wiki::Toolkit> store tables from the database. B<NOTE>
 that this will lose all your data; you probably only want to use this
 for testing purposes or if you really screwed up somewhere. Note also
-that it doesn't touch any L<CGI::Wiki> search backend tables; if you
+that it doesn't touch any L<Wiki::Toolkit> search backend tables; if you
 have any of those in the same or a different database see either
-L<CGI::Wiki::Setup::DBIxFTS> or L<CGI::Wiki::Setup::SII>, depending on
+L<Wiki::Toolkit::Setup::DBIxFTS> or L<Wiki::Toolkit::Setup::SII>, depending on
 which search backend you're using.
 
 =cut
@@ -294,7 +294,7 @@ under the same terms as Perl itself.
 
 =head1 SEE ALSO
 
-L<CGI::Wiki>, L<CGI::Wiki::Setup::DBIxMySQL>, L<CGI::Wiki::Setup::SII>
+L<Wiki::Toolkit>, L<Wiki::Toolkit::Setup::DBIxMySQL>, L<Wiki::Toolkit::Setup::SII>
 
 =cut
 

@@ -1,15 +1,15 @@
 use strict;
-use CGI::Wiki::TestLib;
+use Wiki::Toolkit::TestLib;
 use Test::More;
 use Time::Piece;
 
-if ( scalar @CGI::Wiki::TestLib::wiki_info == 0 ) {
+if ( scalar @Wiki::Toolkit::TestLib::wiki_info == 0 ) {
     plan skip_all => "no backends configured";
 } else {
-    plan tests => ( 12 * scalar @CGI::Wiki::TestLib::wiki_info );
+    plan tests => ( 12 * scalar @Wiki::Toolkit::TestLib::wiki_info );
 }
 
-my $iterator = CGI::Wiki::TestLib->new_wiki_maker;
+my $iterator = Wiki::Toolkit::TestLib->new_wiki_maker;
 
 while ( my $wiki = $iterator->new_wiki ) {
     # Put some test data in.
@@ -31,9 +31,9 @@ while ( my $wiki = $iterator->new_wiki ) {
     is( $new_node_data{version}, $node_data{version} + 1,
         "...and the version number is updated on successful writing" );
     my $lastmod = Time::Piece->strptime($new_node_data{last_modified},
-                                   $CGI::Wiki::Store::Database::timestamp_fmt);
+                                   $Wiki::Toolkit::Store::Database::timestamp_fmt);
     my $prev_lastmod = Time::Piece->strptime($node_data{last_modified},
-                                   $CGI::Wiki::Store::Database::timestamp_fmt);
+                                   $Wiki::Toolkit::Store::Database::timestamp_fmt);
     print "# [$lastmod] [$prev_lastmod]\n";
     ok( $lastmod > $prev_lastmod, "...as is last_modified" );
     my %old_content = $wiki->retrieve_node( name    => "Home",

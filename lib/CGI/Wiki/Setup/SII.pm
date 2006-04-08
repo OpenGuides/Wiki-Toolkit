@@ -1,4 +1,4 @@
-package CGI::Wiki::Setup::SII;
+package Wiki::Toolkit::Setup::SII;
 
 use strict;
 
@@ -7,16 +7,16 @@ $VERSION = '0.03';
 
 use DBI;
 use Search::InvertedIndex;
-use CGI::Wiki::Search::SII;
+use Wiki::Toolkit::Search::SII;
 use Carp;
 
 =head1 NAME
 
-CGI::Wiki::Setup::SII - Set up Search::InvertedIndex indexes for CGI::Wiki
+Wiki::Toolkit::Setup::SII - Set up Search::InvertedIndex indexes for Wiki::Toolkit
 
 =head1 SYNOPSIS
 
-  use CGI::Wiki::Setup::SII;
+  use Wiki::Toolkit::Setup::SII;
   my $indexdb = Search::InvertedIndex::DB::Mysql->new(
                    -db_name    => $dbname,
                    -username   => $dbuser,
@@ -24,17 +24,17 @@ CGI::Wiki::Setup::SII - Set up Search::InvertedIndex indexes for CGI::Wiki
 		   -hostname   => '',
                    -table_name => 'siindex',
                    -lock_mode  => 'EX' );
-  CGI::Wiki::Setup::SII::setup( indexdb => $indexdb );
+  Wiki::Toolkit::Setup::SII::setup( indexdb => $indexdb );
 
 =head1 DESCRIPTION
 
-Set up L<Search::InvertedIndex> indexes for use with L<CGI::Wiki.> Has
+Set up L<Search::InvertedIndex> indexes for use with L<Wiki::Toolkit.> Has
 only one function, C<setup>, which takes one mandatory argument,
 C<indexdb>, the C<Search::InvertedIndex::DB::*> object to use as the
-backend, and one optional argument, C<store>, a C<CGI::Wiki::Store::*
+backend, and one optional argument, C<store>, a C<Wiki::Toolkit::Store::*
 object> corresponding to existing data that you wish to (re-)index.
 
-Note that any pre-existing L<CGI::Wiki> indexes stored in C<indexdb>
+Note that any pre-existing L<Wiki::Toolkit> indexes stored in C<indexdb>
 will be I<cleared> by this function, so if you have existing data you
 probably want to use the C<store> parameter to get it re-indexed.
 
@@ -54,7 +54,7 @@ sub setup {
     my $store = $args{store};
     if ( $store ) {
 	my @nodes = $store->list_all_nodes;
-	my $search = CGI::Wiki::Search::SII->new( indexdb => $indexdb );
+	my $search = Wiki::Toolkit::Search::SII->new( indexdb => $indexdb );
 	foreach my $node ( @nodes ) {
 	    my $content = $store->retrieve_node( $node );
 	    $search->index_node( $node, $content );
@@ -75,7 +75,7 @@ under the same terms as Perl itself.
 
 =head1 SEE ALSO
 
-L<CGI::Wiki>, L<CGI::Wiki::Setup::MySQL>, L<DBIx::FullTextSearch>
+L<Wiki::Toolkit>, L<Wiki::Toolkit::Setup::MySQL>, L<DBIx::FullTextSearch>
 
 =cut
 

@@ -1,15 +1,15 @@
 use strict;
-use CGI::Wiki::TestLib;
+use Wiki::Toolkit::TestLib;
 use Test::More;
 use Time::Piece;
 
-if ( scalar @CGI::Wiki::TestLib::wiki_info == 0 ) {
+if ( scalar @Wiki::Toolkit::TestLib::wiki_info == 0 ) {
     plan skip_all => "no backends configured";
 } else {
-    plan tests => ( 35 * scalar @CGI::Wiki::TestLib::wiki_info );
+    plan tests => ( 35 * scalar @Wiki::Toolkit::TestLib::wiki_info );
 }
 
-my $iterator = CGI::Wiki::TestLib->new_wiki_maker;
+my $iterator = Wiki::Toolkit::TestLib->new_wiki_maker;
 
 while ( my $wiki = $iterator->new_wiki ) {
 	my %non_existant_node = (content=>"", version=>0, last_modified=>"", checksum=>"d41d8cd98f00b204e9800998ecf8427e", moderated=>undef, node_requires_moderation=>undef, metadata=>{});
@@ -90,7 +90,7 @@ while ( my $wiki = $iterator->new_wiki ) {
 
 
 	# Tweak the formatter - swap to extended links from implicit
-	$wiki->{_formatter} = CGI::Wiki::Formatter::Default->new( extended_links=>1, implicit_links=>0 );
+	$wiki->{_formatter} = Wiki::Toolkit::Formatter::Default->new( extended_links=>1, implicit_links=>0 );
 	ok( $wiki->{_formatter}->can("rename_links"), "The formatter must be able to rename links for these tests to work" );
 
 	# Rename NodeTwo to NodeFooBar

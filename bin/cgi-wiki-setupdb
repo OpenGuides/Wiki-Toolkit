@@ -29,9 +29,9 @@ if ($help) {
     exit 0;
 }
 
-my %setup_modules = ( postgres => "CGI::Wiki::Setup::Pg",
-		      mysql    => "CGI::Wiki::Setup::MySQL",
-		      sqlite  => "CGI::Wiki::Setup::SQLite"
+my %setup_modules = ( postgres => "Wiki::Toolkit::Setup::Pg",
+		      mysql    => "Wiki::Toolkit::Setup::MySQL",
+		      sqlite  => "Wiki::Toolkit::Setup::SQLite"
 );
 
 unless ( defined($setup_modules{$dbtype}) ) {
@@ -59,15 +59,15 @@ if ($preclear) {
 
 =head1 NAME
 
-cgi-wiki-setupdb - Set up a database storage backend for CGI::Wiki.
+wiki-toolkit-setupdb - Set up a database storage backend for Wiki::Toolkit.
 
 =head1 SYNOPSIS
 
   # Set up or update the storage backend, leaving any existing data
-  # intact. Useful for upgrading from old versions of CGI::Wiki to
+  # intact. Useful for upgrading from old versions of Wiki::Toolkit to
   # newer ones with more backend features.
 
-  cgi-wiki-setupdb --type postgres
+  wiki-toolkit-setupdb --type postgres
 		   --name mywiki \
 		   --user wiki  \
 		   --pass wiki \
@@ -75,7 +75,7 @@ cgi-wiki-setupdb - Set up a database storage backend for CGI::Wiki.
 
   # Clear out any existing data and set up a fresh backend from scratch.
 
-  cgi-wiki-setupdb --type postgres
+  wiki-toolkit-setupdb --type postgres
 		   --name mywiki \
 		   --user wiki  \
 		   --pass wiki  \
@@ -141,7 +141,7 @@ under the same terms as Perl itself.
 
 =head1 SEE ALSO
 
-L<CGI::Wiki>
+L<Wiki::Toolkit>
 
 =cut
 
