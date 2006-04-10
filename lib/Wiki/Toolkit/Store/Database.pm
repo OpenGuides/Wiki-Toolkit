@@ -1214,7 +1214,7 @@ sub _find_recent_changes_by_criteria {
                          . " AND "
                          . $self->_get_comparison_sql(
                                           thing1      => "$mdt.metadata_value",
-                                          thing2      => $dbh->quote($value),
+                                          thing2      => $dbh->quote( $self->charset_encode($value) ),
                                           ignore_case => $ignore_case,
                                                      )
                          . " )";
@@ -1258,7 +1258,7 @@ sub _find_recent_changes_by_criteria {
                          . " AND "
                          . $self->_get_comparison_sql(
                                           thing1      => "$mdt.metadata_value",
-                                          thing2      => $dbh->quote($value),
+                                          thing2      => $dbh->quote( $self->charset_encode($value) ),
                                           ignore_case => $ignore_case,
                                                      )
                          . " )";
@@ -1414,7 +1414,7 @@ sub list_nodes_by_metadata {
     my $sql =
          $self->_get_list_by_metadata_sql( ignore_case => $args{ignore_case} );
     my $sth = $dbh->prepare( $sql );
-    $sth->execute( $type, $value );
+    $sth->execute( $type, $self->charset_encode($value) );
     my @nodes;
     while ( my ($node) = $sth->fetchrow_array ) {
         push @nodes, $node;
@@ -1424,11 +1424,13 @@ sub list_nodes_by_metadata {
 
 sub _get_list_by_metadata_sql {
     # can be over-ridden by database-specific subclasses
-    return "SELECT node.name FROM node, metadata"
-         . " WHERE node.name=metadata.node"
-         . " AND node.version=metadata.version"
-         . " AND metadata.metadata_type = ? "
-         . " AND metadata.metadata_value = ? ";
+    return "SELECT node.name "
+		 . "FROM node "
+		 . "INNER JOIN metadata "
+		 . "	ON (node.id = metadata.node_id) "
+		 . "WHERE node.version=metadata.version "
+		 . "AND metadata.metadata_type = ? "
+		 . "AND metadata.metadata_value = ? ";
 }
 
 sub _get_comparison_sql {
