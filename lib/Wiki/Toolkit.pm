@@ -493,6 +493,32 @@ sub list_recent_changes {
     $self->store->list_recent_changes( @args );
 }
 
+=item B<list_unmoderated_nodes>
+
+  my @nodes = $wiki->list_unmoderated_nodes();
+  my @nodes = $wiki->list_unmoderated_nodes(
+												only_where_latest => 1
+											);
+
+  $nodes[0]->{'name'}              # The name of the node
+  $nodes[0]->{'node_id'}           # The id of the node
+  $nodes[0]->{'version'}           # The version in need of moderation
+  $nodes[0]->{'moderated_version'} # The newest moderated version
+
+  Fetches details of all the node versions that require moderation (id,
+   name, version, and latest moderated version).
+
+  If only_where_latest is set, then only the latest version of nodes where 
+   the latest version needs moderating are returned.
+  Otherwise, all node versions (including old ones, and possibly multiple
+   per node) are returned.
+=cut
+
+sub list_unmoderated_nodes {
+    my ($self, @args) = @_;
+    $self->store->list_unmoderated_nodes( @args );
+}
+
 =item B<node_exists>
 
   my $ok = $wiki->node_exists( "Wombat Defenestration" );

@@ -1444,6 +1444,60 @@ sub _get_node_exists_ignore_case_sql {
     return "SELECT name FROM node WHERE name = ? ";
 }
 
+=item B<list_unmoderated_nodes>
+
+  my @nodes = $wiki->list_unmoderated_nodes();
+  my @nodes = $wiki->list_unmoderated_nodes(
+                                                only_where_latest => 1
+                                            );
+
+  $nodes[0]->{'name'}              # The name of the node
+  $nodes[0]->{'node_id'}           # The id of the node
+  $nodes[0]->{'version'}           # The version in need of moderation
+  $nodes[0]->{'moderated_version'} # The newest moderated version
+
+  With only_where_latest set, return the id, name and version of all the
+   nodes where the most recent version needs moderation.
+  Otherwise, returns the id, name and version of all node versions that need
+   to be moderated.
+
+=cut
+
+sub list_unmoderated_nodes {
+	my ($self,%args) = @_;
+
+	my $only_where_lastest = $args{'only_where_latest'};
+
+	my $sql =
+		 "SELECT "
+		."	id, name, "
+		."	node.version AS last_moderated_version, "
+		."	content.version AS version "
+		."FROM content "
+		."INNER JOIN node "
+		."	ON (id = node_id) "
+		."WHERE moderated = ? "
+	;
+	if($only_where_lastest) {
+		$sql .= "AND node.version = content.version ";
+	}
+	$sql .= "ORDER BY name, content.version ";
+
+	# Query
+    my $dbh = $self->dbh;
+    my $sth = $dbh->prepare( $sql );
+    $sth->execute( "0" );
+
+	my @nodes;
+	while(my @results = $sth->fetchrow_array) {
+		my %data;
+		@data{ qw( node_id name moderated_version version ) } = @results;
+		push @nodes, \%data;
+	}
+
+	return @nodes;
+}
+
 =item B<dbh>
 
   my $dbh = $store->dbh;
