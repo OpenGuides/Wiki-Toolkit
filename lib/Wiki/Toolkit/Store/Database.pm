@@ -892,7 +892,7 @@ sub moderate_node {
 	# TODO: Do something about internal links, if required
 
     # Finally call post_moderate on any plugins.
-    my @plugins = @{ $args{plugins} || [ ] };
+    @plugins = @{ $args{plugins} || [ ] };
     foreach my $plugin (@plugins) {
         if ( $plugin->can( "post_moderate" ) ) {
             $plugin->post_moderate( 
