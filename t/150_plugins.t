@@ -5,7 +5,7 @@ use Test::More;
 if ( scalar @Wiki::Toolkit::TestLib::wiki_info == 0 ) {
     plan skip_all => "no backends configured";
 } else {
-    plan tests => ( 26 * scalar @Wiki::Toolkit::TestLib::wiki_info );
+    plan tests => ( 28 * scalar @Wiki::Toolkit::TestLib::wiki_info );
 }
 
 my $iterator = Wiki::Toolkit::TestLib->new_wiki_maker;
@@ -25,6 +25,7 @@ while ( my $wiki = $iterator->new_wiki ) {
                            $self->{__seen_nodes} = [ ];
                            $self->{__deleted_nodes} = [ ];
                            $self->{__moderated_nodes} = [ ];
+                           $self->{__pre_moderated_nodes} = [ ];
                            $self->{__pre_write_nodes} = [ ];
                            $self->{__pre_retrieve_nodes} = [ ];
                            }
@@ -141,9 +142,19 @@ while ( my $wiki = $iterator->new_wiki ) {
 
 # ===========================================================================
 
-		# Test the moderation plugin
+		# Test the moderation plugins
 		# (Adds nodes that require moderation and moderates them,
-		#  ensuring post_moderate is called with the appropriate options)
+		#  ensuring pre_moderate and post_moderate are called with
+		#  the appropriate options)
+        $plugin->mock( "pre_moderate",
+						sub {
+							my ($self, %args) = @_;
+							push @{ $self->{__pre_moderated_nodes} },
+							{ node     => ${$args{node}},
+							  version  => ${$args{version}}
+							};
+						}
+        );
         $plugin->mock( "post_moderate",
 						sub {
 							my ($self, %args) = @_;
@@ -155,15 +166,25 @@ while ( my $wiki = $iterator->new_wiki ) {
 						}
         );
 
+		# Add
+        $wiki->write_node( "Test Node 3", "bar" )
+            or die "Can't write first version node";
+
 		# Moderate
-        $wiki->moderate_node( name=>"Test Node 2", version=>2 )
+        $wiki->moderate_node( name=>"Test Node 3", version=>1 )
             or die "Can't moderate node";
+        ok( $plugin->called("pre_moderate"), "->pre_moderate method called" );
         ok( $plugin->called("post_moderate"), "->post_moderate method called" );
 
+        my @pre_moderated = @{ $plugin->{__pre_moderated_nodes} };
+        is_deeply( $pre_moderated[0], { node => "Test Node 3",
+                               version => 1 },
+                   "...with the right arguments" );
+
         my @moderated = @{ $plugin->{__moderated_nodes} };
-        is_deeply( $deleted[0], { node => "Test Node 2",
-                               node_id => 2,
-                               version => 2 },
+        is_deeply( $moderated[0], { node => "Test Node 3",
+                               node_id => 3,
+                               version => 1 },
                    "...with the right arguments" );
 
 # ===========================================================================
@@ -201,8 +222,8 @@ while ( my $wiki = $iterator->new_wiki ) {
                    "...with the right (changed) arguments" );
 
         @seen = @{ $plugin->{__seen_nodes} };
-        is_deeply( $seen[3], { node => "CHANGED_NAME",
-                               node_id => 3,
+        is_deeply( $seen[4], { node => "CHANGED_NAME",
+                               node_id => 4,
                                version => 1,
                                content => "Changed: foo",
                                metadata => { bar=>"baz", foo=>"bar" } },

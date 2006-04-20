@@ -791,6 +791,16 @@ sub moderate_node {
 
 	my ($name,$version) = ($args{name},$args{version});
 
+    # Call pre_moderate on any plugins.
+    my @plugins = @{ $args{plugins} || [ ] };
+    foreach my $plugin (@plugins) {
+        if ( $plugin->can( "pre_moderate" ) ) {
+            $plugin->pre_moderate( 
+				node     => \$name,
+				version  => \$version );
+        }
+    }
+
 	# Get the ID of this node
     my $id_sql = "SELECT id FROM node WHERE name=?";
     my $id_sth = $dbh->prepare($id_sql);

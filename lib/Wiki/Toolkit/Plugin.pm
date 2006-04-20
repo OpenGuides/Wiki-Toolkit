@@ -32,7 +32,14 @@ registered with.
 
 =item B<pre_moderate>
 
-  * TODO *
+  Called before moderation is performed.
+  Allows changes to the parameters used in moderation.
+
+  my %args = @_;
+  my ($name_ref,$version_ref) = @args{ qw( node version ) };
+  $$name_ref =~ s/\s/_/g;
+
+  TODO: Allow declining of moderation.
 
 =item B<post_moderate>
 
@@ -188,7 +195,7 @@ Kake Pugh (kake@earth.li).
 
 =head1 COPYRIGHT
 
-     Copyright (C) 2003-4 Kake Pugh.  All Rights Reserved.
+     Copyright (C) 2003-6 Kake Pugh.  All Rights Reserved.
 
 This module is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
@@ -196,8 +203,3 @@ under the same terms as Perl itself.
 =cut
 
 1;
-
-
-
-
-
