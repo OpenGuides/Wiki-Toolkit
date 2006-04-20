@@ -36,9 +36,36 @@ registered with.
 
 =item B<post_moderate>
 
+  Called after moderation has been performed.
+  Allows additional actions to occur after node moderation.
+
+  my %args = @_;
+  my ($node,$node_id,$version) = 
+     @args{ qw( node node_id version ) };
+  &update_pending_list($node,$version);
+
 =item B<pre_rename>
 
+  Called before a rename is performed.
+  Allows changes to the parameters used by rename.
+
+  my %args = @_;
+  my ($old_name_ref,$new_name_ref,$create_new_versions_ref) = 
+     @args{ qw( old_name new_name create_new_versions ) };
+  $$old_name_ref =~ s/\s/_/g;
+  $$new_name_ref =~ s/\s/_/g;
+
+  TODO: Allow declining of the rename.
+
 =item B<post_rename>
+
+  Called after a rename has been performed.
+  Allows additional actions to occur after node renames.
+
+  my %args = @_;
+  my ($old_name,$new_name,$node_id) =
+     @args{ qw( old_name new_name node_id ) };
+  &recalculate_category_listings();
 
 =item B<pre_retrieve>
 
@@ -74,6 +101,14 @@ registered with.
   &log_node_write($node,gmtime);
 
 =item B<post_delete>
+
+  Called after a delete has been performed.
+  Allows additional actions to occur after node deletions.
+
+  my %args = @_;
+  my ($node,$node_id,$version) = 
+     @args{ qw( node node_id version ) };
+  &log_node_delete($node,gmtime);
 
 =back
 
