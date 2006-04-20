@@ -127,6 +127,7 @@ sub setup {
 		# Grab current data
 		print "Upgrading: $upgrade_schema\n";
 		@cur_data = eval("&Wiki::Toolkit::Setup::Database::fetch_upgrade_".$upgrade_schema."(\$dbh)");
+		if($@) { warn $@; }
 
 		# Drop the current tables
 		cleardb($dbh);

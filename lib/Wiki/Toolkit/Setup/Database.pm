@@ -51,16 +51,20 @@ sub fetch_upgrade_old_to_9 {
 	$sth->execute;
 	while ( my($name,$version,$text,$modified,$comment) = $sth->fetchrow_array) {
 		my $id = $ids{$name};
-		unless($id) { die("Couldn't find ID for name '$name'"); }
-		my %content;
-		$content{'node_id'} = $id;
-		$content{'version'} = $version;
-		$content{'text'} = $text;
-		$content{'modified'} = $modified;
-		$content{'comment'} = $comment;
-		$content{'moderated'} = 1;
-		$contents{$id."-".$version} = \%content;
+		if($id) {
+			my %content;
+			$content{'node_id'} = $id;
+			$content{'version'} = $version;
+			$content{'text'} = $text;
+			$content{'modified'} = $modified;
+			$content{'comment'} = $comment;
+			$content{'moderated'} = 1;
+			$contents{$id."-".$version} = \%content;
+		} else {
+			warn("There was no node entry for content with name '$name', unable to migrate it!");
+		}
 	}
+	print " read ".(scalar keys %contents)." contents...  ";
 
 	# Grab all the metadata, and upgrade to ID from node
 	$sth = $dbh->prepare("SELECT node,version,metadata_type,metadata_value FROM metadata");
@@ -68,13 +72,16 @@ sub fetch_upgrade_old_to_9 {
 	my $i = 0;
 	while( my($node,$version,$metadata_type,$metadata_value) = $sth->fetchrow_array) {
 		my $id = $ids{$node};
-		unless($id) { die("Couldn't find ID for name/node '$node'"); }
-		my %metadata;
-		$metadata{'node_id'} = $id;
-		$metadata{'version'} = $version;
-		$metadata{'metadata_type'} = $metadata_type;
-		$metadata{'metadata_value'} = $metadata_value;
-		$metadatas{$id."-".($i++)} = \%metadata;
+		if($id) {
+			my %metadata;
+			$metadata{'node_id'} = $id;
+			$metadata{'version'} = $version;
+			$metadata{'metadata_type'} = $metadata_type;
+			$metadata{'metadata_value'} = $metadata_value;
+			$metadatas{$id."-".($i++)} = \%metadata;
+		} else {
+			warn("There was no node entry for metadata with name (node) '$node', unable to migrate it!");
+		}
 	}
 
 	print "done\n";
