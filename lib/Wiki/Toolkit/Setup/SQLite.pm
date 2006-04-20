@@ -101,15 +101,7 @@ sub setup {
     my $disconnect_required = _disconnect_required( @args );
 
     # Check whether tables exist, set them up if not.
-    my $sql = "SELECT name FROM sqlite_master
-               WHERE type='table' AND name in ("
-            . join( ",", map { $dbh->quote($_) } keys %create_sql ) . ")";
-    my $sth = $dbh->prepare($sql) or croak $dbh->errstr;
-    $sth->execute;
-    my %tables;
-    while ( my $table = $sth->fetchrow_array ) {
-        $tables{$table} = 1;
-    }
+    my %tables = fetch_tables_listing($dbh);
 
 	# Do we need to upgrade the schema?
 	# (Don't check if no tables currently exist)
@@ -125,6 +117,9 @@ sub setup {
 
 		# Drop the current tables
 		cleardb($dbh);
+
+		# Grab new list of tables
+		%tables = fetch_tables_listing($dbh);
 	}
 
 	# Set up tables if not found
@@ -148,6 +143,23 @@ sub setup {
 
     # Clean up if we made our own dbh.
     $dbh->disconnect if $disconnect_required;
+}
+
+# Internal method - what tables are defined?
+sub fetch_tables_listing {
+	my $dbh = shift;
+
+    # Check whether tables exist, set them up if not.
+    my $sql = "SELECT name FROM sqlite_master
+               WHERE type='table' AND name in ("
+            . join( ",", map { $dbh->quote($_) } keys %create_sql ) . ")";
+    my $sth = $dbh->prepare($sql) or croak $dbh->errstr;
+    $sth->execute;
+    my %tables;
+    while ( my $table = $sth->fetchrow_array ) {
+        $tables{$table} = 1;
+    }
+	return %tables;
 }
 
 =item B<cleardb>

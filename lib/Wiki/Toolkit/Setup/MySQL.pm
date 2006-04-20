@@ -114,12 +114,7 @@ sub setup {
     my $disconnect_required = _disconnect_required( @args );
 
     # Check whether tables exist
-    my $sth = $dbh->prepare("SHOW TABLES") or croak $dbh->errstr;
-    $sth->execute;
-    my %tables;
-    while ( my $table = $sth->fetchrow_array ) {
-        $tables{$table} = 1;
-    }
+    my %tables = fetch_tables_listing($dbh);
 
 	# Do we need to upgrade the schema of existing tables?
 	# (Don't check if no tables currently exist)
@@ -135,6 +130,9 @@ sub setup {
 
 		# Drop the current tables
 		cleardb($dbh);
+
+		# Grab new list of tables
+		%tables = fetch_tables_listing($dbh);
 	}
 
 	# Set up tables if not found
@@ -156,6 +154,20 @@ sub setup {
 
     # Clean up if we made our own dbh.
     $dbh->disconnect if $disconnect_required;
+}
+
+# Internal method - what tables are defined?
+sub fetch_tables_listing {
+	my $dbh = shift;
+
+    # Check what tables exist
+    my $sth = $dbh->prepare("SHOW TABLES") or croak $dbh->errstr;
+    $sth->execute;
+    my %tables;
+    while ( my $table = $sth->fetchrow_array ) {
+        $tables{$table} = 1;
+    }
+	return %tables;
 }
 
 =item B<cleardb>
