@@ -1,11 +1,13 @@
-0.70    ?? March 2006
+0.69_01 20 April 2006
+        Rename to Wiki::Toolkit.
         Support for moderation on a per-node basis.
         Update to the database schema: added needs_moderation column to
          node, and moderated column to content
-        You will need to run cgi-wiki-setupdb to upgrade your database
+        You will need to run wiki-toolkit-setupdb to upgrade your database
 
 		Many more plugin points: pre_write + pre_retrieve (get to change
 		 the data), post_moderate + post_delete. See test 150 for examples
+
         Merge Wiki::Toolkit::Formatter::Multiple:
         0.02    15 September 2004
                 Applied patch from Tom Insam to fix bug with 
