@@ -217,6 +217,10 @@ sub setup {
 		foreach my $update (@updates) {
 			if(ref($update) eq "CODE") {
 				&$update($dbh);
+			} elsif(ref($update) eq "ARRAY") {
+				foreach my $nupdate (@$update) {
+					$dbh->do($nupdate);
+				}
 			} else {
 				$dbh->do($update);
 			}
