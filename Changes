@@ -6,6 +6,13 @@
 
 		Many more plugin points: pre_write + pre_retrieve (get to change
 		 the data), post_moderate + post_delete. See test 150 for examples
+        Merge Wiki::Toolkit::Formatter::Multiple:
+        0.02    15 September 2004
+                Applied patch from Tom Insam to fix bug with 
+                find_internal_links.
+
+        0.01    22 September 2003
+                Initial release.
 
 0.69    22 February 2006
         Update to database schema: added an ID column to node, and changed

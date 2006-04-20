@@ -1,4 +1,4 @@
-use Test::More tests => 15;
+use Test::More tests => 16;
 
 use_ok( "Wiki::Toolkit" );
 use_ok( "Wiki::Toolkit::Formatter::Default" );
@@ -31,3 +31,5 @@ use_ok( "Wiki::Toolkit::Store::Database" );
 use_ok( "Wiki::Toolkit::Store::MySQL" );
 use_ok( "Wiki::Toolkit::Store::Pg" );
 use_ok( "Wiki::Toolkit::Store::SQLite" );
+
+use_ok( "Wiki::Toolkit::Formatter::Multiple" );

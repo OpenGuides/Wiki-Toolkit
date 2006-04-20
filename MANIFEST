@@ -8,6 +8,7 @@ bin/wiki-toolkit-setupdb
 bin/user-setup-mysql-dbixfts.pl
 lib/Wiki/Toolkit/Extending.pod
 lib/Wiki/Toolkit/Formatter/Default.pm
+lib/Wiki/Toolkit/Formatter/Multiple.pm
 lib/Wiki/Toolkit/Plugin.pm
 lib/Wiki/Toolkit/Search/Base.pm
 lib/Wiki/Toolkit/Search/DBIxFTS.pm
