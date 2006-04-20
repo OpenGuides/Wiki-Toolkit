@@ -26,6 +26,57 @@ registered with.
   $wiki->register_plugin( plugin => $plugin );
   my $node = $plugin->datastore->retrieve_node( "Home" );
 
+=head1 POSSIBLE METHODS
+
+=over 4
+
+=item B<pre_moderate>
+
+  * TODO *
+
+=item B<post_moderate>
+
+=item B<pre_rename>
+
+=item B<post_rename>
+
+=item B<pre_retrieve>
+
+  Called before a retrieve is performed.
+  Allows changes to the parameters used by retrieve.
+
+  my %args = @_;
+  my ($name_ref,$version_ref) = @args{ qw( node version ) };
+  $$name_ref =~ s/\s/_/g;
+
+  TODO: Allow declining of the read.
+
+=item B<pre_write>
+
+  Called before a write is performed.
+  Allows changes to the parameters used by the write;
+
+  my %args = @_;
+  my ($node_ref,$content_ref,$metadata_ref) = 
+      @args{ qw( node content metadata ) };
+  $$content_ref =~ s/\bpub\b/Pub/g;
+
+  TODO: Allow declining of the read.
+
+=item B<post_write>
+
+  Called after a write has been performed.
+  Allows additional actions to occur after node writes.
+
+  my %args = @_;
+  my ($node,$node_id,$version,$content,$metadata) =
+     @args{ qw( node node_id version content metadata ) };
+  &log_node_write($node,gmtime);
+
+=item B<post_delete>
+
+=back
+
 =head1 METHODS
 
 =over 4
