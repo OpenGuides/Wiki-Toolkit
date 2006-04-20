@@ -6,7 +6,9 @@
         You will need to run wiki-toolkit-setupdb to upgrade your database
 
 		Many more plugin points: pre_write + pre_retrieve (get to change
-		 the data), post_moderate + post_delete. See test 150 for examples
+		 the data), pre_moderate + post_moderate, pre_rename + post_rename,
+		 + post_delete. See test 150 for examples, and the perldoc of
+		 Wiki::Toolkit::Plugin for a description.
 
         Merge Wiki::Toolkit::Formatter::Multiple:
         0.02    15 September 2004
