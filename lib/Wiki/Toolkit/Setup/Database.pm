@@ -44,6 +44,7 @@ sub fetch_upgrade_old_to_9 {
 		$nodes{$name} = \%node;
 		$ids{$name} = $id;
 	}
+	print " read $id nodes...  ";
 
 	# Grab all the content, and upgrade to ID from name
 	$sth = $dbh->prepare("SELECT name,version,text,modified,comment FROM content");
@@ -190,6 +191,7 @@ sub bulk_data_insert {
 		$sth->bind_param(6, $node{'moderate'});
 		$sth->execute;
 	}
+	print "added ".(scalar keys %$nodesref)." nodes...  ";
 
 	# Add content
 	$sth = $dbh->prepare("INSERT INTO content (node_id,version,text,modified,comment,moderated) VALUES (?,?,?,?,?,?)");
