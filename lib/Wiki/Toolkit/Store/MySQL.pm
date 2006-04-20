@@ -62,9 +62,9 @@ sub check_and_write_node {
         $self->_unlock_node($node) or carp "Can't unlock node";
 	return 0;
     }
-    $self->write_node_post_locking( %args );
+    my $ok = $self->write_node_post_locking( %args );
     $self->_unlock_node($node) or carp "Can't unlock node";
-    return 1;
+    return $ok;
 }
 
 # Returns 1 if we can get a lock, 0 if we can't, croaks on error.

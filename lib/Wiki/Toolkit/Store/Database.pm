@@ -117,6 +117,22 @@ sub _init {
     return $self;
 }
 
+# Internal method, used to handle the logic of how to add up return
+#  values from pre_ plugins
+sub handle_pre_plugin_ret {
+	my ($running_total_ref,$result) = @_;
+
+	if($result == 0 || $result == undef) {
+		# No opinion, no need to change things
+	} elsif($result == -1 || $result == 1) {
+		# Increase or decrease as requested
+		$$running_total_ref += $result;
+	} else {
+		# Invalid return code
+		warn("Pre_ plugin returned invalid accept/deny value of '$result'");
+	}
+}
+
 
 =item B<retrieve_node>
 
@@ -463,14 +479,22 @@ sub write_node_post_locking {
 
     # Call pre_write on any plugins, in case they want to tweak anything
     my @preplugins = @{ $args{plugins} || [ ] };
+	my $write_allowed = 1;
     foreach my $plugin (@preplugins) {
         if ( $plugin->can( "pre_write" ) ) {
-            $plugin->pre_write( 
-				node     => \$node,
-				content  => \$content,
-				metadata => \$metadata_ref );
+			handle_pre_plugin_ret(
+				\$write_allowed,
+				$plugin->pre_write( 
+					node     => \$node,
+					content  => \$content,
+					metadata => \$metadata_ref )
+			);
         }
     }
+	if($write_allowed < 1) {
+		# The plugins didn't want to allow this action
+		return -1;
+	}
 
     # Either inserting a new page or updating an old one.
     my $sql = "SELECT count(*) FROM node WHERE name=" . $dbh->quote($node);
@@ -656,15 +680,23 @@ sub rename_node {
 
     # Call pre_rename on any plugins, in case they want to tweak anything
     my @preplugins = @{ $args{plugins} || [ ] };
+	my $rename_allowed = 1;
     foreach my $plugin (@preplugins) {
         if ( $plugin->can( "pre_rename" ) ) {
-            $plugin->pre_rename( 
-				old_name => \$old_name,
-				new_name => \$new_name,
-				create_new_versions => \$create_new_versions,
+			handle_pre_plugin_ret(
+				\$rename_allowed,
+				$plugin->pre_rename( 
+					old_name => \$old_name,
+					new_name => \$new_name,
+					create_new_versions => \$create_new_versions,
+				)
 			);
         }
     }
+	if($rename_allowed < 1) {
+		# The plugins didn't want to allow this action
+		return -1;
+	}
 
 	# Get the ID of the node
 	my $sql = "SELECT id FROM node WHERE name=?";
@@ -793,13 +825,21 @@ sub moderate_node {
 
     # Call pre_moderate on any plugins.
     my @plugins = @{ $args{plugins} || [ ] };
+	my $moderation_allowed = 1;
     foreach my $plugin (@plugins) {
         if ( $plugin->can( "pre_moderate" ) ) {
-            $plugin->pre_moderate( 
-				node     => \$name,
-				version  => \$version );
+			handle_pre_plugin_ret(
+				\$moderation_allowed,
+				$plugin->pre_moderate( 
+					node     => \$name,
+					version  => \$version )
+			);
         }
     }
+	if($moderation_allowed < 1) {
+		# The plugins didn't want to allow this action
+		return -1;
+	}
 
 	# Get the ID of this node
     my $id_sql = "SELECT id FROM node WHERE name=?";

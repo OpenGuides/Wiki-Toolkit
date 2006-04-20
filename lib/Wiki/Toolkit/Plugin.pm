@@ -38,8 +38,7 @@ registered with.
   my %args = @_;
   my ($name_ref,$version_ref) = @args{ qw( node version ) };
   $$name_ref =~ s/\s/_/g;
-
-  TODO: Allow declining of moderation.
+  return 0;
 
 =item B<post_moderate>
 
@@ -61,8 +60,7 @@ registered with.
      @args{ qw( old_name new_name create_new_versions ) };
   $$old_name_ref =~ s/\s/_/g;
   $$new_name_ref =~ s/\s/_/g;
-
-  TODO: Allow declining of the rename.
+  return 0;
 
 =item B<post_rename>
 
@@ -81,7 +79,7 @@ registered with.
 
   my %args = @_;
   my ($name_ref,$version_ref) = @args{ qw( node version ) };
-  $$name_ref =~ s/\s/_/g;
+  return &check_retrive_allowed($$name_ref);
 
   TODO: Allow declining of the read.
 
@@ -94,8 +92,7 @@ registered with.
   my ($node_ref,$content_ref,$metadata_ref) = 
       @args{ qw( node content metadata ) };
   $$content_ref =~ s/\bpub\b/Pub/g;
-
-  TODO: Allow declining of the read.
+  return 1;
 
 =item B<post_write>
 
@@ -118,6 +115,29 @@ registered with.
   &log_node_delete($node,gmtime);
 
 =back
+
+=head1 DECLINING ACTIONS FROM PRE_ METHODS
+
+  Note: This functionality is missing for pre_retrieve
+
+  It is possible for the pre_ methods (eg C<pre_write>) to
+  decline the action. This could be due to an authentication
+  check done by the plugin, due to the content, or whatever else
+  the plugin fancies. There are three possible return values from
+  a pre_ plugin:
+
+  C<-1> - Deny this action
+  C<0> or C<undef> - I have no opinion
+  C<1> - Allow this action
+
+  If you have only zeros, the action will be allowed. If you have ones
+  and zeros, it will also be allowed.
+
+  If you have minus ones and zeros, it will be denied. If you have minus
+  ones, ones and zeros, the sum will be used to decide. 
+
+  For default deny, have one plugin return -1, and another only return 1 
+  if the action is explicity allowed)
 
 =head1 METHODS
 

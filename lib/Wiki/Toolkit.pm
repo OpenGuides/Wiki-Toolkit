@@ -240,7 +240,9 @@ sub moderate_node {
     my @plugins = $self->get_registered_plugins;
     $args{plugins} = \@plugins if scalar @plugins;
 
-    $self->store->moderate_node( %args );
+    my $ret = $self->store->moderate_node( %args );
+	if($ret == -1) { return $ret; }
+	return 1;
 }
 
 =item B<set_node_moderation>
@@ -286,8 +288,9 @@ sub rename_node {
     $args{plugins} = \@plugins if scalar @plugins;
 	$args{wiki} = $self;
 
-    $self->store->rename_node( %args );
+    my $ret = $self->store->rename_node( %args );
 
+	if($ret == -1) { return $ret; }
 	return 1;
 }
 
@@ -819,7 +822,8 @@ sub write_node {
     $data{plugins} = \@plugins if scalar @plugins;
 
     my $store = $self->store;
-    $store->check_and_write_node( %data ) or return 0;
+    my $ret = $store->check_and_write_node( %data ) or return 0;
+	if($ret == -1) { return -1; }
 
     my $search = $self->{_search};
     if ($search and $content) {
