@@ -31,7 +31,7 @@ for Wiki::Toolkit
 
 =head1 SYNOPSIS
 
-Can't see yet why you'd want to use the backends directly, but:
+This is probably only useful for Wiki::Toolkit developers.
 
   # See below for parameter details.
   my $store = Wiki::Toolkit::Store::MySQL->new( %config );

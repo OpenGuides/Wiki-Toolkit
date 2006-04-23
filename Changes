@@ -3,7 +3,8 @@
         which should be considered beta in nature at this stage. It is not yet
         suitable for deployment on production data and should only be tested
         on copies of your production data. If it eats your data, you get to
-        keep the pieces.
+        keep the pieces. Additionally, functionality exposed in this beta
+        release is subject to change.
 
         Rename to Wiki::Toolkit.
         Support for moderation on a per-node basis.

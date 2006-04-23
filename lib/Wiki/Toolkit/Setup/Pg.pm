@@ -372,6 +372,7 @@ Kake Pugh (kake@earth.li).
 =head1 COPYRIGHT
 
      Copyright (C) 2002-2004 Kake Pugh.  All Rights Reserved.
+     Copyright (C) 2006 the Wiki::Toolkit team. All Rights Reserved.
 
 This module is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
