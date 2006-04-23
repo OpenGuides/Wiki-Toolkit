@@ -1,4 +1,10 @@
-0.69_01 20 April 2006
+0.69_01 23 April 2006
+        *** IMPORTANT NOTICE *** This release introduces a new database schema
+        which should be considered beta in nature at this stage. It is not yet
+        suitable for deployment on production data and should only be tested
+        on copies of your production data. If it eats your data, you get to
+        keep the pieces.
+
         Rename to Wiki::Toolkit.
         Support for moderation on a per-node basis.
         Update to the database schema: added needs_moderation column to

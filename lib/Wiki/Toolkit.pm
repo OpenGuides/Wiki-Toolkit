@@ -3,7 +3,7 @@ package Wiki::Toolkit;
 use strict;
 
 use vars qw( $VERSION );
-$VERSION = '0.62';
+$VERSION = '0.69';
 
 use Carp qw(croak carp);
 use Digest::MD5 "md5_hex";
@@ -995,25 +995,25 @@ Other ways to implement Wikis in Perl include:
 
 =head1 AUTHOR
 
-Kake Pugh (kake@earth.li).
+Kake Pugh (kake@earth.li) and the Wiki::Toolkit team (including Nick Burch
+and Dominic Hargreaves)
 
 =head1 SUPPORT
 
-Questions, feature requests and bug reports should go to cgi-wiki-dev@earth.li
+Questions should go to cgi-wiki-dev@earth.li.
 
 =head1 COPYRIGHT
 
      Copyright (C) 2002-2004 Kake Pugh.  All Rights Reserved.
+     Copyright (C) 2006 the Wiki::Toolkit team. All Rights Reserved.
 
 This module is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
 
 =head1 FEEDBACK
 
-Please send me mail and tell me what you think of this, particularly
-if something is broken or confusing. I would much rather fix it than
-not know. I love getting mail, even if all it says is "I used your
-thing and I like it", or "I didn't use your thing because of X".
+The developer web site and bug tracker is at
+  http://www.wiki-toolkit.org/ - please file bugs there as appropriate.
 
 You could also subscribe to the dev list at
   http://www.earth.li/cgi-bin/mailman/listinfo/cgi-wiki-dev
@@ -1031,6 +1031,9 @@ help me get it working in just the way I need. Paul Makepeace helped
 me add support for connecting to non-local databases. Shevek has been
 prodding me a lot lately. The L<OpenGuides> team keep me well-supplied
 with encouragement and bug reports.
+
+Nick Burch has been leading the way with development leading up to the
+release under the Wiki::Toolkit name.
 
 =head1 GRATUITOUS PLUG
 
