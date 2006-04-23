@@ -1,4 +1,4 @@
-package CGI::Wiki::Formatter::Multiple;
+package Wiki::Toolkit::Formatter::Multiple;
 use strict;
 
 use vars qw( $VERSION );
@@ -6,36 +6,36 @@ $VERSION = '0.02';
 
 =head1 NAME
 
-CGI::Wiki::Formatter::Multiple - Allows a CGI::Wiki wiki to use more than one formatter.
+Wiki::Toolkit::Formatter::Multiple - Allows a Wiki::Toolkit wiki to use more than one formatter.
 
 =head1 DESCRIPTION
 
-A "dummy" formatter for L<CGI::Wiki>.  Passes methods through to other
-CGI::Wiki formatters, depending on supplied metadata.
+A "dummy" formatter for L<Wiki::Toolkit>.  Passes methods through to other
+Wiki::Toolkit formatters, depending on supplied metadata.
 
 =head1 SYNOPSIS
 
-  use CGI::Wiki::Formatter::Multiple;
-  use CGI::Wiki::Formatter::Pod;
-  use CGI::Wiki::Formatter::UseMod;
+  use Wiki::Toolkit::Formatter::Multiple;
+  use Wiki::Toolkit::Formatter::Pod;
+  use Wiki::Toolkit::Formatter::UseMod;
 
-  my $pod_fmtr = CGI::Wiki::Formatter::Pod->new(
+  my $pod_fmtr = Wiki::Toolkit::Formatter::Pod->new(
       node_prefix => "wiki.cgi?node=",
   );
 
-  my $usemod_fmtr = CGI::Wiki::Formatter::UseMod->new(
+  my $usemod_fmtr = Wiki::Toolkit::Formatter::UseMod->new(
       node_prefix    => "wiki.cgi?node=",
       extended_links => 1,
       allowed_tags   => [ qw( p b i div br ) ],
   );
 
-  my $formatter = CGI::Wiki::Formatter::Multiple->new(
+  my $formatter = Wiki::Toolkit::Formatter::Multiple->new(
       documentation => $pod_fmtr,
       discussion    => $usemod_fmtr,
       _DEFAULT      => $usemod_fmtr,
   );
 
-  my $wiki = CGI::Wiki->new( store     => ...,
+  my $wiki = Wiki::Toolkit->new( store     => ...,
                              formatter => $formatter );
   my $output = $wiki->format( "This is some discussion.",
                               { formatter => "discussion" } );
@@ -46,10 +46,10 @@ CGI::Wiki formatters, depending on supplied metadata.
 
 =item B<new>
 
-  my $formatter = CGI::Wiki::Formatter::Multiple->new(
+  my $formatter = Wiki::Toolkit::Formatter::Multiple->new(
       label_1  => Formatter1->new( ... ),
       label_2  => Formatter2->new( ... ),
-      _DEFAULT => CGI::Wiki::Formatter::Default->new,
+      _DEFAULT => Wiki::Toolkit::Formatter::Default->new,
   );
 
 You may supply as many formatter objects as you wish.  They don't have
@@ -64,7 +64,7 @@ of the formatter that should be used to render that node.
 The C<_DEFAULT> label is special - it defines the formatter that will
 be used for any node that does not have a C<formatter> stored in its
 metadata.  The C<_DEFAULT> formatter, if not supplied to C<< ->new >>,
-will default to the very basic L<CGI::Wiki::Formatter::Default>.
+will default to the very basic L<Wiki::Toolkit::Formatter::Default>.
 
 =cut
 
@@ -72,8 +72,8 @@ sub new {
     my ($class, %args) = @_;
     my $self = bless {}, $class;
     unless ( $args{_DEFAULT} ) {
-        require CGI::Wiki::Formatter::Default;
-        $args{_DEFAULT} = CGI::Wiki::Formatter::Default->new;
+        require Wiki::Toolkit::Formatter::Default;
+        $args{_DEFAULT} = Wiki::Toolkit::Formatter::Default->new;
     }
     $self->{formatters} = \%args;
     return $self;
@@ -89,7 +89,7 @@ of the formatter objects passed on instantiation to use, then uses it
 to format the provided rawwikitext.
 
 The C<undef> second element of the parameter array in the example is
-there because when this is called from a L<CGI::Wiki> object, the wiki
+there because when this is called from a L<Wiki::Toolkit> object, the wiki
 object passes itself in as the second parameter.
 
 =cut
@@ -125,7 +125,7 @@ sub _formatter {
 
 =head1 SEE ALSO
 
-L<CGI::Wiki>
+L<Wiki::Toolkit>
 
 =head1 AUTHOR
 
