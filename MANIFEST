@@ -14,6 +14,7 @@ lib/Wiki/Toolkit/Search/Base.pm
 lib/Wiki/Toolkit/Search/DBIxFTS.pm
 lib/Wiki/Toolkit/Search/Plucene.pm
 lib/Wiki/Toolkit/Search/SII.pm
+lib/Wiki/Toolkit/Setup/Database.pm
 lib/Wiki/Toolkit/Setup/DBIxFTSMySQL.pm
 lib/Wiki/Toolkit/Setup/MySQL.pm
 lib/Wiki/Toolkit/Setup/Pg.pm

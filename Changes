@@ -1,3 +1,7 @@
+0.69_02 27 April 2006
+        Add missing new file lib/Wiki/Toolkit/Setup/Database.pm to
+        distribution.
+
 0.69_01 23 April 2006
         *** IMPORTANT NOTICE *** This release introduces a new database schema
         which should be considered beta in nature at this stage. It is not yet
