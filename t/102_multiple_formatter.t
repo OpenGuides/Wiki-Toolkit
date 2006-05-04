@@ -1,24 +1,25 @@
 use strict;
-use CGI::Wiki;
-use CGI::Wiki::Store::SQLite;
-use CGI::Wiki::Formatter::Default;
-use CGI::Wiki::Formatter::Multiple;
+use Wiki::Toolkit;
+use Wiki::Toolkit::Setup::SQLite;
+use Wiki::Toolkit::Store::SQLite;
+use Wiki::Toolkit::Formatter::Default;
+use Wiki::Toolkit::Formatter::Multiple;
 use vars qw( $num_sqlite_tests );
 BEGIN {
    $num_sqlite_tests = 7;
 }
 use Test::More tests => 1 + $num_sqlite_tests;
 
-my $default_fmtr = CGI::Wiki::Formatter::Default->new;
+my $default_fmtr = Wiki::Toolkit::Formatter::Default->new;
 my $uc_fmtr = Local::Test::Formatter::UC->new;
 my $append_fmtr = Local::Test::Formatter::Append->new;
 
-my $formatter = CGI::Wiki::Formatter::Multiple->new(
+my $formatter = Wiki::Toolkit::Formatter::Multiple->new(
     normal   => $default_fmtr,
     uc       => $uc_fmtr,
     _DEFAULT => $append_fmtr,
 );
-isa_ok( $formatter, "CGI::Wiki::Formatter::Multiple" );
+isa_ok( $formatter, "Wiki::Toolkit::Formatter::Multiple" );
 
 eval { require DBD::SQLite };
 my $run_tests = $@ ? 0 : 1;
@@ -27,9 +28,11 @@ SKIP: {
     skip "DBD::SQLite not installed - can't make test database",
       $num_sqlite_tests unless $run_tests;
 
-    my $store = CGI::Wiki::Store::SQLite->new( dbname => "./t/wiki.db" );
-    my $wiki = CGI::Wiki->new( store => $store, formatter => $formatter );
-    isa_ok( $wiki, "CGI::Wiki" );
+    Wiki::Toolkit::Setup::SQLite::setup("./t/wiki.db");
+
+    my $store = Wiki::Toolkit::Store::SQLite->new( dbname => "./t/wiki.db" );
+    my $wiki = Wiki::Toolkit->new( store => $store, formatter => $formatter );
+    isa_ok( $wiki, "Wiki::Toolkit" );
 
     $wiki->write_node( "Normal Node", "foo bar FooBar", undef,
                        { formatter => "normal" } ) or die "Can't write node";
@@ -53,8 +56,8 @@ SKIP: {
           "default node formatted as expected" );
 
     # Now test we get a sensible default _DEFAULT.
-    $formatter = CGI::Wiki::Formatter::Multiple->new( uc => $uc_fmtr );
-    $wiki = CGI::Wiki->new( store => $store, formatter => $formatter );
+    $formatter = Wiki::Toolkit::Formatter::Multiple->new( uc => $uc_fmtr );
+    $wiki = Wiki::Toolkit->new( store => $store, formatter => $formatter );
     my %data4 = $wiki->retrieve_node( "Other Node" );
     my $output4 = $wiki->format( $data4{content}, $data4{metadata} );
     like( $output4, qr|<p>\s*foo bar\s*</p>|, "default _DEFAULT as expected" );
