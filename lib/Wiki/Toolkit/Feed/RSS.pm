@@ -1,9 +1,9 @@
-package CGI::Wiki::Plugin::RSS::ModWiki;
+package Wiki::Toolkit::Feed::RSS;
 
 use strict;
 
 use vars qw( $VERSION );
-$VERSION = '0.09';
+$VERSION = '0.10';
 
 use POSIX 'strftime';
 use Time::Piece;
@@ -19,9 +19,9 @@ sub new
   my %args = @_;
   my $wiki = $args{wiki};
 
-  unless ($wiki && UNIVERSAL::isa($wiki, 'CGI::Wiki'))
+  unless ($wiki && UNIVERSAL::isa($wiki, 'Wiki::Toolkit'))
   {
-    croak 'No CGI::Wiki object supplied';
+    croak 'No Wiki::Toolkit object supplied';
   }
   
   $self->{wiki} = $wiki;
@@ -40,7 +40,7 @@ sub new
     $self->{$arg} = $args{$arg} || '';
   }
 
-  $self->{timestamp_fmt} = $CGI::Wiki::Store::Database::timestamp_fmt;
+  $self->{timestamp_fmt} = $Wiki::Toolkit::Store::Database::timestamp_fmt;
   $self->{utc_offset} = strftime "%z", localtime;
   $self->{utc_offset} =~ s/(..)(..)$/$1:$2/;
   
@@ -266,24 +266,24 @@ __END__
 
 =head1 NAME
 
-  CGI::Wiki::Plugin::RSS::ModWiki - A CGI::Wiki plugin to output RecentChanges RSS.
+  Wiki::Toolkit::Feed::RSS - Output RecentChanges RSS for Wiki::Toolkit.
 
 =head1 DESCRIPTION
 
-This is an alternative access to the recent changes of a CGI::Wiki
+This is an alternative access to the recent changes of a Wiki::Toolkit
 wiki. It outputs RSS as described by the ModWiki proposal at
 L<http://www.usemod.com/cgi-bin/mb.pl?ModWiki>
 
 =head1 SYNOPSIS
 
-  use CGI::Wiki;
-  use CGI::Wiki::Plugin::RSS::ModWiki;
+  use Wiki::Toolkit;
+  use Wiki::Toolkit::Feed::RSS;
 
-  my $wiki = CGI::Wiki->new( ... );  # See perldoc CGI::Wiki
+  my $wiki = CGI::Wiki->new( ... );  # See perldoc Wiki::Toolkit
 
   # Set up the RSS feeder with the mandatory arguments - see
   # C<new()> below for more, optional, arguments.
-  my $rss = CGI::Wiki::Plugin::RSS::ModWiki->new(
+  my $rss = Wiki::Toolkit::Feed::RSS->new(
     wiki                => $wiki,
     site_name           => 'My Wiki',
     site_url            => 'http://example.com/',
@@ -302,7 +302,7 @@ L<http://www.usemod.com/cgi-bin/mb.pl?ModWiki>
 
 =head2 C<new()>
 
-  my $rss = CGI::Wiki::Plugin::RSS::ModWiki->new(
+  my $rss = Wiki::Toolkit::Feed::RSS->new(
     # Mandatory arguments:
     wiki                 => $wiki,
     site_name            => 'My Wiki',
@@ -329,10 +329,10 @@ L<http://www.usemod.com/cgi-bin/mb.pl?ModWiki>
                             },
     software_name        => $your_software_name,     # e.g. "CGI::Wiki"
     software_version     => $your_software_version,  # e.g. "0.73"
-    software_homepage    => $your_software_homepage, # e.g. "http://search.cpan.org/dist/CGI-Wiki/"
+    software_homepage    => $your_software_homepage, # e.g. "http://search.cpan.org/dist/Wiki-Toolkit/"
   );
 
-C<wiki> must be a L<CGI::Wiki> object. C<make_node_url>, and
+C<wiki> must be a L<Wiki::Toolkit> object. C<make_node_url>, and
 C<make_diff_url> and C<make_history_url>, if supplied, must be coderefs.
 
 The mandatory arguments are:
@@ -402,7 +402,7 @@ I<all> criteria will be returned.
 
 B<Note:> Many of the fields emitted by the RSS generator are taken
 from the node metadata. The form of this metadata is I<not> mandated
-by L<CGI::Wiki>. Your wiki application should make sure to store some or
+by L<Wiki::Toolkit>. Your wiki application should make sure to store some or
 all of the following metadata when calling C<write_node>:
 
 =over 4
@@ -431,7 +431,7 @@ whether they need to reload the feed or not.
 
 =over 4
 
-=item * L<CGI::Wiki>
+=item * L<Wiki::Toolkit>
 
 =item * L<http://web.resource.org/rss/1.0/spec>
 
@@ -441,12 +441,13 @@ whether they need to reload the feed or not.
 
 =head1 MAINTAINER
 
-Earle Martin <EMARTIN@cpan.org>. Originally by Kake Pugh <kake@earth.li>.
+The Wiki::Toolkit project. Originally by Kake Pugh <kake@earth.li>.
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright 2003-4 Kake Pugh. Subsequent modifications copyright 2005 
-Earle Martin.
+Copyright 2003-4 Kake Pugh.
+Copyright 2005 Earle Martin.
+Copyright 2006 the Wiki::Toolkit team
 
 This module is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
