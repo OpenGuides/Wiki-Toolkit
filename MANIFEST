@@ -55,6 +55,8 @@ t/100_formatting.t
 t/101_default_formatter.t
 t/150_plugins.t
 t/151_plugin_methods.t
+t/297_feed_rss_recentchanges_setup.t
+t/298_feed_rss_recentchanges_add_test_data.t
 t/299_feed_rss_recentchanges.t
 t/lib/Wiki/Toolkit/Plugin/Bar.pm
 t/lib/Wiki/Toolkit/Plugin/Foo.pm
