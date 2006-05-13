@@ -7,6 +7,7 @@ README
 bin/wiki-toolkit-setupdb
 bin/user-setup-mysql-dbixfts.pl
 lib/Wiki/Toolkit/Extending.pod
+lib/Wiki/Toolkit/Feed/Atom.pm
 lib/Wiki/Toolkit/Feed/RSS.pm
 lib/Wiki/Toolkit/Formatter/Default.pm
 lib/Wiki/Toolkit/Formatter/Multiple.pm
@@ -58,6 +59,9 @@ t/151_plugin_methods.t
 t/297_feed_rss_recentchanges_setup.t
 t/298_feed_rss_recentchanges_add_test_data.t
 t/299_feed_rss_recentchanges.t
+t/300_feed_atom_setup.t
+t/301_feed_atom_add_test_data.t
+t/302_feed_atom_recentchanges.t
 t/lib/Wiki/Toolkit/Plugin/Bar.pm
 t/lib/Wiki/Toolkit/Plugin/Foo.pm
 
