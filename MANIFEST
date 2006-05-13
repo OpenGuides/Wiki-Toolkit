@@ -4,6 +4,7 @@ MANIFEST
 META.yml
 Makefile.PL
 README
+SIGNATURE
 bin/wiki-toolkit-setupdb
 bin/user-setup-mysql-dbixfts.pl
 lib/Wiki/Toolkit/Extending.pod
