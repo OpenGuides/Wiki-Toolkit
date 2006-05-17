@@ -108,7 +108,7 @@ while ( my $wiki = $iterator->new_wiki ) {
 	%node_data = $wiki->retrieve_node(name=>"Moderation");
 	my %mmn1 = $wiki->retrieve_node(name=>"Moderation",version=>1);
 
-	# First entry should now be moderated, but node shouldn't be changed
+	# First entry should now be moderated, but node should not be changed
 	is( $mmn1{moderated}, '1', "First version should now be moderated" );
 	is( $mmn1{node_requires_moderation}, '1', "Still requires moderation" );
 	is( $node_data{moderated}, '1', "Current version should still be moderated" );
@@ -122,7 +122,7 @@ while ( my $wiki = $iterator->new_wiki ) {
 	%node_data = $wiki->retrieve_node(name=>"Moderation");
 	my %mmn3 = $wiki->retrieve_node(name=>"Moderation",version=>3);
 
-	# Third entry should now be moderated, and node should've be changed
+	# Third entry should now be moderated, and node should have been changed
 	is( $mmn3{moderated}, '1', "Third version should now be moderated" );
 	is( $mmn3{node_requires_moderation}, '1', "Still requires moderation" );
 	is( $node_data{moderated}, '1', "Current version should still be moderated" );
