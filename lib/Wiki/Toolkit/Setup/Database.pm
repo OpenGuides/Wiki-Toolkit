@@ -190,13 +190,12 @@ sub bulk_data_insert {
 	my $sth = $dbh->prepare("INSERT INTO node (id,name,version,text,modified,moderate) VALUES (?,?,?,?,?,?)");
 	foreach my $name (keys %$nodesref) {
 		my %node = %{$nodesref->{$name}};
-		$sth->bind_param(1, $node{'id'});
-		$sth->bind_param(2, $node{'name'});
-		$sth->bind_param(3, $node{'version'});
-		$sth->bind_param(4, $node{'text'});
-		$sth->bind_param(5, $node{'modified'});
-		$sth->bind_param(6, $node{'moderate'});
-		$sth->execute;
+		$sth->execute($node{'id'},
+                      $node{'name'},
+                      $node{'version'},
+                      $node{'text'},
+                      $node{'modified'},
+                      $node{'moderate'});
 	}
 	print "added ".(scalar keys %$nodesref)." nodes...  ";
 
@@ -204,24 +203,22 @@ sub bulk_data_insert {
 	$sth = $dbh->prepare("INSERT INTO content (node_id,version,text,modified,comment,moderated) VALUES (?,?,?,?,?,?)");
 	foreach my $key (keys %$contentsref) {
 		my %content = %{$contentsref->{$key}};
-		$sth->bind_param(1, $content{'node_id'});
-		$sth->bind_param(2, $content{'version'});
-		$sth->bind_param(3, $content{'text'});
-		$sth->bind_param(4, $content{'modified'});
-		$sth->bind_param(5, $content{'comment'});
-		$sth->bind_param(6, $content{'moderated'});
-		$sth->execute;
+		$sth->execute($content{'node_id'},
+                      $content{'version'},
+                      $content{'text'},
+                      $content{'modified'},
+                      $content{'comment'},
+                      $content{'moderated'});
 	}
 
 	# Add metadata
 	$sth = $dbh->prepare("INSERT INTO metadata (node_id,version,metadata_type,metadata_value) VALUES (?,?,?,?)");
 	foreach my $key (keys %$metadataref) {
 		my %metadata = %{$metadataref->{$key}};
-		$sth->bind_param(1, $metadata{'node_id'});
-		$sth->bind_param(2, $metadata{'version'});
-		$sth->bind_param(3, $metadata{'metadata_type'});
-		$sth->bind_param(4, $metadata{'metadata_value'});
-		$sth->execute;
+		$sth->execute($metadata{'node_id'},
+                      $metadata{'version'},
+                      $metadata{'metadata_type'},
+                      $metadata{'metadata_value'});
 	}
 
 	print "done\n";
