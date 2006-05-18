@@ -60,34 +60,7 @@ sub recent_changes
 {
   my ($self, %args) = @_;
 
-  my $wiki = $self->{wiki};
-
-  # If we're not passed any parameters to limit the items returned, default to 15.
-
-  my %criteria = (
-                   ignore_case => 1,
-                 );
-
-  if ($args{days})
-  {
-    $criteria{days} = $args{days};
-  }
-  else
-  {
-    $criteria{last_n_changes} = $args{items} || 15;
-  }
-  
-  if ($args{ignore_minor_edits})
-  {
-    $criteria{metadata_wasnt} = { major_change => 0 };
-  }
-  
-  if ($args{filter_on_metadata})
-  {
-    $criteria{metadata_was} = $args{filter_on_metadata};
-  }
-
-  my @changes = $wiki->list_recent_changes(%criteria);
+  my @changes = $self->fetch_recently_changed_nodes(%args);
   my $rss_timestamp = $self->rss_timestamp(%args);
 
   return $self->generate_node_list_feed($rss_timestamp, @changes);

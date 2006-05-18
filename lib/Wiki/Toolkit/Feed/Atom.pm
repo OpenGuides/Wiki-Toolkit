@@ -51,25 +51,12 @@ sub new
 
 sub recent_changes
 {
-  my ($self, %args) = @_;
+    my ($self, %args) = @_;
 
-  my $wiki = $self->{wiki};
+    my @changes = $self->fetch_recently_changed_nodes(%args);
+    my $atom_timestamp = $self->feed_timestamp(%args);
 
-  my %criteria = (
-                   ignore_case => 1,
-                 );
-
-  # If we're not passed any parameters to limit the items returned, default to 15.
-  $args{days} ? $criteria{days}           = $args{days}
-              : $criteria{last_n_changes} = $args{items} || 15;
-  
-  $criteria{metadata_wasnt} = { major_change => 0 }     if $args{ignore_minor_edits};
-  $criteria{metadata_was}   = $args{filter_on_metadata} if $args{filter_on_metadata};
-
-  my @changes = $wiki->list_recent_changes(%criteria);
-  my $atom_timestamp = $self->feed_timestamp(%args);
-
-  return $self->generate_node_list_feed($atom_timestamp, @changes);
+    return $self->generate_node_list_feed($atom_timestamp, @changes);
 }
 
 =item <generate_node_list_feed>
