@@ -24,6 +24,7 @@ sub fetch_upgrade_old_to_9 {
 	my %nodes;
 	my %metadatas;
 	my %contents;
+	my @internal_links;
 	my %ids;
 
 	print "Grabbing and upgrading old data... ";
@@ -84,10 +85,20 @@ sub fetch_upgrade_old_to_9 {
 		}
 	}
 
+	# Grab all the internal links
+	$sth = $dbh->prepare("SELECT link_from,link_to FROM internal_links");
+	$sth->execute;
+	while( my($link_from,$link_to) = $sth->fetchrow_array) {
+		my %il;
+		$il{'link_from'} = $link_from;
+		$il{'link_to'} = $link_to;
+		push @internal_links, \%il;
+	}
+
 	print "done\n";
 
 	# Return it all
-	return (\%nodes,\%contents,\%metadatas,\%ids);
+	return (\%nodes,\%contents,\%metadatas,\@internal_links,\%ids);
 }
 # Fetch from schema version 8, and upgrade to version 9
 sub fetch_upgrade_8_to_9 {
@@ -95,6 +106,7 @@ sub fetch_upgrade_8_to_9 {
 	my %nodes;
 	my %metadatas;
 	my %contents;
+	my @internal_links;
 
 	print "Grabbing and upgrading old data... ";
 
@@ -139,10 +151,20 @@ sub fetch_upgrade_8_to_9 {
 		$metadatas{$node_id."-".($i++)} = \%metadata;
 	}
 
+	# Grab all the internal links
+	$sth = $dbh->prepare("SELECT link_from,link_to FROM internal_links");
+	$sth->execute;
+	while( my($link_from,$link_to) = $sth->fetchrow_array) {
+		my %il;
+		$il{'link_from'} = $link_from;
+		$il{'link_to'} = $link_to;
+		push @internal_links, \%il;
+	}
+
 	print "done\n";
 
 	# Return it all
-	return (\%nodes,\%contents,\%metadatas);
+	return (\%nodes,\%contents,\%metadatas,\@internal_links);
 }
 
 
@@ -182,7 +204,7 @@ sub get_database_upgrade_required {
 
 # Put the latest data into the latest database structure
 sub bulk_data_insert {
-	my ($dbh, $nodesref, $contentsref, $metadataref) = @_;
+	my ($dbh, $nodesref, $contentsref, $metadataref, $internallinksref) = @_;
 
 	print "Bulk inserting upgraded data... ";
 
@@ -211,15 +233,23 @@ sub bulk_data_insert {
                       $content{'moderated'});
 	}
 
-	# Add metadata
-	$sth = $dbh->prepare("INSERT INTO metadata (node_id,version,metadata_type,metadata_value) VALUES (?,?,?,?)");
-	foreach my $key (keys %$metadataref) {
-		my %metadata = %{$metadataref->{$key}};
-		$sth->execute($metadata{'node_id'},
+    # Add metadata
+    $sth = $dbh->prepare("INSERT INTO metadata (node_id,version,metadata_type,metadata_value) VALUES (?,?,?,?)");
+    foreach my $key (keys %$metadataref) {
+        my %metadata = %{$metadataref->{$key}};
+        $sth->execute($metadata{'node_id'},
                       $metadata{'version'},
                       $metadata{'metadata_type'},
                       $metadata{'metadata_value'});
-	}
+    }
 
-	print "done\n";
+    # Add internal links
+    $sth = $dbh->prepare("INSERT INTO internal_links (link_from,link_to) VALUES (?,?)");
+    foreach my $ilr (@$internallinksref) {
+        my %il = %{$ilr};
+        $sth->execute($il{'link_from'},
+                      $il{'link_to'});
+    }
+
+    print "done\n";
 }
