@@ -50,6 +50,12 @@ sub new
   $self;
 }
 
+=item B<recent_changes>
+
+Build an RSS Feed of the recent changes to the Wiki::Toolkit instance,
+using any supplied parameters to narrow the results.
+
+=cut
 sub recent_changes
 {
   my ($self, %args) = @_;
@@ -82,8 +88,18 @@ sub recent_changes
   }
 
   my @changes = $wiki->list_recent_changes(%criteria);
-
   my $rss_timestamp = $self->rss_timestamp(%args);
+
+  return $self->generate_node_list_feed($rss_timestamp, @changes);
+}
+
+=item <generate_node_list_feed>
+
+Generate and return an RSS feed for a list of nodes
+
+=cut
+sub generate_node_list_feed {
+  my ($self,$rss_timestamp,@nodes) = @_;
 
   #"http://purl.org/rss/1.0/modules/wiki/"
   my $rss = qq{<?xml version="1.0" encoding="UTF-8"?>
@@ -137,7 +153,7 @@ $rss .= qq{<title>}   . $self->{site_name}            . qq{</title>
 
   my (@urls, @items);
 
-  foreach my $change (@changes)
+  foreach my $change (@nodes)
   {
     my $node_name = $change->{name};
 
