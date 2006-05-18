@@ -62,7 +62,7 @@ sub recent_changes
 
   my @changes = $self->fetch_recently_changed_nodes(%args);
   my $rss_timestamp = $self->rss_timestamp(
-                              $self->fetch_oldest_for_recently_changed(%args)
+                              $self->fetch_newest_for_recently_changed(%args)
   );
 
   return $self->generate_node_list_feed($rss_timestamp, @changes);
@@ -215,16 +215,16 @@ $rss .= qq{<title>}   . $self->{site_name}            . qq{</title>
 
 =item B<rss_timestamp>
 
-Generate the timestamp for the RSS, based on the oldest node (if available)
+Generate the timestamp for the RSS, based on the newest node (if available)
 
 =cut
 sub rss_timestamp
 {
-    my ($self, $oldest_node) = @_;
+    my ($self, $newest_node) = @_;
 
-    if ($oldest_node->{last_modified})
+    if ($newest_node->{last_modified})
     {
-        my $time = Time::Piece->strptime( $oldest_node->{last_modified}, $self->{timestamp_fmt} );
+        my $time = Time::Piece->strptime( $newest_node->{last_modified}, $self->{timestamp_fmt} );
 
         my $utc_offset = $self->{utc_offset};
 

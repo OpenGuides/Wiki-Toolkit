@@ -42,11 +42,11 @@ sub fetch_recently_changed_nodes {
 =item B<fetch_oldest_for_recently_changed>
 
 Based on the supplied criteria (but not using all of those used by
-B<fetch_recently_changed_nodes>), find the oldest node from the recently
+B<fetch_recently_changed_nodes>), find the newest node from the recently
 changed nodes set. Normally used for dating the whole of a Feed.
 
 =cut
-sub fetch_oldest_for_recently_changed {
+sub fetch_newest_for_recently_changed {
     my ($self, %args) = @_;
 
     my %criteria = (ignore_case => 1);
