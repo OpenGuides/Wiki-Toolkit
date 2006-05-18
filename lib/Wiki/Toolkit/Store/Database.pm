@@ -1453,9 +1453,9 @@ sub list_node_all_versions {
 	if($with_metadata) {
 		$sql .= ", metadata_type, metadata_value ";
 	}
-	$sql .= " FROM node INNER JOIN content ON (id = node_id) ";
+	$sql .= " FROM node INNER JOIN content ON (id = content.node_id) ";
 	if($with_metadata) {
-		$sql .= " LEFT OUTER JOIN metadata ON (id = node_id AND content.version = metadata.version) ";
+		$sql .= " LEFT OUTER JOIN metadata ON (id = metadata.node_id AND content.version = metadata.version) ";
 	}
 	$sql .= " WHERE id = ? ORDER BY content.version DESC";
 
@@ -1492,7 +1492,10 @@ sub list_node_all_versions {
 		}
 		if($with_metadata) {
 			my ($m_type,$m_value) = @results[$i,($i+1)];
-			$data{'metadata'}->{$m_type} = $m_value;
+			unless($data{'metadata'}) { $data{'metadata'} = {}; }
+			if($m_type) {
+				$data{'metadata'}->{$m_type} = $m_value;
+			}
 		}
 
 		# Save where we've got to
