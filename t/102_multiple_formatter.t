@@ -28,7 +28,11 @@ SKIP: {
     skip "DBD::SQLite not installed - can't make test database",
       $num_sqlite_tests unless $run_tests;
 
-    Wiki::Toolkit::Setup::SQLite::setup("./t/wiki.db");
+	my $db_file = "./t/wiki.db";
+	if(-f $db_file) {
+		Wiki::Toolkit::Setup::SQLite::cleardb($db_file);
+	}
+    Wiki::Toolkit::Setup::SQLite::setup($db_file);
 
     my $store = Wiki::Toolkit::Store::SQLite->new( dbname => "./t/wiki.db" );
     my $wiki = Wiki::Toolkit->new( store => $store, formatter => $formatter );
