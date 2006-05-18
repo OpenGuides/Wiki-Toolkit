@@ -153,11 +153,11 @@ $rss .= qq{<title>}   . $self->{site_name}            . qq{</title>
 
   my (@urls, @items);
 
-  foreach my $change (@nodes)
+  foreach my $node (@nodes)
   {
-    my $node_name = $change->{name};
+    my $node_name = $node->{name};
 
-    my $timestamp = $change->{last_modified};
+    my $timestamp = $node->{last_modified};
     
     # Make a Time::Piece object.
     my $time = Time::Piece->strptime($timestamp, $self->{timestamp_fmt});
@@ -166,15 +166,15 @@ $rss .= qq{<title>}   . $self->{site_name}            . qq{</title>
     
     $timestamp = $time->strftime( "%Y-%m-%dT%H:%M:%S$utc_offset" );
 
-    my $author      = $change->{metadata}{username}[0] || $change->{metadata}{host}[0] || '';
-    my $description = $change->{metadata}{comment}[0]  || '';
+    my $author      = $node->{metadata}{username}[0] || $node->{metadata}{host}[0] || '';
+    my $description = $node->{metadata}{comment}[0]  || '';
 
     $description .= " [$author]" if $author;
 
-    my $version = $change->{version};
+    my $version = $node->{version};
     my $status  = (1 == $version) ? 'new' : 'updated';
 
-    my $major_change = $change->{metadata}{major_change}[0];
+    my $major_change = $node->{metadata}{major_change}[0];
        $major_change = 1 unless defined $major_change;
     my $importance = $major_change ? 'major' : 'minor';
 
@@ -238,6 +238,12 @@ $rss .= qq{<title>}   . $self->{site_name}            . qq{</title>
   return $rss;   
 }
 
+=item B<rss_timestamp>
+
+Generate the timestamp for the RSS, by figuring out the age range of
+the source data for the feed
+
+=cut
 sub rss_timestamp
 {
   my ($self, %args) = @_;

@@ -55,17 +55,6 @@ sub recent_changes
 
   my $wiki = $self->{wiki};
 
-  my $generator = '';
-  
-  if ($self->{software_name})
-  {
-    $generator  = '  <generator';
-    $generator .= ' uri="' . $self->{software_homepage} . '"'   if $self->{software_homepage};
-    $generator .= ' version=' . $self->{software_version} . '"' if $self->{software_version};
-    $generator .= ">\n";
-    $generator .= $self->{software_name} . "</generator>\n";
-  }                          
-
   my %criteria = (
                    ignore_case => 1,
                  );
@@ -78,6 +67,29 @@ sub recent_changes
   $criteria{metadata_was}   = $args{filter_on_metadata} if $args{filter_on_metadata};
 
   my @changes = $wiki->list_recent_changes(%criteria);
+  my $atom_timestamp = $self->feed_timestamp(%args);
+
+  return $self->generate_node_list_feed($atom_timestamp, @changes);
+}
+
+=item <generate_node_list_feed>
+  
+Generate and return an Atom feed for a list of nodes
+  
+=cut
+sub generate_node_list_feed {
+  my ($self,$atom_timestamp,@nodes) = @_;
+
+  my $generator = '';
+  
+  if ($self->{software_name})
+  {
+    $generator  = '  <generator';
+    $generator .= ' uri="' . $self->{software_homepage} . '"'   if $self->{software_homepage};
+    $generator .= ' version=' . $self->{software_version} . '"' if $self->{software_version};
+    $generator .= ">\n";
+    $generator .= $self->{software_name} . "</generator>\n";
+  }                          
 
   my $subtitle = $self->{site_description}
                  ? '<subtitle>' . $self->{site_description} . "</subtitle>\n"
@@ -87,20 +99,20 @@ sub recent_changes
 
 <feed xmlns="http://www.w3.org/2005/Atom">
 
-  <link href="}            . $self->{site_url}            . qq{" />
-  <title>}                 . $self->{site_name}           . qq{</title>
-  <link rel="self" href="} . $self->{atom_link}           . qq{" />
-  <updated>}               . $self->feed_timestamp(%args) . qq{</updated>
-  <id>}                    . $self->{site_url}            . qq{</id>
+  <link href="}            . $self->{site_url}     . qq{" />
+  <title>}                 . $self->{site_name}    . qq{</title>
+  <link rel="self" href="} . $self->{atom_link}    . qq{" />
+  <updated>}               . $atom_timestamp       . qq{</updated>
+  <id>}                    . $self->{site_url}     . qq{</id>
   $subtitle};
 
   my (@urls, @items);
 
-  foreach my $change (@changes)
+  foreach my $node (@nodes)
   {
-    my $node_name = $change->{name};
+    my $node_name = $node->{name};
 
-    my $item_timestamp = $change->{last_modified};
+    my $item_timestamp = $node->{last_modified};
     
     # Make a Time::Piece object.
     my $time = Time::Piece->strptime($item_timestamp, $self->{timestamp_fmt});
@@ -109,15 +121,15 @@ sub recent_changes
     
     $item_timestamp = $time->strftime( "%Y-%m-%dT%H:%M:%S$utc_offset" );
 
-    my $author      = $change->{metadata}{username}[0] || $change->{metadata}{host}[0] || 'Anonymous';
-    my $description = $change->{metadata}{comment}[0]  || 'No description given for change';
+    my $author      = $node->{metadata}{username}[0] || $node->{metadata}{host}[0] || 'Anonymous';
+    my $description = $node->{metadata}{comment}[0]  || 'No description given for node';
 
     $description .= " [$author]" if $author;
 
-    my $version = $change->{version};
+    my $version = $node->{version};
     my $status  = (1 == $version) ? 'new' : 'updated';
 
-    my $major_change = $change->{metadata}{major_change}[0];
+    my $major_change = $node->{metadata}{major_change}[0];
        $major_change = 1 unless defined $major_change;
     my $importance = $major_change ? 'major' : 'minor';
 
@@ -181,7 +193,7 @@ __END__
 
 =head1 NAME
 
-  Wiki::Toolkit::Feed::Atom - A Wiki::Toolkit plugin to output RecentChanges RSS.
+  Wiki::Toolkit::Feed::Atom - A Wiki::Toolkit plugin to output RecentChanges Atom.
 
 =head1 DESCRIPTION
 
