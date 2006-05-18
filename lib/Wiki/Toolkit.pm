@@ -522,6 +522,32 @@ sub list_unmoderated_nodes {
     $self->store->list_unmoderated_nodes( @args );
 }
 
+=item B<list_node_all_versions>
+
+  my @versions = $wiki->list_node_all_versions("HomePage");
+
+  my @versions = $wiki->list_node_all_versions(
+                                                name => 'HomePage',
+                                                with_content => 1,
+                                                with_metadata => 0
+                 );
+
+Returns all the versions of a node, optionally including the content
+and metadata, as an array of hashes (newest versions first).
+=cut
+sub list_node_all_versions {
+    my ($self,@argsarray) = @_;
+
+    my %args;
+    if(scalar @argsarray == 1) {
+        $args{'name'} = $argsarray[0];
+    } else {
+        %args = @argsarray;
+    }
+
+    return $self->store->list_node_all_versions(%args);
+}
+
 =item B<node_exists>
 
   my $ok = $wiki->node_exists( "Wombat Defenestration" );

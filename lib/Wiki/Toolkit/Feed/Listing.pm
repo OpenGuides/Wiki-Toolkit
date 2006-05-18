@@ -62,4 +62,18 @@ sub fetch_newest_for_recently_changed {
     return $changes[0];
 }
 
+
+=item B<fetch_node_all_versions>
+
+For a given node (name or ID), return all the versions there have been,
+including all metadata required for it to go into a "recent changes"
+style listing.
+
+=cut
+sub fetch_node_all_versions {
+    my ($self, %args) = @_;
+
+    # TODO. Will make use of store->list_node_all_versions()
+}
+
 1;

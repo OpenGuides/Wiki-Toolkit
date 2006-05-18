@@ -1414,6 +1414,78 @@ sub list_all_nodes {
     return ( map { $self->charset_decode( $_->[0] ) } (@$nodes) );
 }
 
+=item B<list_node_all_versions>
+
+  my @all_versions = $store->list_node_all_versions(
+										name => 'HomePage',
+										with_content => 1,
+										with_metadata => 0
+					 );
+
+Returns all the versions of a node, optionally including the content
+and metadata, as an array of hashes (newest versions first).
+
+=cut
+
+sub list_node_all_versions {
+    my ($self, %args) = @_;
+
+	my ($node_id,$name,$with_content,$with_metadata) = 
+			@args{ qw( node_id name with_content with_metadata ) };
+
+    my $dbh = $self->dbh;
+	my $sql;
+
+	# If they only gave us the node name, get the node id
+    $sql = "SELECT id FROM node WHERE name=" . $dbh->quote($name);
+    my ($node_id) = $dbh->selectrow_array($sql);
+
+	# If they didn't tell us what they wanted / we couldn't find it, 
+	#  return an empty array
+	return () unless($node_id);
+
+
+	# Build up our SQL
+	my $sql = "SELECT id, name, content.version, content.modified ";
+	if($with_content) {
+		$sql .= ", content.text ";
+	}
+	if($with_metadata) {
+		$sql .= ", metadata_type, metadata_value ";
+	}
+	$sql .= " FROM node INNER JOIN content ON (id = node_id) ";
+	if($with_metadata) {
+		$sql .= " LEFT OUTER JOIN metadata ON (id = node_id AND content.version = metadata.version) ";
+	}
+	$sql .= " WHERE id = ? ORDER BY content.version DESC";
+
+	# Do the fetch
+    my $sth = $dbh->prepare( $sql );
+    $sth->execute( $node_id );
+
+	# Haul out the data
+	my @versions;
+	while(my @results = $sth->fetchrow_array) {
+		# TODO: Support metadata multi-rows
+		my %data;
+		@data{ qw( node_id name version last_modified ) } = @results;
+
+		my $i = 4;
+		if($with_content) {
+			$data{'content'} = $results[$i];
+			$i++;
+		}
+		if($with_metadata) {
+			warn("Not supported properly yet");
+		}
+
+		push @versions, \%data;
+	}
+
+	# Return
+	return @versions;
+}
+
 =item B<list_nodes_by_metadata>
 
   # All documentation nodes.
