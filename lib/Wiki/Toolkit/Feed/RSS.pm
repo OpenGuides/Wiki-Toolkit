@@ -2,13 +2,16 @@ package Wiki::Toolkit::Feed::RSS;
 
 use strict;
 
-use vars qw( $VERSION );
+use vars qw( @ISA $VERSION );
 $VERSION = '0.10';
 
 use POSIX 'strftime';
 use Time::Piece;
 use URI::Escape;
 use Carp qw( croak );
+
+use Wiki::Toolkit::Feed::Listing;
+@ISA = qw( Wiki::Toolkit::Feed::Listing );
 
 sub new
 {
