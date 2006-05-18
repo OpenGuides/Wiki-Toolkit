@@ -61,7 +61,9 @@ sub recent_changes
   my ($self, %args) = @_;
 
   my @changes = $self->fetch_recently_changed_nodes(%args);
-  my $rss_timestamp = $self->rss_timestamp(%args);
+  my $rss_timestamp = $self->rss_timestamp(
+                              $self->fetch_oldest_for_recently_changed(%args)
+  );
 
   return $self->generate_node_list_feed($rss_timestamp, @changes);
 }
@@ -213,49 +215,25 @@ $rss .= qq{<title>}   . $self->{site_name}            . qq{</title>
 
 =item B<rss_timestamp>
 
-Generate the timestamp for the RSS, by figuring out the age range of
-the source data for the feed
+Generate the timestamp for the RSS, based on the oldest node (if available)
 
 =cut
 sub rss_timestamp
 {
-  my ($self, %args) = @_;
-  
-  my %criteria = (ignore_case => 1);
+    my ($self, $oldest_node) = @_;
 
-  if ($args{days})
-  {
-    $criteria{days} = $args{days};
-  }
-  else
-  {
-    $criteria{last_n_changes} = $args{items} || 15;
-  }
-  
-  if ($args{ignore_minor_edits})
-  {
-    $criteria{metadata_wasnt} = { major_change => 0 };
-  }
-  
-  if ($args{filter_on_metadata})
-  {
-    $criteria{metadata_was} = $args{filter_on_metadata};
-  }
+    if ($oldest_node->{last_modified})
+    {
+        my $time = Time::Piece->strptime( $oldest_node->{last_modified}, $self->{timestamp_fmt} );
 
-  my @changes = $self->{wiki}->list_recent_changes(%criteria);
+        my $utc_offset = $self->{utc_offset};
 
-  if ($changes[0]->{last_modified})
-  {
-    my $time = Time::Piece->strptime( $changes[0]->{last_modified}, $self->{timestamp_fmt} );
-
-    my $utc_offset = $self->{utc_offset};
-    
-    return $time->strftime( "%Y-%m-%dT%H:%M:%S$utc_offset" );
-  }
-  else
-  {
-    return '1970-01-01T00:00:00+0000';
-  }
+        return $time->strftime( "%Y-%m-%dT%H:%M:%S$utc_offset" );
+    }
+    else
+    {
+        return '1970-01-01T00:00:00+0000';
+    }
 }
 
 1;

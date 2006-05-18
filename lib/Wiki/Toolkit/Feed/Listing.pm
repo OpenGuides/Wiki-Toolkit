@@ -46,5 +46,20 @@ B<fetch_recently_changed_nodes>), find the oldest node from the recently
 changed nodes set. Normally used for dating the whole of a Feed.
 
 =cut
+sub fetch_oldest_for_recently_changed {
+    my ($self, %args) = @_;
+
+    my %criteria = (ignore_case => 1);
+
+    $args{days} ? $criteria{days}           = $args{days}
+                : $criteria{last_n_changes} = $args{items} || 15;
+
+    $criteria{metadata_wasnt} = { major_change => 0 }     if $args{ignore_minor_edits};
+    $criteria{metadata_was}   = $args{filter_on_metadata} if $args{filter_on_metadata};
+
+    my @changes = $self->{wiki}->list_recent_changes(%criteria);
+
+    return $changes[0];
+}
 
 1;

@@ -54,7 +54,9 @@ sub recent_changes
     my ($self, %args) = @_;
 
     my @changes = $self->fetch_recently_changed_nodes(%args);
-    my $atom_timestamp = $self->feed_timestamp(%args);
+    my $atom_timestamp = $self->feed_timestamp(
+                              $self->fetch_oldest_for_recently_changed(%args)
+    );
 
     return $self->generate_node_list_feed($atom_timestamp, @changes);
 }
@@ -146,23 +148,18 @@ sub generate_node_list_feed {
   return $atom;   
 }
 
+=item B<feed_timestamp>
+
+Generate the timestamp for the Atom, based on the oldest node (if available)
+
+=cut
 sub feed_timestamp
 {
-  my ($self, %args) = @_;
+  my ($self, $oldest_node) = @_;
   
-  my %criteria = (ignore_case => 1);
-
-  $args{days} ? $criteria{days}           = $args{days}
-              : $criteria{last_n_changes} = $args{items} || 15;
-
-  $criteria{metadata_wasnt} = { major_change => 0 }     if $args{ignore_minor_edits};
-  $criteria{metadata_was}   = $args{filter_on_metadata} if $args{filter_on_metadata};
-
-  my @changes = $self->{wiki}->list_recent_changes(%criteria);
-
-  if ($changes[0]->{last_modified})
+  if ($oldest_node->{last_modified})
   {
-    my $time = Time::Piece->strptime( $changes[0]->{last_modified}, $self->{timestamp_fmt} );
+    my $time = Time::Piece->strptime( $oldest_node->{last_modified}, $self->{timestamp_fmt} );
 
     my $utc_offset = $self->{utc_offset};
     
