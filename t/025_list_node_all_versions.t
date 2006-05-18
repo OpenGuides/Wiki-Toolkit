@@ -5,7 +5,7 @@ use Test::More;
 if ( scalar @Wiki::Toolkit::TestLib::wiki_info == 0 ) {
     plan skip_all => "no backends configured";
 } else {
-    plan tests => ( 9 * scalar @Wiki::Toolkit::TestLib::wiki_info );
+    plan tests => ( 22 * scalar @Wiki::Toolkit::TestLib::wiki_info );
 }
 
 my $iterator = Wiki::Toolkit::TestLib->new_wiki_maker;
@@ -44,6 +44,26 @@ while ( my $wiki = $iterator->new_wiki ) {
 
 
 	# Fetch with content too
+	@all_versions = $wiki->list_node_all_versions(
+								name => "Cheese",
+								with_content => 1
+	);
+
+	is( scalar @all_versions, 4, "list_node_all_versions gives the right number back" );
+
+	# Check them
+	is( $all_versions[0]->{'version'}, 4, "right ordering" );
+	is( $all_versions[1]->{'version'}, 3, "right ordering" );
+	is( $all_versions[2]->{'version'}, 2, "right ordering" );
+	is( $all_versions[3]->{'version'}, 1, "right ordering" );
+	is( $all_versions[0]->{'name'}, "Cheese", "right node" );
+	is( $all_versions[1]->{'name'}, "Cheese", "right node" );
+	is( $all_versions[2]->{'name'}, "Cheese", "right node" );
+	is( $all_versions[3]->{'name'}, "Cheese", "right node" );
+	is( $all_versions[0]->{'content'}, "Content v4", "right node" );
+	is( $all_versions[1]->{'content'}, "Content v3", "right node" );
+	is( $all_versions[2]->{'content'}, "Content v2", "right node" );
+	is( $all_versions[3]->{'content'}, "content", "right node" );
 
 	# With metadata
 

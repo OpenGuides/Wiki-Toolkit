@@ -1463,11 +1463,26 @@ sub list_node_all_versions {
     my $sth = $dbh->prepare( $sql );
     $sth->execute( $node_id );
 
+	# Need to hold onto the last row by hash ref, so we don't trash
+	#  it every time
+	my %first_data;
+	my $dataref = \%first_data;
+
 	# Haul out the data
 	my @versions;
 	while(my @results = $sth->fetchrow_array) {
-		# TODO: Support metadata multi-rows
-		my %data;
+		my %data = %$dataref;
+
+		# Is it the same version as last time?
+		if(%data && $data{'version'} != $results[2]) {
+			# New version
+			push @versions, $dataref;
+			%data = ();
+		} else {
+			# Same version as last time, must be more metadata
+		}
+
+		# Grab the core data (will be the same on multi-row for metadata)
 		@data{ qw( node_id name version last_modified ) } = @results;
 
 		my $i = 4;
@@ -1476,10 +1491,17 @@ sub list_node_all_versions {
 			$i++;
 		}
 		if($with_metadata) {
-			warn("Not supported properly yet");
+			my ($m_type,$m_value) = @results[$i,($i+1)];
+			$data{'metadata'}->{$m_type} = $m_value;
 		}
 
-		push @versions, \%data;
+		# Save where we've got to
+		$dataref = \%data;
+	}
+
+	# Handle final row saving
+	if($dataref) {
+		push @versions, $dataref;
 	}
 
 	# Return
