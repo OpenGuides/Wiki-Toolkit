@@ -1,3 +1,6 @@
+0.69_04
+        Feed code being refactored.
+
 0.69_03 13 May 2006
         Add Wiki::Toolkit::Feed::RSS (formerly CGI::Wiki::Plugin::RSS::Modwiki)
         and Wiki::Toolkit::Feed::Atom (formerly CGI::Wiki::Plugin::Atom)
