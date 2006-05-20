@@ -55,6 +55,7 @@ t/019_recent_changes_case.t
 t/020_node_exists_case_insensitive.t
 t/021_moderation.t
 t/022_list_unmoderated.t
+t/025_list_node_all_versions.t
 t/040_rename.t
 t/050_mysql_store.t
 t/051_pg_store.t
