@@ -12,6 +12,7 @@ use Carp qw( carp croak );
 use Digest::MD5 qw( md5_hex );
 
 $VERSION = '0.27';
+my $SCHEMA_VER = 9;
 
 # first, detect if Encode is available - it's not under 5.6. If we _are_
 # under 5.6, give up - we'll just have to hope that nothing explodes. This
@@ -112,6 +113,13 @@ sub _init {
 				        AutoCommit => 1 } )
           or croak "Can't connect to database $dbname using $dsn: "
                    . DBI->errstr;
+    }
+
+    my ($cur_ver, $db_ver) = $self->schema_current;
+    if ($db_ver < $cur_ver) {
+        croak "Database schema version $db_ver is too old (need $cur_ver)";
+    } elsif ($db_ver > $cur_ver) {
+        croak "Database schema version $db_ver is too new (need $cur_ver)";
     }
 
     return $self;
@@ -1646,6 +1654,39 @@ sub list_unmoderated_nodes {
 
 	return @nodes;
 }
+
+=item B<schema_current>
+
+  my ($code_version, $db_version) = $store->schema_current;
+  if ($code_version == $db_version)
+      # Do stuff
+  } else {
+      # Bail
+  }
+
+=cut
+
+sub schema_current {
+    my $self = shift;
+    my $dbh = $self->dbh;
+    my $sth;
+    eval { $sth = $dbh->prepare("SELECT version FROM schema_info") };
+    if ($@) {
+        return ($SCHEMA_VER, 0);
+    }
+    eval { $sth->execute };
+    if ($@) {
+        return ($SCHEMA_VER, 0);
+    }
+    my $version;
+    eval { $version = $sth->fetchrow_array };
+    if ($@) {
+        return ($SCHEMA_VER, 0);
+    } else {
+        return ($SCHEMA_VER, $version);
+    }
+}
+
 
 =item B<dbh>
 
