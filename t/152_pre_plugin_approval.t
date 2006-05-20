@@ -73,13 +73,13 @@ while ( my $wiki = $iterator->new_wiki ) {
             or die "Can't write first version node";
 
 		# Try to Rename
-		my $ok = $wiki->rename_node( old_name=>"Test Node 2", new_name=>"ren" )
+		$ok = $wiki->rename_node( old_name=>"Test Node 2", new_name=>"ren" )
             or die "Can't rename node";
 		is($plugin->{__pre_rename_called}, 1, "Plugin was called");
 		is($ok, -1, "Wasn't allowed to rename the node");
 
 		# Check it really wasn't
-		my %node = $wiki->retrieve_node("Test Node 2");
+		%node = $wiki->retrieve_node("Test Node 2");
 		is($node{'version'}, 1, "Node correctly retrieved");
 
 # ===========================================================================
@@ -94,13 +94,13 @@ while ( my $wiki = $iterator->new_wiki ) {
         );
 
 		# Try to Add
-		my $ok = $wiki->write_node( "Test Node 4", "bar" )
+		$ok = $wiki->write_node( "Test Node 4", "bar" )
             or die "Can't add node";
 		is($plugin->{__pre_write_called}, 1, "Plugin was called");
 		is($ok, -1, "Wasn't allowed to write the node");
 
 		# Check it really wasn't
-		my %node = $wiki->retrieve_node("Test Node 4");
+		%node = $wiki->retrieve_node("Test Node 4");
 		is($node{'version'}, 0, "Node wasn't added");
 		is($node{'content'}, '', "Node wasn't added");
     }

@@ -10,6 +10,7 @@ bin/wiki-toolkit-setupdb
 bin/user-setup-mysql-dbixfts.pl
 lib/Wiki/Toolkit/Extending.pod
 lib/Wiki/Toolkit/Feed/Atom.pm
+lib/Wiki/Toolkit/Feed/Listing.pm
 lib/Wiki/Toolkit/Feed/RSS.pm
 lib/Wiki/Toolkit/Formatter/Default.pm
 lib/Wiki/Toolkit/Formatter/Multiple.pm

@@ -132,7 +132,7 @@ while ( my $wiki = $iterator->new_wiki ) {
 	is( $asnode2{"version"}, 3, "new node version" );
 
 	# Check the other two nodes
-	my %anode1 = $wiki->retrieve_node("NodeOne");
+	%anode1 = $wiki->retrieve_node("NodeOne");
 	is( "This is the second version of the first node, which links to NodeTwo, NodeThree, [NodeTwo], [NodeFour|Node Four] and [NodeThree | Node Three].", $anode1{'content'}, "explicit link was updated, implicit not" );
 	is( 3, $anode1{'version'}, "new version" );
 	%anode3 = $wiki->retrieve_node("NodeThree");

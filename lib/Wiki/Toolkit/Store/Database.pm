@@ -122,7 +122,7 @@ sub _init {
 sub handle_pre_plugin_ret {
 	my ($running_total_ref,$result) = @_;
 
-	if($result == 0 || $result == undef) {
+	if(($result && $result == 0) || !$result) {
 		# No opinion, no need to change things
 	} elsif($result == -1 || $result == 1) {
 		# Increase or decrease as requested
@@ -1437,8 +1437,10 @@ sub list_node_all_versions {
 	my $sql;
 
 	# If they only gave us the node name, get the node id
-    $sql = "SELECT id FROM node WHERE name=" . $dbh->quote($name);
-    my ($node_id) = $dbh->selectrow_array($sql);
+    unless ($node_id) {
+        $sql = "SELECT id FROM node WHERE name=" . $dbh->quote($name);
+        $node_id = $dbh->selectrow_array($sql);
+    }
 
 	# If they didn't tell us what they wanted / we couldn't find it, 
 	#  return an empty array
@@ -1446,7 +1448,7 @@ sub list_node_all_versions {
 
 
 	# Build up our SQL
-	my $sql = "SELECT id, name, content.version, content.modified ";
+	$sql = "SELECT id, name, content.version, content.modified ";
 	if($with_content) {
 		$sql .= ", content.text ";
 	}

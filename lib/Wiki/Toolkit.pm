@@ -290,7 +290,7 @@ sub rename_node {
 
     my $ret = $self->store->rename_node( %args );
 
-	if($ret == -1) { return $ret; }
+	if($ret && $ret == -1) { return $ret; }
 	return 1;
 }
 
