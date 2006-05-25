@@ -70,6 +70,7 @@ t/152_pre_plugin_approval.t
 t/295_feed_rss_recentchanges_setup.t
 t/296_feed_rss_recentchanges_add_test_data.t
 t/297_feed_rss_recentchanges.t
+t/298_feed_rss_node_all_versions.t
 t/300_feed_atom_setup.t
 t/301_feed_atom_add_test_data.t
 t/302_feed_atom_recentchanges.t

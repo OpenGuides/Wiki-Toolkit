@@ -9,6 +9,8 @@ Wiki::Toolkit::Feed::Listing - parent class for Feeds from Wiki::Toolkit.
 Handles common data fetching tasks, so that child classes need only
 worry about formatting the feeds.
 
+Also enforces some common methods that must be implemented.
+
 =cut
 
 
@@ -73,7 +75,47 @@ style listing.
 sub fetch_node_all_versions {
     my ($self, %args) = @_;
 
-    # TODO. Will make use of store->list_node_all_versions()
+    # Check we got the right options
+    unless($args{'name'}) {
+        return ();
+    }
+
+    # Do the fetch
+    my @nodes = $self->{wiki}->list_node_all_versions(
+                        name => $args{'name'},
+                        with_content => 0,
+                        with_metadata => 1,
+    );
+
+    # Ensure that all the metadata fields are arrays and not strings
+    foreach my $node (@nodes) {
+        foreach my $mdk (keys %{$node->{'metadata'}}) {
+            unless(ref($node->{'metadata'}->{$mdk}) eq "ARRAY") {
+                $node->{'metadata'}->{$mdk} = [ $node->{'metadata'}->{$mdk} ];
+            }
+        }
+    }
+
+    return @nodes;
 }
+
+
+# The following are methods that any feed renderer must provide
+
+=item B<recent_changes>
+All implementing feed renderers must implement a method to fetch a list
+of recent changes, and render them
+=cut
+sub recent_changes    { die("Not implemented by feed renderer!"); }
+=item B<node_all_versions>
+All implementing feed renderers must implement a method to fetch a list
+of the different versions of a node, and render them
+=cut
+sub node_all_versions { die("Not implemented by feed renderer!"); }
+=item B<feed_timestamp>
+All implementing feed renderers must implement a method to produce a
+feed specific timestamp, based on the supplied node
+=cut
+sub feed_timestamp    { die("Not implemented by feed renderer!"); }
 
 1;

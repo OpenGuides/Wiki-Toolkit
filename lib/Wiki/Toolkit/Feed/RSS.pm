@@ -61,12 +61,29 @@ sub recent_changes
   my ($self, %args) = @_;
 
   my @changes = $self->fetch_recently_changed_nodes(%args);
-  my $rss_timestamp = $self->rss_timestamp(
+  my $feed_timestamp = $self->feed_timestamp(
                               $self->fetch_newest_for_recently_changed(%args)
   );
 
-  return $self->generate_node_list_feed($rss_timestamp, @changes);
+  return $self->generate_node_list_feed($feed_timestamp, @changes);
 }
+
+
+=item B<node_all_versions>
+
+Build an RSS Feed of all the different versions of a given node.
+
+=cut
+sub node_all_versions
+{
+  my ($self, %args) = @_;
+
+  my @all_versions = $self->fetch_node_all_versions(%args);
+  my $feed_timestamp = $self->feed_timestamp( $all_versions[0] );
+
+  return $self->generate_node_list_feed($feed_timestamp, @all_versions);
+}
+
 
 =item <generate_node_list_feed>
 
@@ -74,7 +91,7 @@ Generate and return an RSS feed for a list of nodes
 
 =cut
 sub generate_node_list_feed {
-  my ($self,$rss_timestamp,@nodes) = @_;
+  my ($self,$feed_timestamp,@nodes) = @_;
 
   #"http://purl.org/rss/1.0/modules/wiki/"
   my $rss = qq{<?xml version="1.0" encoding="UTF-8"?>
@@ -123,7 +140,7 @@ if ($self->{software_name})
 $rss .= qq{<title>}   . $self->{site_name}            . qq{</title>
 <link>}               . $self->{recent_changes_link}  . qq{</link>
 <description>}        . $self->{site_description}     . qq{</description>
-<dc:date>}            . $rss_timestamp                . qq{</dc:date>
+<dc:date>}            . $feed_timestamp                . qq{</dc:date>
 <modwiki:interwiki>}     . $self->{interwiki_identifier} . qq{</modwiki:interwiki>};
 
   my (@urls, @items);
@@ -213,12 +230,12 @@ $rss .= qq{<title>}   . $self->{site_name}            . qq{</title>
   return $rss;   
 }
 
-=item B<rss_timestamp>
+=item B<feed_timestamp>
 
 Generate the timestamp for the RSS, based on the newest node (if available)
 
 =cut
-sub rss_timestamp
+sub feed_timestamp
 {
     my ($self, $newest_node) = @_;
 
@@ -393,9 +410,9 @@ all of the following metadata when calling C<write_node>:
 
 =back
 
-=head2 C<rss_timestamp()>
+=head2 C<feed_timestamp()>
 
-  print $rss->rss_timestamp();
+  print $rss->feed_timestamp();
 
 Returns the timestamp of the feed in POSIX::strftime style ("Tue, 29 Feb 2000 
 12:34:56 GMT"), which is equivalent to the timestamp of the most recent item 
