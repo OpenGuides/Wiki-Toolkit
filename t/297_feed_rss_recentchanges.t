@@ -4,7 +4,7 @@ use Wiki::Toolkit;
 use URI::Escape;
 
 use Test::More tests =>
-  (3 + 17 * $Wiki::Toolkit::TestConfig::Utilities::num_stores);
+  (3 + 18 * $Wiki::Toolkit::TestConfig::Utilities::num_stores);
 
 use_ok( "Wiki::Toolkit::Feed::RSS" );
 
@@ -68,6 +68,9 @@ while ( ($store_name, $store) = each %stores ) {
 
       like( $feed, qr|<description>.*\[nou]</description>|,
             "username included in description" );
+
+      like( $feed, qr|<dc:subject>TestCategory1</dc:subject>|,
+            "dublin core subject contains category" );
 
       # Check that interwiki things are passed through right.
       $rss = Wiki::Toolkit::Feed::RSS->new(

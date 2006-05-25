@@ -153,7 +153,19 @@ sub generate_node_list_feed {
        $title =~ s/</&lt;/g;
        $title =~ s/>/&gt;/g;
 
-    # TODO: Store categories in the atom:category element (4.2.2)
+    # Pop the categories into atom:category elements (4.2.2)
+    # We can do this because the spec says:
+    #   "This specification assigns no meaning to the content (if any) 
+    #    of this element."
+    # TODO: Decide if we should include the "all categories listing" url
+    #        as the scheme (URI) attribute?
+    my $category_atom;
+    if($node->{metadata}->{category}) {
+        foreach my $cat (@{ $node->{metadata}->{category} }) {
+            $category_atom .= "    <category term=\"$cat\" />\n";
+        }
+    }
+
     # TODO: Find an Atom equivalent of ModWiki, so we can include more info
     
     push @items, qq{
@@ -164,6 +176,7 @@ sub generate_node_list_feed {
     <summary>$description</summary>
     <updated>$item_timestamp</updated>
     <author><name>$author</name></author>
+$category_atom
   </entry>
 };
 

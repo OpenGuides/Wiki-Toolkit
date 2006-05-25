@@ -44,6 +44,7 @@ while ( ($store_name, $store) = each %stores ) {
 			 undef,
 			 { username => "Kake",
 			   comment  => "new node",
+               category => [ 'TestCategory1', 'Meta' ]
 			 }
 		       );
 

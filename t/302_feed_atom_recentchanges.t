@@ -4,7 +4,7 @@ use Wiki::Toolkit;
 use URI::Escape;
 
 use Test::More tests =>
-  (3 + 11 * $Wiki::Toolkit::TestConfig::Utilities::num_stores);
+  (3 + 12 * $Wiki::Toolkit::TestConfig::Utilities::num_stores);
 
 use_ok( "Wiki::Toolkit::Feed::Atom" );
 
@@ -60,6 +60,10 @@ while ( ($store_name, $store) = each %stores ) {
 
       like( $feed, qr|<summary>.*\[nou]</summary>|,
             "username included in summary" );
+
+      # Check we also have some categories
+      like( $feed, qr|<category term="TestCategory1" />|,
+            "contains categories" );
 
       # Test the 'items' parameter.
       $feed = $atom->recent_changes( items => 2 );

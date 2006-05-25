@@ -199,6 +199,17 @@ $rss .= qq{<title>}   . $self->{site_name}            . qq{</title>
        $title =~ s/&/&amp;/g;
        $title =~ s/</&lt;/g;
        $title =~ s/>/&gt;/g;
+
+    # Pop the categories into dublin core subject elements
+    #  (http://dublincore.org/usage/terms/history/#subject-004)
+    # TODO: Decide if we should include the "all categories listing" url
+    #        as the scheme (URI) attribute?
+    my $category_rss;
+    if($node->{metadata}->{category}) {
+        foreach my $cat (@{ $node->{metadata}->{category} }) {
+            $category_rss .= "  <dc:subject>$cat</dc:subject>\n";
+        }
+    }
     
     push @items, qq{
 <item rdf:about="$url">
@@ -213,6 +224,7 @@ $rss .= qq{<title>}   . $self->{site_name}            . qq{</title>
   <modwiki:version>$version</modwiki:version>
   <modwiki:history>$history_url</modwiki:history>
   <rdfs:seeAlso rdf:resource="$rdf_url" />
+$category_rss
 </item>
 };
   }
