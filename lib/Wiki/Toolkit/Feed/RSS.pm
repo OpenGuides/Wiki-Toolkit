@@ -50,58 +50,6 @@ sub new
     $self;
 }
 
-=item B<recent_changes>
-
-Build an RSS Feed of the recent changes to the Wiki::Toolkit instance,
-using any supplied parameters to narrow the results.
-
-If the argument "also_return_timestamp" is supplied, it will return an
-array of the feed, and the feed timestamp. Otherwise it just returns the feed.
-
-=cut
-sub recent_changes
-{
-    my ($self, %args) = @_;
-
-    my @changes = $self->fetch_recently_changed_nodes(%args);
-    my $feed_timestamp = $self->feed_timestamp(
-                              $self->fetch_newest_for_recently_changed(%args)
-    );
-
-    my $feed = $self->generate_node_list_feed($feed_timestamp, @changes);
-
-    if($args{'also_return_timestamp'}) {
-        return ($feed,$feed_timestamp);
-    } else {
-        return $feed;
-    }
-}
-
-
-=item B<node_all_versions>
-
-Build an RSS Feed of all the different versions of a given node.
-
-If the argument "also_return_timestamp" is supplied, it will return an
-array of the feed, and the feed timestamp. Otherwise it just returns the feed.
-
-=cut
-sub node_all_versions
-{
-    my ($self, %args) = @_;
-
-    my @all_versions = $self->fetch_node_all_versions(%args);
-    my $feed_timestamp = $self->feed_timestamp( $all_versions[0] );
-
-    my $feed = $self->generate_node_list_feed($feed_timestamp, @all_versions);
-
-    if($args{'also_return_timestamp'}) {
-        return ($feed,$feed_timestamp);
-    } else {
-        return $feed;
-    }
-}
-
 
 =item <generate_node_list_feed>
 
