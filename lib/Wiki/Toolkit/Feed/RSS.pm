@@ -15,39 +15,39 @@ use Wiki::Toolkit::Feed::Listing;
 
 sub new
 {
-  my $class = shift;
-  my $self  = {};
-  bless $self, $class;
+    my $class = shift;
+    my $self  = {};
+    bless $self, $class;
 
-  my %args = @_;
-  my $wiki = $args{wiki};
+    my %args = @_;
+    my $wiki = $args{wiki};
 
-  unless ($wiki && UNIVERSAL::isa($wiki, 'Wiki::Toolkit'))
-  {
-    croak 'No Wiki::Toolkit object supplied';
-  }
+    unless ($wiki && UNIVERSAL::isa($wiki, 'Wiki::Toolkit'))
+    {
+        croak 'No Wiki::Toolkit object supplied';
+    }
   
-  $self->{wiki} = $wiki;
+    $self->{wiki} = $wiki;
   
-  # Mandatory arguments.
-  foreach my $arg (qw/site_name site_url make_node_url recent_changes_link/)
-  {
-    croak "No $arg supplied" unless $args{$arg};
-    $self->{$arg} = $args{$arg};
-  }
+    # Mandatory arguments.
+    foreach my $arg (qw/site_name site_url make_node_url recent_changes_link/)
+    {
+        croak "No $arg supplied" unless $args{$arg};
+        $self->{$arg} = $args{$arg};
+    }
   
-  # Optional arguments.
-  foreach my $arg (qw/site_description interwiki_identifier make_diff_url make_history_url 
-                      software_name software_version software_homepage/)
-  {
-    $self->{$arg} = $args{$arg} || '';
-  }
+    # Optional arguments.
+    foreach my $arg (qw/site_description interwiki_identifier make_diff_url make_history_url 
+                        software_name software_version software_homepage/)
+    {
+        $self->{$arg} = $args{$arg} || '';
+    }
 
-  $self->{timestamp_fmt} = $Wiki::Toolkit::Store::Database::timestamp_fmt;
-  $self->{utc_offset} = strftime "%z", localtime;
-  $self->{utc_offset} =~ s/(..)(..)$/$1:$2/;
-  
-  $self;
+    $self->{timestamp_fmt} = $Wiki::Toolkit::Store::Database::timestamp_fmt;
+    $self->{utc_offset} = strftime "%z", localtime;
+    $self->{utc_offset} =~ s/(..)(..)$/$1:$2/;
+
+    $self;
 }
 
 =item B<recent_changes>
@@ -58,14 +58,14 @@ using any supplied parameters to narrow the results.
 =cut
 sub recent_changes
 {
-  my ($self, %args) = @_;
+    my ($self, %args) = @_;
 
-  my @changes = $self->fetch_recently_changed_nodes(%args);
-  my $feed_timestamp = $self->feed_timestamp(
+    my @changes = $self->fetch_recently_changed_nodes(%args);
+    my $feed_timestamp = $self->feed_timestamp(
                               $self->fetch_newest_for_recently_changed(%args)
-  );
+    );
 
-  return $self->generate_node_list_feed($feed_timestamp, @changes);
+    return $self->generate_node_list_feed($feed_timestamp, @changes);
 }
 
 
@@ -76,12 +76,12 @@ Build an RSS Feed of all the different versions of a given node.
 =cut
 sub node_all_versions
 {
-  my ($self, %args) = @_;
+    my ($self, %args) = @_;
 
-  my @all_versions = $self->fetch_node_all_versions(%args);
-  my $feed_timestamp = $self->feed_timestamp( $all_versions[0] );
+    my @all_versions = $self->fetch_node_all_versions(%args);
+    my $feed_timestamp = $self->feed_timestamp( $all_versions[0] );
 
-  return $self->generate_node_list_feed($feed_timestamp, @all_versions);
+    return $self->generate_node_list_feed($feed_timestamp, @all_versions);
 }
 
 
