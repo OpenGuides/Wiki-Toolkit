@@ -1503,8 +1503,13 @@ sub list_node_all_versions {
 		if($with_metadata) {
 			my ($m_type,$m_value) = @results[$i,($i+1)];
 			unless($data{'metadata'}) { $data{'metadata'} = {}; }
+
 			if($m_type) {
-				$data{'metadata'}->{$m_type} = $m_value;
+				if($data{'metadata'}->{$m_type}) {
+					push @{$data{'metadata'}->{$m_type}}, $m_value;
+				} else {
+					$data{'metadata'}->{$m_type} = $m_value;
+				}
 			}
 		}
 
