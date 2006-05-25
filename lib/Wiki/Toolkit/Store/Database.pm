@@ -1505,9 +1505,14 @@ sub list_node_all_versions {
 			unless($data{'metadata'}) { $data{'metadata'} = {}; }
 
 			if($m_type) {
+				# If we have existing data, then put it into an array
 				if($data{'metadata'}->{$m_type}) {
+					unless(ref($data{'metadata'}->{$m_type}) eq "ARRAY") {
+						$data{'metadata'}->{$m_type} = [ $data{'metadata'}->{$m_type} ];
+					}
 					push @{$data{'metadata'}->{$m_type}}, $m_value;
 				} else {
+					# Otherwise, just store it in a normal string
 					$data{'metadata'}->{$m_type} = $m_value;
 				}
 			}
