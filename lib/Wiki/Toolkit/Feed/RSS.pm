@@ -55,6 +55,9 @@ sub new
 Build an RSS Feed of the recent changes to the Wiki::Toolkit instance,
 using any supplied parameters to narrow the results.
 
+If the argument "also_return_timestamp" is supplied, it will return an
+array of the feed, and the feed timestamp. Otherwise it just returns the feed.
+
 =cut
 sub recent_changes
 {
@@ -65,13 +68,22 @@ sub recent_changes
                               $self->fetch_newest_for_recently_changed(%args)
     );
 
-    return $self->generate_node_list_feed($feed_timestamp, @changes);
+    my $feed = $self->generate_node_list_feed($feed_timestamp, @changes);
+
+    if($args{'also_return_timestamp'}) {
+        return ($feed,$feed_timestamp);
+    } else {
+        return $feed;
+    }
 }
 
 
 =item B<node_all_versions>
 
 Build an RSS Feed of all the different versions of a given node.
+
+If the argument "also_return_timestamp" is supplied, it will return an
+array of the feed, and the feed timestamp. Otherwise it just returns the feed.
 
 =cut
 sub node_all_versions
@@ -81,7 +93,13 @@ sub node_all_versions
     my @all_versions = $self->fetch_node_all_versions(%args);
     my $feed_timestamp = $self->feed_timestamp( $all_versions[0] );
 
-    return $self->generate_node_list_feed($feed_timestamp, @all_versions);
+    my $feed = $self->generate_node_list_feed($feed_timestamp, @all_versions);
+
+    if($args{'also_return_timestamp'}) {
+        return ($feed,$feed_timestamp);
+    } else {
+        return $feed;
+    }
 }
 
 
@@ -264,9 +282,16 @@ sub feed_timestamp
         return '1970-01-01T00:00:00+0000';
     }
 }
-# Compatibility method
+
+# Compatibility method - use feed_timestamp with a node instead
 sub rss_timestamp {
-    return feed_timestamp(@_);
+    my ($self, %args) = @_;
+
+    warn("Old style method used - please convert to calling feed_timestamp with a node!");
+    my $feed_timestamp = $self->feed_timestamp(
+                              $self->fetch_newest_for_recently_changed(%args)
+    );
+    return $feed_timestamp;
 }
 
 1;
