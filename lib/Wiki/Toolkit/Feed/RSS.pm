@@ -264,6 +264,10 @@ sub feed_timestamp
         return '1970-01-01T00:00:00+0000';
     }
 }
+# Compatibility method
+sub rss_timestamp {
+    return feed_timestamp(@_);
+}
 
 1;
 
