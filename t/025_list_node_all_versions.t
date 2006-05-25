@@ -5,7 +5,7 @@ use Test::More;
 if ( scalar @Wiki::Toolkit::TestLib::wiki_info == 0 ) {
     plan skip_all => "no backends configured";
 } else {
-    plan tests => ( 56 * scalar @Wiki::Toolkit::TestLib::wiki_info );
+    plan tests => ( 59 * scalar @Wiki::Toolkit::TestLib::wiki_info );
 }
 
 my $iterator = Wiki::Toolkit::TestLib->new_wiki_maker;
@@ -127,5 +127,18 @@ while ( my $wiki = $iterator->new_wiki ) {
 	is_deeply( $all_versions[1]->{'metadata'}, \%md_3, "right metadata" );
 	is_deeply( $all_versions[2]->{'metadata'}, \%md_2, "right metadata" );
 	is_deeply( $all_versions[3]->{'metadata'}, \%md_1, "right metadata" );
+
+
+	# Finally, check that we still only have 1 version of the carrots node
+	my @carrots_versions = $wiki->list_node_all_versions(
+								name => "Carrots",
+								with_content => 1,
+								with_metadata => 1
+	);
+
+	is( scalar @carrots_versions, 1, "list_node_all_versions gives the right number back" );
+
+	is( $carrots_versions[0]->{'version'}, 1, "right ordering" );
+	is( $carrots_versions[0]->{'name'}, "Carrots", "right node" );
 }
 
