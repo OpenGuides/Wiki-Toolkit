@@ -49,6 +49,12 @@ sub new
   $self;
 }
 
+=item B<recent_changes>
+
+Build an Atom Feed of the recent changes to the Wiki::Toolkit instance,
+using any supplied parameters to narrow the results.
+
+=cut
 sub recent_changes
 {
     my ($self, %args) = @_;
@@ -60,6 +66,23 @@ sub recent_changes
 
     return $self->generate_node_list_feed($atom_timestamp, @changes);
 }
+
+
+=item B<node_all_versions>
+
+Build an Atom Feed of all the different versions of a given node.
+
+=cut
+sub node_all_versions
+{
+    my ($self, %args) = @_;
+
+    my @all_versions = $self->fetch_node_all_versions(%args);
+    my $feed_timestamp = $self->feed_timestamp( $all_versions[0] );
+
+    return $self->generate_node_list_feed($feed_timestamp, @all_versions);
+} 
+
 
 =item <generate_node_list_feed>
   
@@ -129,6 +152,9 @@ sub generate_node_list_feed {
        $title =~ s/&/&amp;/g;
        $title =~ s/</&lt;/g;
        $title =~ s/>/&gt;/g;
+
+    # TODO: Store categories in the atom:category element (4.2.2)
+    # TODO: Find an Atom equivalent of ModWiki, so we can include more info
     
     push @items, qq{
   <entry>

@@ -74,6 +74,7 @@ t/298_feed_rss_node_all_versions.t
 t/300_feed_atom_setup.t
 t/301_feed_atom_add_test_data.t
 t/302_feed_atom_recentchanges.t
+t/303_feed_atom_node_all_versions.t
 t/lib/Wiki/Toolkit/Plugin/Bar.pm
 t/lib/Wiki/Toolkit/Plugin/Foo.pm
 

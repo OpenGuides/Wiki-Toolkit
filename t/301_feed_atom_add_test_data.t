@@ -18,8 +18,14 @@ while ( ($store_name, $store) = each %stores ) {
 
       my $wiki = Wiki::Toolkit->new( store => $store );
 
+      # Write two versions of one node
+      # The recent changes should only show it once though
       $wiki->write_node( "Old Node",
-                         "We will write at least 15 nodes after this one" );
+                         "First version of Old Node" );
+      my %old_node = $wiki->retrieve_node("Old Node");
+      $wiki->write_node( "Old Node",
+                         "We will write at least 15 nodes after this one",
+                         $old_node{'checksum'} );
 
       my $slept = sleep(2);
       warn "Slept for less than a second, 'days=n' test may pass even if buggy"
