@@ -92,6 +92,7 @@ ALTER TABLE content ADD COLUMN node_id INTEGER;
 UPDATE content SET node_id = 
 	(SELECT id FROM node where node.name = content.name)
 |, qq|
+DELETE FROM content WHERE node_id IS NULL;
 ALTER TABLE content ALTER COLUMN node_id SET NOT NULL;
 ALTER TABLE content DROP COLUMN name;
 ALTER TABLE content ADD CONSTRAINT pk_node_id PRIMARY KEY (node_id,version);
@@ -103,6 +104,7 @@ ALTER TABLE metadata ADD COLUMN node_id INTEGER;
 UPDATE metadata SET node_id = 
 	(SELECT id FROM node where node.name = metadata.node)
 |, qq|
+DELETE FROM metadata WHERE node_id IS NULL;
 ALTER TABLE metadata ALTER COLUMN node_id SET NOT NULL;
 ALTER TABLE metadata DROP COLUMN node;
 ALTER TABLE metadata ADD CONSTRAINT fk_node_id FOREIGN KEY (node_id) REFERENCES node (id);

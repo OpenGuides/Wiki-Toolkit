@@ -2,6 +2,7 @@
         Feed code being refactored.
         Check that the database schema is up-to-date when initializing the
         store and abort otherwise.
+        In PostgresSQL setup code, delete orphaned content/metadata rows.
 
 0.69_03 13 May 2006
         Add Wiki::Toolkit::Feed::RSS (formerly CGI::Wiki::Plugin::RSS::Modwiki)
