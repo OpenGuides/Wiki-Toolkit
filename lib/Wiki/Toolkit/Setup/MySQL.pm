@@ -129,6 +129,13 @@ sub setup {
 		@cur_data = eval("&Wiki::Toolkit::Setup::Database::fetch_upgrade_".$upgrade_schema."(\$dbh)");
 		if($@) { warn $@; }
 
+        # Check to make sure we can create, index and drop tables
+        # before doing any more
+        my $perm_check = Wiki::Toolkit::Setup::Database::perm_check($dbh);
+        if ($perm_check) {
+            die $perm_check;
+        }
+        
 		# Drop the current tables
 		cleardb($dbh);
 

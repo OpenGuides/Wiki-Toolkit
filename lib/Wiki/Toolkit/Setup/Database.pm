@@ -253,3 +253,19 @@ sub bulk_data_insert {
 
     print "done\n";
 }
+
+sub perm_check {
+    my $dbh = shift;
+    # If we can do all this, we'll be able to do a bulk upgrade too
+    eval {
+        my $sth = $dbh->prepare("CREATE TABLE dbtest (test int)");
+        $sth->execute;
+
+        $sth = $dbh->prepare("CREATE INDEX dbtest_index ON dbtest (test)");
+        $sth->execute;
+
+        $sth = $dbh->prepare("DROP TABLE dbtest");
+        $sth->execute;
+    };
+    return $@;
+}
