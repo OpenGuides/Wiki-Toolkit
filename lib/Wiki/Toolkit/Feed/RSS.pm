@@ -170,7 +170,7 @@ $rss .= qq{<title>}   . $self->{site_name}            . qq{</title>
     #  (http://dublincore.org/usage/terms/history/#subject-004)
     # TODO: Decide if we should include the "all categories listing" url
     #        as the scheme (URI) attribute?
-    my $category_rss;
+    my $category_rss = "";
     if($node->{metadata}->{category}) {
         foreach my $cat (@{ $node->{metadata}->{category} }) {
             $category_rss .= "  <dc:subject>$cat</dc:subject>\n";

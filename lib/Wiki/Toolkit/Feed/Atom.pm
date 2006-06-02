@@ -124,7 +124,7 @@ sub generate_node_list_feed {
     #    of this element."
     # TODO: Decide if we should include the "all categories listing" url
     #        as the scheme (URI) attribute?
-    my $category_atom;
+    my $category_atom = "";
     if($node->{metadata}->{category}) {
         foreach my $cat (@{ $node->{metadata}->{category} }) {
             $category_atom .= "    <category term=\"$cat\" />\n";
