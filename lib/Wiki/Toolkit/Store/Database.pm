@@ -342,6 +342,7 @@ sub node_exists {
         my $sth = $self->dbh->prepare( $sql );
         $sth->execute( $args{name} );
         my $found_name = $sth->fetchrow_array || "";
+        $sth->finish;
         return lc($found_name) eq lc($args{name}) ? 1 : 0;
     }
 }
@@ -711,6 +712,7 @@ sub rename_node {
 	my $sth = $dbh->prepare($sql);
 	$sth->execute($old_name);
 	my ($node_id) = $sth->fetchrow_array;
+    $sth->finish;
 
 
 	# If the formatter supports it, get a list of the internal
@@ -854,6 +856,7 @@ sub moderate_node {
     my $id_sth = $dbh->prepare($id_sql);
     $id_sth->execute($name);
 	my ($node_id) = $id_sth->fetchrow_array;
+    $id_sth->finish;
 
 	# Check what the current highest moderated version is
 	my $hv_sql = 
@@ -864,6 +867,7 @@ sub moderate_node {
 	my $hv_sth = $dbh->prepare($hv_sql);
 	$hv_sth->execute($node_id, "1") or croak $dbh->errstr;
 	my ($highest_mod_version) = $hv_sth->fetchrow_array;
+    $hv_sth->finish;
 	unless($highest_mod_version) { $highest_mod_version = 0; }
 
 	# Mark this version as moderated
@@ -935,6 +939,7 @@ sub set_node_moderation {
     my $id_sth = $dbh->prepare($id_sql);
     $id_sth->execute($name);
 	my ($node_id) = $id_sth->fetchrow_array;
+    $id_sth->finish;
 
 	# Mark it as requiring / not requiring moderation
 	my $mod_sql = 
@@ -985,6 +990,7 @@ sub delete_node {
     my $id_sth = $dbh->prepare($id_sql);
     $id_sth->execute($name);
 	my ($node_id) = $id_sth->fetchrow_array;
+    $id_sth->finish;
 
     # Trivial case - delete the whole node and all its history.
     unless ( $version ) {
@@ -1017,6 +1023,7 @@ sub delete_node {
     my $sth = $dbh->prepare( $sql );
     $sth->execute() or croak "Deletion failed: " . $dbh->errstr;
     my ($count) = $sth->fetchrow_array;
+    $sth->finish;
 	if($count == 1) {
 		# Only one version, so can do the non version delete
 	    return $self->delete_node( name=>$name, plugins=>$args{plugins} );
