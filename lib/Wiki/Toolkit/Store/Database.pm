@@ -236,8 +236,8 @@ sub _retrieve_node_data {
     my %metadata;
     while ( my ($type, $val) = $self->charset_decode( $sth->fetchrow_array ) ) {
         if ( defined $metadata{$type} ) {
-	    push @{$metadata{$type}}, $val;
-	} else {
+	        push @{$metadata{$type}}, $val;
+	    } else {
             $metadata{$type} = [ $val ];
         }
     }
