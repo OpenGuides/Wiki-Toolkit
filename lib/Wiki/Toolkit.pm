@@ -3,7 +3,7 @@ package Wiki::Toolkit;
 use strict;
 
 use vars qw( $VERSION );
-$VERSION = '0.69_03';
+$VERSION = '0.70';
 
 use Carp qw(croak carp);
 use Digest::MD5 "md5_hex";
