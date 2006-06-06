@@ -13,7 +13,7 @@ my $iterator = Wiki::Toolkit::TestLib->new_wiki_maker;
 while ( my $wiki = $iterator->new_wiki ) {
     SKIP: {
         eval { require Test::MockObject; };
-        skip "Test::MockObject not installed", 9 if $@;
+        skip "Test::MockObject not installed", 28 if $@;
 
         my $null_plugin = Test::MockObject->new;
 
