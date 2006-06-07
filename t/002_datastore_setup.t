@@ -18,7 +18,7 @@ foreach my $dbtype (qw( MySQL Pg SQLite )) {
         {
             no strict 'refs';
 
-            my $dsn = $store_class->_dsn( $config{dbname} );
+            my $dsn = $store_class->_dsn( $config{dbname}, $config{dbhost} );
 
             foreach my $method ( qw( cleardb setup ) ) {
                 eval {
