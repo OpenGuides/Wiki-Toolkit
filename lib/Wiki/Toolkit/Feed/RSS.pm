@@ -220,22 +220,7 @@ sub generate_node_list_feed {
     }
 
     # Include geospacial data, if we have it
-    my $geo_rss = "";
-    if($node->{metadata}->{latitude}) {
-        $geo_rss .= "  <geo:lat>".$node->{metadata}->{latitude}."</geo:lat>\n";
-    }
-    if($node->{metadata}->{longitude}) {
-        $geo_rss .= "  <geo:long>".$node->{metadata}->{longitude}."</geo:long>\n";
-    }
-    if($node->{metadata}->{os_x}) {
-        $geo_rss .= "  <space:os_x>".$node->{metadata}->{os_x}."</space:os_x>\n";
-    }
-    if($node->{metadata}->{os_y}) {
-        $geo_rss .= "  <space:os_y>".$node->{metadata}->{os_y}."</space:os_y>\n";
-    }
-    if($node->{metadata}->{distance}) {
-        $geo_rss .= "  <space:distance>".$node->{metadata}->{distance}."</space:distance>\n";
-    }
+    my $geo_rss = $self->format_geo($node->{metadata});
 
     push @items, qq{
 <item rdf:about="$url">

@@ -161,22 +161,7 @@ sub generate_node_list_feed {
     }
 
     # Include geospacial data, if we have it
-    my $geo_atom = "";
-    if($node->{metadata}->{latitude}) {
-        $geo_atom .= "  <geo:lat>".$node->{metadata}->{latitude}."</geo:lat>\n";
-    }
-    if($node->{metadata}->{longitude}) {
-        $geo_atom .= "  <geo:long>".$node->{metadata}->{longitude}."</geo:long>\n";
-    }
-    if($node->{metadata}->{os_x}) {
-        $geo_atom .= "  <space:os_x>".$node->{metadata}->{os_x}."</space:os_x>\n";
-    }
-    if($node->{metadata}->{os_y}) {
-        $geo_atom .= "  <space:os_y>".$node->{metadata}->{os_y}."</space:os_y>\n";
-    }
-    if($node->{metadata}->{distance}) {
-        $geo_atom .= "  <space:distance>".$node->{metadata}->{distance}."</space:distance>\n";
-    }
+    my $geo_atom = $self->format_geo($node->{metadata});
 
     # TODO: Find an Atom equivalent of ModWiki, so we can include more info
 

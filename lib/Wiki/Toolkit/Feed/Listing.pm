@@ -152,6 +152,44 @@ sub node_all_versions
     }
 } 
 
+=item B<format_geo>
+
+Using the geo and space xml namespaces, format the supplied node metadata
+into geo: and space: tags, suitable for inclusion in a feed with those
+namespaces imported.
+
+=cut
+sub format_geo {
+    my ($self, %metadata) = @_;
+    if(ref($_[1]) eq "HASH") {
+        %metadata = %{$_[1]};
+    }
+
+    my %mapping = (
+            "os_x" => "space:os_x",
+            "os_y" => "space:os_y",
+            "latitude"  => "geo:lat",
+            "longitude" => "geo:long",
+            "distance"  => "space:distance",
+    );
+
+    my $feed = "";
+
+    foreach my $geo (keys %metadata) {
+        my $geo_val = $metadata{$geo};
+        if(ref($geo_val) eq "ARRAY") {
+            $geo_val = $geo_val->[0];
+        }
+
+        if($mapping{$geo}) {
+            my $tag = $mapping{$geo};
+            $feed .= "  <$tag>$geo_val</$tag>\n";
+        }
+    }
+
+    return $feed;
+}
+
 
 
 # The following are methods that any feed renderer must provide
