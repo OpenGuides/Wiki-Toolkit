@@ -46,6 +46,18 @@ sub new
   $self->{utc_offset} = strftime "%z", localtime;
   $self->{utc_offset} =~ s/(..)(..)$/$1:$2/;
   
+  # Escape any &'s in the urls
+  foreach my $key qw(site_url atom_link) {
+     my @ands = ($self->{$key} =~ /(\&.{1,6})/g);
+     foreach my $and (@ands) {
+        if($and ne "&amp;") {
+            my $new_and = $and;
+            $new_and =~ s/\&/\&amp;/;
+            $self->{$key} =~ s/$and/$new_and/;
+        }
+     }
+  }
+
   $self;
 }
 
