@@ -1,3 +1,7 @@
+0.71
+		More feed code refactoring, to allow "mini" feeds with just
+           name, and optionally distance and location. Typically used in
+           search results, especially with Wiki::Toolkit::Plugin::Locator's
 0.70    6 June 2006
         Feed code has been refactored.
         Check that the database schema is up-to-date when initializing the

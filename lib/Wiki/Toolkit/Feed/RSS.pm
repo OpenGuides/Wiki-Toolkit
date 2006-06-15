@@ -303,14 +303,14 @@ sub generate_node_name_distance_feed {
        $title =~ s/>/&gt;/g;
 
     # What location stuff do we have?
-    my $location = undef;
-    my $distance = undef;
+    my $geo_rss = $self->format_geo($node);
 
     push @items, qq{
 <item rdf:about="$url">
   <title>$title</title>
   <link>$url</link>
   <rdfs:seeAlso rdf:resource="$rdf_url" />
+$geo_rss
 </item>
 };
   }

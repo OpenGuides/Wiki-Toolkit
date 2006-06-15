@@ -214,11 +214,15 @@ sub generate_node_name_distance_feed {
        $title =~ s/</&lt;/g;
        $title =~ s/>/&gt;/g;
 
+    # What location stuff do we have?
+    my $geo_atom = $self->format_geo($node);
+
     push @items, qq{
   <entry>
     <title>$title</title>
     <link href="$url" />
     <id>$url</id>
+$geo_atom
   </entry>
 };
 
