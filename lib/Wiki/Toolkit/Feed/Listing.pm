@@ -166,5 +166,10 @@ All implementing feed renderers must implement a method to produce a
 feed from the supplied list of nodes
 =cut
 sub generate_node_list_feed { die("Not implemented by feed renderer!"); }
+=item B<generate_node_name_distance_feed>
+All implementing feed renderers must implement a method to produce a
+stripped down feed from the supplied list of node names, and optionally
+locations and distance from a reference point.
+=cut
 
 1;

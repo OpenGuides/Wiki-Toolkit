@@ -50,17 +50,17 @@ sub new
     $self;
 }
 
+=item <build_feed_start>
 
-=item <generate_node_list_feed>
-
-Generate and return an RSS feed for a list of nodes
+Internal method, to build all the stuff that will go at the start of a feed.
+Generally will output namespaces, headers and so on.
 
 =cut
-sub generate_node_list_feed {
-  my ($self,$feed_timestamp,@nodes) = @_;
+sub build_feed_start {
+  my ($self,$feed_timestamp) = @_;
 
   #"http://purl.org/rss/1.0/modules/wiki/"
-  my $rss = qq{<?xml version="1.0" encoding="UTF-8"?>
+  return qq{<?xml version="1.0" encoding="UTF-8"?>
 
 <rdf:RDF
  xmlns         = "http://purl.org/rss/1.0/"
@@ -70,11 +70,21 @@ sub generate_node_list_feed {
  xmlns:rdf     = "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
  xmlns:rdfs    = "http://www.w3.org/2000/01/rdf-schema#"
  xmlns:modwiki = "http://www.usemod.com/cgi-bin/mb.pl?ModWiki"
+ xmlns:geo     = "http://www.w3.org/2003/01/geo/wgs84_pos#"
+ xmlns:space   = "http://frot.org/space/0.1/"
 >
+};
+}
 
-<channel rdf:about="">
+=item <build_feed_mid>
 
-<dc:publisher>}       . $self->{site_url}   . qq{</dc:publisher>\n};
+Internal method, to build all the stuff (except items) to go inside the channel
+
+=cut
+sub build_feed_mid {
+    my ($self,$feed_timestamp) = @_;
+
+    my $rss .= qq{<dc:publisher>} . $self->{site_url} . qq{</dc:publisher>\n};
 
 if ($self->{software_name})
 {
@@ -109,8 +119,40 @@ $rss .= qq{<title>}   . $self->{site_name}            . qq{</title>
 <dc:date>}            . $feed_timestamp                . qq{</dc:date>
 <modwiki:interwiki>}     . $self->{interwiki_identifier} . qq{</modwiki:interwiki>};
 
-  my (@urls, @items);
+   return $rss;
+}
 
+=item <build_feed_end>
+
+Internal method, to build all the stuff that will go at the end of a feed
+
+=cut
+sub build_feed_end {
+    my ($self,$feed_timestamp) = @_;
+
+    return "</rdf:RDF>\n";
+}
+
+
+=item <generate_node_list_feed>
+
+Generate and return an RSS feed for a list of nodes
+
+=cut
+sub generate_node_list_feed {
+  my ($self,$feed_timestamp,@nodes) = @_;
+
+  # Start our feed
+  my $rss = $self->build_feed_start($feed_timestamp);
+  $rss .= qq{
+
+<channel rdf:about="">
+
+};
+  $rss .= $self->build_feed_mid($feed_timestamp);
+
+  # Generate the items list, and the individiual item entries
+  my (@urls, @items);
   foreach my $node (@nodes)
   {
     my $node_name = $node->{name};
@@ -176,7 +218,25 @@ $rss .= qq{<title>}   . $self->{site_name}            . qq{</title>
             $category_rss .= "  <dc:subject>$cat</dc:subject>\n";
         }
     }
-    
+
+    # Include geospacial data, if we have it
+    my $geo_rss = "";
+    if($node->{metadata}->{latitude}) {
+        $geo_rss .= "  <geo:lat>".$node->{metadata}->{latitude}."</geo:lat>\n";
+    }
+    if($node->{metadata}->{longitude}) {
+        $geo_rss .= "  <geo:long>".$node->{metadata}->{longitude}."</geo:long>\n";
+    }
+    if($node->{metadata}->{os_x}) {
+        $geo_rss .= "  <space:os_x>".$node->{metadata}->{os_x}."</space:os_x>\n";
+    }
+    if($node->{metadata}->{os_y}) {
+        $geo_rss .= "  <space:os_y>".$node->{metadata}->{os_y}."</space:os_y>\n";
+    }
+    if($node->{metadata}->{distance}) {
+        $geo_rss .= "  <space:distance>".$node->{metadata}->{distance}."</space:distance>\n";
+    }
+
     push @items, qq{
 <item rdf:about="$url">
   <title>$title</title>
@@ -191,10 +251,12 @@ $rss .= qq{<title>}   . $self->{site_name}            . qq{</title>
   <modwiki:history>$history_url</modwiki:history>
   <rdfs:seeAlso rdf:resource="$rdf_url" />
 $category_rss
+$geo_rss
 </item>
 };
   }
   
+  # Output the items list
   $rss .= qq{
 
 <items>
@@ -203,7 +265,87 @@ $category_rss
 </items>
 
 </channel>
-} . join('', @items) . "\n</rdf:RDF>\n";
+};
+
+  # Output the individual item entries
+  $rss .= join('', @items) . "\n";
+
+  # Finish up
+  $rss .= $self->build_feed_end($feed_timestamp);
+ 
+  return $rss;   
+}
+
+
+=item B<generate_node_name_distance_feed>
+
+Generate a very cut down rss feed, based just on the nodes, their locations
+(if given), and their distance from a reference location (if given). 
+
+Typically used on search feeds.
+
+=cut
+sub generate_node_name_distance_feed {
+  my ($self,$feed_timestamp,@nodes) = @_;
+
+  # Start our feed
+  my $rss = $self->build_feed_start($feed_timestamp);
+  $rss .= qq{
+
+<channel rdf:about="">
+
+};
+  $rss .= $self->build_feed_mid($feed_timestamp);
+
+  # Generate the items list, and the individiual item entries
+  my (@urls, @items);
+  foreach my $node (@nodes)
+  {
+    my $node_name = $node->{name};
+
+    my $url = $self->{make_node_url}->($node_name);
+
+    push @urls, qq{    <rdf:li rdf:resource="$url" />\n};
+
+    my $rdf_url =  $url;
+       $rdf_url =~ s/\?/\?id=/;
+       $rdf_url .= ';format=rdf';
+
+    # make XML-clean
+    my $title =  $node_name;
+       $title =~ s/&/&amp;/g;
+       $title =~ s/</&lt;/g;
+       $title =~ s/>/&gt;/g;
+
+    # What location stuff do we have?
+    my $location = undef;
+    my $distance = undef;
+
+    push @items, qq{
+<item rdf:about="$url">
+  <title>$title</title>
+  <link>$url</link>
+  <rdfs:seeAlso rdf:resource="$rdf_url" />
+</item>
+};
+  }
+  
+  # Output the items list
+  $rss .= qq{
+
+<items>
+  <rdf:Seq>
+} . join('', @urls) . qq{  </rdf:Seq>
+</items>
+
+</channel>
+};
+
+  # Output the individual item entries
+  $rss .= join('', @items) . "\n";
+
+  # Finish up
+  $rss .= $self->build_feed_end($feed_timestamp);
  
   return $rss;   
 }

@@ -49,13 +49,14 @@ sub new
   $self;
 }
 
-=item <generate_node_list_feed>
-  
-Generate and return an Atom feed for a list of nodes
-  
+=item <build_feed_start>
+
+Internal method, to build all the stuff that will go at the start of a feed.
+Outputs the feed header, and initial feed info.
+
 =cut
-sub generate_node_list_feed {
-  my ($self,$atom_timestamp,@nodes) = @_;
+sub build_feed_start {
+  my ($self,$atom_timestamp) = @_;
 
   my $generator = '';
   
@@ -74,7 +75,11 @@ sub generate_node_list_feed {
                  
   my $atom = qq{<?xml version="1.0" encoding="UTF-8"?>
 
-<feed xmlns="http://www.w3.org/2005/Atom">
+<feed 
+ xmlns         = "http://www.w3.org/2005/Atom"
+ xmlns:geo     = "http://www.w3.org/2003/01/geo/wgs84_pos#"
+ xmlns:space   = "http://frot.org/space/0.1/"
+>
 
   <link href="}            . $self->{site_url}     . qq{" />
   <title>}                 . $self->{site_name}    . qq{</title>
@@ -82,6 +87,30 @@ sub generate_node_list_feed {
   <updated>}               . $atom_timestamp       . qq{</updated>
   <id>}                    . $self->{site_url}     . qq{</id>
   $subtitle};
+  
+  return $atom;
+}
+
+=item <build_feed_end>
+
+Internal method, to build all the stuff that will go at the end of a feed.
+
+=cut
+sub build_feed_end {
+    my ($self,$feed_timestamp) = @_;
+
+    return "</feed>\n";
+}
+
+=item <generate_node_list_feed>
+  
+Generate and return an Atom feed for a list of nodes
+  
+=cut
+sub generate_node_list_feed {
+  my ($self,$atom_timestamp,@nodes) = @_;
+
+  my $atom = $self->build_feed_start($atom_timestamp);
 
   my (@urls, @items);
 
@@ -131,7 +160,26 @@ sub generate_node_list_feed {
         }
     }
 
+    # Include geospacial data, if we have it
+    my $geo_atom = "";
+    if($node->{metadata}->{latitude}) {
+        $geo_atom .= "  <geo:lat>".$node->{metadata}->{latitude}."</geo:lat>\n";
+    }
+    if($node->{metadata}->{longitude}) {
+        $geo_atom .= "  <geo:long>".$node->{metadata}->{longitude}."</geo:long>\n";
+    }
+    if($node->{metadata}->{os_x}) {
+        $geo_atom .= "  <space:os_x>".$node->{metadata}->{os_x}."</space:os_x>\n";
+    }
+    if($node->{metadata}->{os_y}) {
+        $geo_atom .= "  <space:os_y>".$node->{metadata}->{os_y}."</space:os_y>\n";
+    }
+    if($node->{metadata}->{distance}) {
+        $geo_atom .= "  <space:distance>".$node->{metadata}->{distance}."</space:distance>\n";
+    }
+
     # TODO: Find an Atom equivalent of ModWiki, so we can include more info
+
     
     push @items, qq{
   <entry>
@@ -142,12 +190,57 @@ sub generate_node_list_feed {
     <updated>$item_timestamp</updated>
     <author><name>$author</name></author>
 $category_atom
+$geo_atom
   </entry>
 };
 
   }
   
-  $atom .= join('', @items) . "\n</feed>\n";
+  $atom .= join('', @items) . "\n";
+  $atom .= $self->build_feed_end($atom_timestamp);
+
+  return $atom;   
+}
+
+=item <generate_node_name_distance_feed>
+  
+Generate a very cut down atom feed, based just on the nodes, their locations
+(if given), and their distance from a reference location (if given).
+
+Typically used on search feeds.
+  
+=cut
+sub generate_node_name_distance_feed {
+  my ($self,$atom_timestamp,@nodes) = @_;
+
+  my $atom = $self->build_feed_start($atom_timestamp);
+
+  my (@urls, @items);
+
+  foreach my $node (@nodes)
+  {
+    my $node_name = $node->{name};
+
+    my $url = $self->{make_node_url}->($node_name);
+
+    # make XML-clean
+    my $title =  $node_name;
+       $title =~ s/&/&amp;/g;
+       $title =~ s/</&lt;/g;
+       $title =~ s/>/&gt;/g;
+
+    push @items, qq{
+  <entry>
+    <title>$title</title>
+    <link href="$url" />
+    <id>$url</id>
+  </entry>
+};
+
+  }
+  
+  $atom .= join('', @items) . "\n";
+  $atom .= $self->build_feed_end($atom_timestamp);
 
   return $atom;   
 }
