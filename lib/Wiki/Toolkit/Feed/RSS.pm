@@ -341,25 +341,25 @@ $geo_rss
 
 =item B<feed_timestamp>
 
-Generate the timestamp for the RSS, based on the newest node (if available)
+Generate the timestamp for the RSS, based on the newest node (if available).
+Will return a timestamp for now if no node dates are available
 
 =cut
 sub feed_timestamp
 {
     my ($self, $newest_node) = @_;
 
+    my $time;
     if ($newest_node->{last_modified})
     {
-        my $time = Time::Piece->strptime( $newest_node->{last_modified}, $self->{timestamp_fmt} );
-
-        my $utc_offset = $self->{utc_offset};
-
-        return $time->strftime( "%Y-%m-%dT%H:%M:%S$utc_offset" );
+        $time = Time::Piece->strptime( $newest_node->{last_modified}, $self->{timestamp_fmt} );
+    } else {
+        $time = localtime;
     }
-    else
-    {
-        return '1970-01-01T00:00:00+0000';
-    }
+
+    my $utc_offset = $self->{utc_offset};
+
+    return $time->strftime( "%Y-%m-%dT%H:%M:%S$utc_offset" );
 }
 
 # Compatibility method - use feed_timestamp with a node instead
