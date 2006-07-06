@@ -30,11 +30,15 @@ sub new
     $self->{wiki} = $wiki;
   
     # Mandatory arguments.
-    foreach my $arg (qw/site_name site_url make_node_url recent_changes_link/)
+    foreach my $arg (qw/site_name site_url make_node_url/)
     {
         croak "No $arg supplied" unless $args{$arg};
         $self->{$arg} = $args{$arg};
     }
+
+    # Must-supply-one-of arguments
+    my %mustoneof = ( 'html_equiv_link' => ['html_equiv_link','recent_changes_link'] );
+    $self->handle_supply_one_of(\%mustoneof,\%args);
   
     # Optional arguments.
     foreach my $arg (qw/site_description interwiki_identifier make_diff_url make_history_url 
@@ -113,9 +117,9 @@ if ($self->{software_name})
 </foaf:maker>\n};
 }
 
-$rss .= qq{<title>}   . $self->{site_name}            . qq{</title>
-<link>}               . $self->{recent_changes_link}  . qq{</link>
-<description>}        . $self->{site_description}     . qq{</description>
+$rss .= qq{<title>}   . $self->{site_name}             . qq{</title>
+<link>}               . $self->{html_equiv_link}       . qq{</link>
+<description>}        . $self->{site_description}      . qq{</description>
 <dc:date>}            . $feed_timestamp                . qq{</dc:date>
 <modwiki:interwiki>}     . $self->{interwiki_identifier} . qq{</modwiki:interwiki>};
 
@@ -401,7 +405,7 @@ L<http://www.usemod.com/cgi-bin/mb.pl?ModWiki>
                              my ($node_name, $version) = @_;
                              return 'http://example.com/?id=' . uri_escape($node_name) . ';version=' . uri_escape($version);
                            },
-    recent_changes_link => 'http://example.com/?RecentChanges',
+    html_equiv_link => 'http://example.com/?RecentChanges',
   );
 
   print "Content-type: application/xml\n\n";
@@ -421,7 +425,7 @@ L<http://www.usemod.com/cgi-bin/mb.pl?ModWiki>
                               my ($node_name, $version) = @_;
                               return 'http://example.com/?id=' . uri_escape($node_name) . ';version=' . uri_escape($version);
                             },
-    recent_changes_link  => 'http://example.com/?RecentChanges',
+    html_equiv_link  => 'http://example.com/?RecentChanges',
 
     # Optional arguments:
     site_description     => 'My wiki about my stuff',
@@ -456,7 +460,7 @@ The mandatory arguments are:
 
 =item * make_node_url
 
-=item * recent_changes_link
+=item * html_equiv_link or recent_changes_link
 
 =back
 

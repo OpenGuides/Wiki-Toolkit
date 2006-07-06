@@ -30,11 +30,15 @@ sub new
   $self->{wiki} = $wiki;
   
   # Mandatory arguments.
-  foreach my $arg (qw/site_name site_url make_node_url recent_changes_link atom_link/)
+  foreach my $arg (qw/site_name site_url make_node_url atom_link/)
   {
     croak "No $arg supplied" unless $args{$arg};
     $self->{$arg} = $args{$arg};
   }
+
+  # Must-supply-one-of arguments
+  my %mustoneof = ( 'html_equiv_link' => ['html_equiv_link','recent_changes_link'] );
+  $self->handle_supply_one_of(\%mustoneof,\%args);
   
   # Optional arguments.
   foreach my $arg (qw/site_description software_name software_version software_homepage/)
@@ -303,7 +307,7 @@ This module is a straight port of L<Wiki::Toolkit::Feed::RSS>.
                              my ($node_name, $version) = @_;
                              return 'http://example.com/?id=' . uri_escape($node_name) . ';version=' . uri_escape($version);
                            },
-    recent_changes_link => 'http://example.com/?RecentChanges',
+    html_equiv_link => 'http://example.com/?RecentChanges',
     atom_link => 'http://example.com/?action=rc;format=atom',
   );
 
@@ -324,7 +328,7 @@ This module is a straight port of L<Wiki::Toolkit::Feed::RSS>.
                               my ($node_name, $version) = @_;
                               return 'http://example.com/?id=' . uri_escape($node_name) . ';version=' . uri_escape($version);
                             },
-    recent_changes_link  => 'http://example.com/?RecentChanges',,
+    html_equiv_link  => 'http://example.com/?RecentChanges',,
     atom_link => 'http://example.com/?action=rc;format=atom',
 
     # Optional arguments:
@@ -349,7 +353,7 @@ The mandatory arguments are:
 
 =item * make_node_url
 
-=item * recent_changes_link
+=item * html_equiv_link or recent_changes_link
 
 =item * atom_link
 

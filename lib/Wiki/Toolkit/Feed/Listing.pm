@@ -1,6 +1,7 @@
 package Wiki::Toolkit::Feed::Listing;
 
 use strict;
+use Carp qw( croak );
 
 =head1 NAME
 
@@ -190,6 +191,29 @@ sub format_geo {
     return $feed;
 }
 
+#item B<handle_supply_one_of>
+# Utility method, to help with argument passing where one of a list of 
+#  arguments must be supplied
+#=cut
+sub handle_supply_one_of {
+    my ($self,$mref,$aref) = @_;
+    my %mustoneof = %{$mref};
+    my %args = %{$aref};
+
+    foreach my $oneof (keys %mustoneof) {
+        my $val = undef;
+        foreach my $poss (@{$mustoneof{$oneof}}) {
+            unless($val) {
+                if($args{$poss}) { $val = $args{$poss}; }
+            }
+        }
+        if($val) {
+            $self->{$oneof} = $val;
+        } else {
+            croak "No $oneof supplied, or one of its equivalents (".join(",", @{$mustoneof{$oneof}}).")";
+        }
+    }
+}
 
 
 # The following are methods that any feed renderer must provide
