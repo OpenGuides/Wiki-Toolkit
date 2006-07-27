@@ -79,27 +79,6 @@ sub check_and_write_node {
     }
 }
 
-sub _get_list_by_metadata_sql {
-    my ($self, %args) = @_;
-    if ( $args{ignore_case} ) {
-        return "SELECT node.name "
-             . "FROM node "
-             . "INNER JOIN metadata "
-             . "   ON (node.id = metadata.node_id) "
-             . "WHERE node.version=metadata.version "
-             . "AND lower(metadata.metadata_type) = ? "
-             . "AND lower(metadata.metadata_value) = ? ";
-    } else {
-        return "SELECT node.name "
-             . "FROM node "
-             . "INNER JOIN metadata "
-             . "   ON (node.id = metadata.node_id) "
-             . "WHERE node.version=metadata.version "
-             . "AND metadata.metadata_type = ? "
-             . "AND metadata.metadata_value = ? ";
-    }
-}
-
 sub _get_comparison_sql {
     my ($self, %args) = @_;
     if ( $args{ignore_case} ) {

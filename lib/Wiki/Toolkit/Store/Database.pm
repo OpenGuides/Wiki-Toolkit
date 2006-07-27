@@ -1597,24 +1597,38 @@ sub list_nodes_by_metadata {
 }
 
 sub _get_list_by_metadata_sql {
-    # can be over-ridden by database-specific subclasses
-    return "SELECT node.name "
-		 . "FROM node "
-		 . "INNER JOIN metadata "
-		 . "	ON (node.id = metadata.node_id) "
-		 . "WHERE node.version=metadata.version "
-		 . "AND metadata.metadata_type = ? "
-		 . "AND metadata.metadata_value = ? ";
+	# SQL 99 version
+    #  Can be over-ridden by database-specific subclasses
+    my ($self, %args) = @_;
+    if ( $args{ignore_case} ) {
+        return "SELECT node.name "
+             . "FROM node "
+             . "INNER JOIN metadata "
+             . "   ON (node.id = metadata.node_id) "
+             . "WHERE node.version=metadata.version "
+             . "AND lower(metadata.metadata_type) = ? "
+             . "AND lower(metadata.metadata_value) = ? ";
+    } else {
+        return "SELECT node.name "
+             . "FROM node "
+             . "INNER JOIN metadata "
+             . "   ON (node.id = metadata.node_id) "
+             . "WHERE node.version=metadata.version "
+             . "AND metadata.metadata_type = ? "
+             . "AND metadata.metadata_value = ? ";
+    }
 }
 
 sub _get_comparison_sql {
     my ($self, %args) = @_;
-    # can be over-ridden by database-specific subclasses
+	# SQL 99 version
+    #  Can be over-ridden by database-specific subclasses
     return "$args{thing1} = $args{thing2}";
 }
 
 sub _get_node_exists_ignore_case_sql {
-    # can be over-ridden by database-specific subclasses
+	# SQL 99 version
+    #  Can be over-ridden by database-specific subclasses
     return "SELECT name FROM node WHERE name = ? ";
 }
 
