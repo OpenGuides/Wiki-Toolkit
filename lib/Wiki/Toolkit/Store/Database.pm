@@ -1415,18 +1415,39 @@ sub _find_recent_changes_by_criteria {
 =item B<list_all_nodes>
 
   my @nodes = $store->list_all_nodes();
+  print "First node is $nodes[0]\n";
+
+  my @nodes = $store->list_all_nodes( with_details=> 1 );
+  print "First node is ".$nodes[0]->{'name'}." at version ".$nodes[0]->{'version'}."\n";
 
 Returns a list containing the name of every existing node.  The list
 won't be in any kind of order; do any sorting in your calling script.
 
+Optionally also returns the id, version and moderation flag.
+
 =cut
 
 sub list_all_nodes {
-    my $self = shift;
+    my ($self,%args) = @_;
     my $dbh = $self->dbh;
-    my $sql = "SELECT name FROM node;";
-    my $nodes = $dbh->selectall_arrayref($sql); 
-    return ( map { $self->charset_decode( $_->[0] ) } (@$nodes) );
+	my @nodes;
+
+	if($args{with_details}) {
+		my $sql = "SELECT id, name, version, moderate FROM node;";
+		my $sth = $dbh->prepare( $sql );
+		$sth->execute();
+
+		while(my @results = $sth->fetchrow_array) {
+			my %data;
+			@data{ qw( node_id name version moderate ) } = @results;
+			push @nodes, \%data;
+		}
+	} else {
+		my $sql = "SELECT name FROM node;";
+		my $raw_nodes = $dbh->selectall_arrayref($sql); 
+		@nodes = ( map { $self->charset_decode( $_->[0] ) } (@$raw_nodes) );
+	}
+	return @nodes;
 }
 
 =item B<list_node_all_versions>
