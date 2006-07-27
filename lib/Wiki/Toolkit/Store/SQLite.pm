@@ -91,45 +91,9 @@ sub check_and_write_node {
     }
 }
 
-sub _get_list_by_metadata_sql {
-    my ($self, %args) = @_;
-    if ( $args{ignore_case} ) {
-        return "SELECT node.id, node.name FROM node, metadata"
-             . " WHERE node.id=metadata.node_id"
-             . " AND node.version=metadata.version"
-             . " AND metadata.metadata_type LIKE ? "
-             . " AND metadata.metadata_value LIKE ? ";
-    } else {
-        return "SELECT node.id, node.name FROM node, metadata"
-             . " WHERE node.id=metadata.node_id"
-             . " AND node.version=metadata.version"
-             . " AND metadata.metadata_type = ? "
-             . " AND metadata.metadata_value = ? ";
-    }
-}
-
-sub _get_list_by_missing_metadata_sql {
-    my ($self, %args) = @_;
-
-	my $sql = "";
-    if ( $args{ignore_case} ) {
-        $sql = "SELECT node.id, node.name "
-			 . "FROM node "
-			 . "LEFT OUTER JOIN metadata "
-             . "   ON (node.id = metadata.node_id "
-             . "       AND node.version=metadata.version "
-             . "       AND metadata.metadata_type LIKE ?) ";
-    } else {
-       $sql = "SELECT node.id, node.name "
-             . "FROM node "
-             . "LEFT OUTER JOIN metadata "
-             . "   ON (node.id = metadata.node_id "
-             . "       AND node.version=metadata.version "
-             . "       AND metadata.metadata_type = ?) ";
-    }
-
-	$sql .= "WHERE (metadata.metadata_value IS NULL OR LENGTH(metadata.metadata_value) = 0) ";
-	return $sql;
+sub _get_lowercase_compare_sql {
+    my ($self, $column) = @_;
+    return "$column LIKE ?";
 }
 
 sub _get_comparison_sql {

@@ -398,6 +398,29 @@ sub list_nodes_by_metadata {
     $self->store->list_nodes_by_metadata( @args );
 }
 
+=item B<list_nodes_by_missing_metadata>
+Returns nodes where either the metadata doesn't exist, or is blank
+    
+Unlike list_nodes_by_metadata(), the metadata value is optional (the
+metadata type is required).
+
+  # All nodes missing documentation
+  my @nodes = $store->list_nodes_by_missing_metadata(
+      metadata_type  => "category",
+      metadata_value => "documentation",
+      ignore_case    => 1,   # optional but recommended (see below)
+  );
+
+  # All nodes which don't have a latitude defined
+  my @nodes = $store->list_nodes_by_missing_metadata(
+      metadata_type  => "latitude"
+  );
+=cut
+sub list_nodes_by_missing_metadata {
+    my ($self, @args) = @_;
+    $self->store->list_nodes_by_missing_metadata( @args );
+}
+
 =item B<list_recent_changes>
 
   # Nodes changed in last 7 days - each node listed only once.

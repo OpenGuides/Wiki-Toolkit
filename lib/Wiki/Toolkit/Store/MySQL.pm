@@ -93,4 +93,9 @@ sub _unlock_node {
     return $unlocked;
 }
 
+sub _get_casesensitive_compare_sql {
+    my ($self, $column) = @_;
+    return "BINARY $column = ?";
+}
+
 1;

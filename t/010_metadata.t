@@ -5,7 +5,7 @@ use Test::More;
 if ( scalar @Wiki::Toolkit::TestLib::wiki_info == 0 ) {
     plan skip_all => "no backends configured";
 } else {
-    plan tests => ( 14 * scalar @Wiki::Toolkit::TestLib::wiki_info );
+    plan tests => ( 22 * scalar @Wiki::Toolkit::TestLib::wiki_info );
 }
 
 my $iterator = Wiki::Toolkit::TestLib->new_wiki_maker;
@@ -14,7 +14,8 @@ while ( my $wiki = $iterator->new_wiki ) {
     # Put some test data in.
     $wiki->write_node( "Reun Thai", "A restaurant", undef,
         { postcode => "W6 9PL",
-          category => [ "Thai Food", "Restaurant", "Hammersmith" ] } );
+          category => [ "Thai Food", "Restaurant", "Hammersmith" ],
+          latitude => "51.911", longitude => "" } );
     my %node = $wiki->retrieve_node( "Reun Thai" );
     my $data = $node{metadata}{postcode};
     is( ref $data, "ARRAY", "arrayref always returned" );
@@ -44,6 +45,13 @@ while ( my $wiki = $iterator->new_wiki ) {
     @nodes = $wiki->list_nodes_by_metadata(
         metadata_type  => "category",
         metadata_value => "hammersmith",
+        ignore_case    => 0,
+    );
+    is_deeply( [ sort @nodes ], [ ],
+               "ignore_case => 0 doesn't ignore case of metadata_value" );
+    @nodes = $wiki->list_nodes_by_metadata(
+        metadata_type  => "category",
+        metadata_value => "hammersmith",
         ignore_case    => 1,
     );
     is_deeply( [ sort @nodes ], [ "Reun Thai", "The Old Trout" ],
@@ -55,6 +63,50 @@ while ( my $wiki = $iterator->new_wiki ) {
     );
     is_deeply( [ sort @nodes ], [ "Reun Thai", "The Old Trout" ],
                "...and case of metadata_type" );
+
+
+    # Test list_nodes_by_missing_metadata
+    #  Shouldn't get any if we search on category
+    @nodes = $wiki->list_nodes_by_missing_metadata(
+                            metadata_type => "category"
+    );
+    is( scalar @nodes, 0, "All have metadata category" );
+    #  By latitude, should only get The Old Trout+The Three Cups
+    @nodes = $wiki->list_nodes_by_missing_metadata(
+                            metadata_type => "latitude"
+    );
+    is_deeply( [ sort @nodes ], [ "The Old Trout", "The Three Cups" ], 
+                    "By lat, not Reun Thai" );
+    #  By longitude, we should get all (Reun Thai has it blank)
+    @nodes = $wiki->list_nodes_by_missing_metadata(
+                            metadata_type => "longitude"
+    );
+    is_deeply( [ sort @nodes ], [ "Reun Thai", "The Old Trout", "The Three Cups" ], "By long, get all" );
+    #  With category=Pub, we should get only the Reun Thai
+    @nodes = $wiki->list_nodes_by_missing_metadata(
+                            metadata_type => "category",
+                            metadata_value => "Pub"
+    );
+    is_deeply( [ sort @nodes ], [ "Reun Thai" ], "Reun Thai not a pub" );
+    #  With Category, we should get all
+    @nodes = $wiki->list_nodes_by_missing_metadata(
+                            metadata_type => "Category"
+    );
+    is_deeply( [ sort @nodes ], [ "Reun Thai", "The Old Trout", "The Three Cups" ], "By Category, get all" );
+    #  With category=hammersmith, we should get all
+    @nodes = $wiki->list_nodes_by_missing_metadata(
+                            metadata_type => "category",
+                            metadata_value => "hammersmith"
+    );
+    is_deeply( [ sort @nodes ], [ "Reun Thai", "The Old Trout", "The Three Cups" ], "By category=hammersmith (case sensitive), get all" );
+    #  But with category=hammersmith+case insensitive, shouldn't get any
+    @nodes = $wiki->list_nodes_by_missing_metadata(
+                            metadata_type => "category",
+                            metadata_value => "hammersmith",
+                            ignore_case => 1
+    );
+    is_deeply( [ sort @nodes ], [ "The Three Cups" ], "By category=hammersmith (ci), get all but the three cups" );
+
 
     %node = $wiki->retrieve_node("The Three Cups");
     $wiki->write_node( "The Three Cups", "Not a pub any more",
@@ -72,6 +124,7 @@ while ( my $wiki = $iterator->new_wiki ) {
                                 metadata_value => "Hammersmith" );
     is_deeply( [ sort @nodes ], [ "The Old Trout" ],
                "...as does deleting a node" );
+
 
     # Check that deleting a node really does clear out the metadata.
     SKIP: {
