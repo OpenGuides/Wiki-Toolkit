@@ -1596,6 +1596,12 @@ sub list_nodes_by_metadata {
     return @nodes;
 }
 
+=item B<_get_list_by_metadata_sql>
+Return the SQL to do a match by metadata. Should expect the metadata type
+as the first SQL parameter, and the metadata value as the second.
+
+If possible, should take account of $args{ignore_case}
+=cut
 sub _get_list_by_metadata_sql {
 	# SQL 99 version
     #  Can be over-ridden by database-specific subclasses
@@ -1617,6 +1623,47 @@ sub _get_list_by_metadata_sql {
              . "AND metadata.metadata_type = ? "
              . "AND metadata.metadata_value = ? ";
     }
+}
+
+=item B<_get_list_by_missing_metadata_sql>
+Return the SQL to do a match by missing metadata. Should expect the metadata 
+type as the first SQL parameter. If $args{with_value} is set, should expect
+the metadata value as the second SQL parameter.
+
+If possible, should take account of $args{ignore_case}
+=cut
+sub _get_list_by_missing_metadata_sql {
+	# SQL 99 version
+    #  Can be over-ridden by database-specific subclasses
+    my ($self, %args) = @_;
+
+	my $sql = "";
+    if ( $args{ignore_case} ) {
+        $sql = "SELECT node.name "
+             . "FROM node "
+             . "LEFT OUTER JOIN metadata "
+             . "   ON (node.id = metadata.node_id) "
+             . "WHERE node.version=metadata.version "
+             . "AND lower(metadata.metadata_type) = ? ";
+    } else {
+        $sql = "SELECT node.name "
+             . "FROM node "
+             . "LEFT JOIN metadata "
+             . "   ON (node.id = metadata.node_id) "
+             . "WHERE node.version=metadata.version "
+             . "AND metadata.metadata_type = ? ";
+    }
+
+	if( $args{with_value} ) {
+		if ( $args{ignore_case} ) {
+        	$sql .= "AND NOT lower(metadata.metadata_value) = ? ";
+		} else {
+        	$sql .= "AND NOT metadata.metadata_value = ? ";
+		}
+	} else {
+		$sql .= "AND (metadata.metadata_value IS NULL OR LENGHT(metadata.metadata_value) == 0) ";
+	}
+	return $sql;
 }
 
 sub _get_comparison_sql {

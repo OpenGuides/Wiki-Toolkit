@@ -108,6 +108,34 @@ sub _get_list_by_metadata_sql {
     }
 }
 
+sub _get_list_by_missing_metadata_sql {
+    my ($self, %args) = @_;
+
+	my $sql = "";
+    if ( $args{ignore_case} ) {
+        $sql = "SELECT node.name FROM node, metadata"
+             . " WHERE node.id=metadata.node_id"
+             . " AND node.version=metadata.version"
+             . " AND metadata.metadata_type LIKE ? ";
+    } else {
+        $sql = "SELECT node.name FROM node, metadata"
+             . " WHERE node.id=metadata.node_id"
+             . " AND node.version=metadata.version"
+             . " AND metadata.metadata_type = ? ";
+    }
+
+	if( $args{with_value} ) {
+		if ( $args{ignore_case} ) {
+             $sql .= " AND NOT metadata.metadata_value LIKE ? ";
+		} else {
+             $sql .= " AND NOT metadata.metadata_value = ? ";
+		}
+	} else {
+		$sql .= "AND (metadata.metadata_value IS NULL OR LENGHT(metadata.metadata_value) == 0) ";
+	}
+	return $sql;
+}
+
 sub _get_comparison_sql {
     my ($self, %args) = @_;
     if ( $args{ignore_case} ) {
