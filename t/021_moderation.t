@@ -6,7 +6,7 @@ use Time::Piece;
 if ( scalar @Wiki::Toolkit::TestLib::wiki_info == 0 ) {
     plan skip_all => "no backends configured";
 } else {
-    plan tests => ( 82 * scalar @Wiki::Toolkit::TestLib::wiki_info );
+    plan tests => ( 85 * scalar @Wiki::Toolkit::TestLib::wiki_info );
 }
 
 my $iterator = Wiki::Toolkit::TestLib->new_wiki_maker;
@@ -207,4 +207,10 @@ while ( my $wiki = $iterator->new_wiki ) {
 	is( $node_data{node_requires_moderation}, '1', "Now requires moderation" );
 	is( $node_data{content}, "No moderation", "Node should now be fifth version" );
 	is( $node_data{version}, "5", "Node should now be fifth version" );
+
+
+    # Test that the shorthand node_required_moderation behaves
+    is( 0, $wiki->node_required_moderation("MADE_UP"), "node_required_moderation behaves");
+    is( 0, $wiki->node_required_moderation("Home"), "node_required_moderation behaves");
+    is( 1, $wiki->node_required_moderation("Moderation"), "node_required_moderation behaves");
 }

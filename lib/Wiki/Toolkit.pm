@@ -596,6 +596,26 @@ sub node_exists {
     $self->store->node_exists( @args );
 }
 
+=item B<node_required_moderation>
+
+  my $needs = $wiki->node_required_moderation( "Wombat Defenestration" );
+
+Returns true if the node exists and requires moderation, and false otherwise.
+
+=cut
+
+sub node_required_moderation {
+    my ($self, @args) = @_;
+    my %node = $self->retrieve_node(@args);
+
+    # Return false if it doesn't exist
+    unless(%node) { return 0; }
+    unless($node{node_requires_moderation}) { return 0; }
+
+    # Otherwise return the state of the flag
+    return $node{node_requires_moderation};
+}
+
 =item B<delete_node>
 
   $wiki->delete_node( name => "Home Page", version => 15 );
