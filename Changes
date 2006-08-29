@@ -1,10 +1,11 @@
 0.71
-		More feed code refactoring, to allow "mini" feeds with just
-           name, and optionally distance and location. Typically used in
-           search results, especially with Wiki::Toolkit::Plugin::Locator's
-		Ability to filter by nodes without certain metadata, by type
-		   or type+value ("everything without a longitude" or 
-		   "everything not category=Pub")
+        More feed code refactoring, to allow "mini" feeds with just
+          name, and optionally distance and location. Typically used in
+          search results, especially with Wiki::Toolkit::Plugin::Locator's
+        Ability to filter by nodes without certain metadata, by type
+          or type+value ("everything without a longitude" or 
+          "everything not category=Pub")
+
 0.70    6 June 2006
         Feed code has been refactored.
         Check that the database schema is up-to-date when initializing the
