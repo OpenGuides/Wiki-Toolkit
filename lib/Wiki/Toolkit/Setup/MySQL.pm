@@ -133,7 +133,7 @@ sub setup {
         # before doing any more
         my $perm_check = Wiki::Toolkit::Setup::Database::perm_check($dbh);
         if ($perm_check) {
-            die $perm_check;
+            die "Unable to create/drop database tables as required by upgrade: $perm_check";
         }
         
 		# Drop the current tables
