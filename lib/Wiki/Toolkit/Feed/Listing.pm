@@ -3,23 +3,12 @@ package Wiki::Toolkit::Feed::Listing;
 use strict;
 use Carp qw( croak );
 
-=head1 NAME
-
-Wiki::Toolkit::Feed::Listing - parent class for Feeds from Wiki::Toolkit.
-
-Handles common data fetching tasks, so that child classes need only
-worry about formatting the feeds.
-
-Also enforces some common methods that must be implemented.
-
-=cut
-
-
 =item B<fetch_recently_changed_nodes>
 
 Based on the supplied criteria, fetch a list of the recently changed nodes
 
 =cut
+
 sub fetch_recently_changed_nodes {
     my ($self, %args) = @_;
 
@@ -49,6 +38,7 @@ B<fetch_recently_changed_nodes>), find the newest node from the recently
 changed nodes set. Normally used for dating the whole of a Feed.
 
 =cut
+
 sub fetch_newest_for_recently_changed {
     my ($self, %args) = @_;
 
@@ -73,6 +63,7 @@ including all metadata required for it to go into a "recent changes"
 style listing.
 
 =cut
+
 sub fetch_node_all_versions {
     my ($self, %args) = @_;
 
@@ -110,6 +101,7 @@ If the argument "also_return_timestamp" is supplied, it will return an
 array of the feed, and the feed timestamp. Otherwise it just returns the feed.
 
 =cut
+
 sub recent_changes
 {
     my ($self, %args) = @_;
@@ -137,6 +129,7 @@ If the argument "also_return_timestamp" is supplied, it will return an
 array of the feed, and the feed timestamp. Otherwise it just returns the feed.
 
 =cut
+
 sub node_all_versions
 {
     my ($self, %args) = @_;
@@ -160,6 +153,7 @@ into geo: and space: tags, suitable for inclusion in a feed with those
 namespaces imported.
 
 =cut
+
 sub format_geo {
     my ($self, %metadata) = @_;
     if(ref($_[1]) eq "HASH") {
@@ -219,19 +213,56 @@ sub handle_supply_one_of {
 # The following are methods that any feed renderer must provide
 
 =item B<feed_timestamp>
+
 All implementing feed renderers must implement a method to produce a
 feed specific timestamp, based on the supplied node
+
 =cut
+
 sub feed_timestamp          { die("Not implemented by feed renderer!"); }
+
 =item B<generate_node_list_feed>
+
 All implementing feed renderers must implement a method to produce a
 feed from the supplied list of nodes
+
 =cut
+
 sub generate_node_list_feed { die("Not implemented by feed renderer!"); }
+
 =item B<generate_node_name_distance_feed>
+
 All implementing feed renderers must implement a method to produce a
 stripped down feed from the supplied list of node names, and optionally
 locations and distance from a reference point.
+
 =cut
 
 1;
+
+__END__
+
+=head1 NAME
+
+Wiki::Toolkit::Feed::Listing - parent class for Feeds from Wiki::Toolkit.
+
+=head1 DESCRIPTION
+
+Handles common data fetching tasks, so that child classes need only
+worry about formatting the feeds.
+
+Also enforces some common methods that must be implemented.
+
+=head1 MAINTAINER
+
+The Wiki::Toolkit team, http://www.wiki-toolkit.org/.
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright 2006 the Wiki::Toolkit team.
+
+This module is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+
+
+=cut
