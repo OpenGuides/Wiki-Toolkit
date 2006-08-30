@@ -155,9 +155,13 @@ namespaces imported.
 =cut
 
 sub format_geo {
-    my ($self, %metadata) = @_;
-    if(ref($_[1]) eq "HASH") {
+    my ($self, @args) = @_;
+
+    my %metadata;
+    if(ref($args[0]) eq "HASH") {
         %metadata = %{$_[1]};
+    } else {
+        %metadata = @args;
     }
 
     my %mapping = (
