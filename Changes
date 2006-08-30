@@ -1,4 +1,4 @@
-0.71    29 August 2006
+0.71    30 August 2006
         More feed code refactoring, to allow "mini" feeds with just
           name, and optionally distance and location. Typically used in
           search results, especially with Wiki::Toolkit::Plugin::Locator's
