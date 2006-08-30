@@ -94,7 +94,7 @@ sub find_internal_links {
     return @links;
 }
 
-=back
+=cut
 
 =head1 SEE ALSO
 
