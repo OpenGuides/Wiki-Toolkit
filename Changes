@@ -1,3 +1,6 @@
+0.72    15 September 2006
+        Install wiki-toolkit-rename-node
+
 0.71    30 August 2006
         More feed code refactoring, to allow "mini" feeds with just
           name, and optionally distance and location. Typically used in

@@ -225,7 +225,8 @@ WriteMakefile( NAME         => "Wiki::Toolkit",
 			         'Test::More' => 0,
 			         'Time::Piece' => 0,
 			         %extras },
-               EXE_FILES => [ "bin/wiki-toolkit-setupdb" ],
+               EXE_FILES => [ "bin/wiki-toolkit-setupdb",
+                              "bin/wiki-toolkit-rename-node" ],
 	       clean => { FILES => "Config lib/Wiki/Toolkit/TestConfig.pm "
 			         . "t/sqlite-test.db t/sii-db-file-test.db "
                                  . "t/node.db t/plucene"
