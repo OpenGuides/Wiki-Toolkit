@@ -163,6 +163,19 @@ sub new {
     return $self;
 }
 
+=item B<wiki>
+
+Returns the Wiki::Toolkit object, or C<undef> if the C<register_plugin>
+method hasn't been called on a L<Wiki::Toolkit> object yet.
+
+=cut
+
+sub wiki {
+    my $self = shift;
+    $self->{_wiki} = $_[0] if $_[0];
+    return $self->{_wiki};
+}
+
 =item B<datastore>
 
 Returns the backend store object, or C<undef> if the C<register_plugin>

@@ -786,6 +786,7 @@ sub register_plugin {
     my $plugin = $args{plugin} || "";
     croak "no plugin supplied" unless $plugin;
     if ( $plugin->isa( "Wiki::Toolkit::Plugin" ) ) {
+        $plugin->wiki(      $self             );
         $plugin->datastore( $self->store      );
         $plugin->indexer(   $self->search_obj );
         $plugin->formatter( $self->formatter  );
