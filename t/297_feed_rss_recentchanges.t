@@ -6,7 +6,7 @@ use URI::Escape;
 # Note - update the count in the skip block to match the number here
 #        we would put the number in a variable, but that doesn't seem to work
 use Test::More tests =>
-  (3 + 18 * $Wiki::Toolkit::TestConfig::Utilities::num_stores);
+  (3 + 22 * $Wiki::Toolkit::TestConfig::Utilities::num_stores);
 
 use_ok( "Wiki::Toolkit::Feed::RSS" );
 
@@ -23,7 +23,7 @@ my %stores = Wiki::Toolkit::TestConfig::Utilities->stores;
 my ($store_name, $store);
 while ( ($store_name, $store) = each %stores ) {
   SKIP: {
-      skip "$store_name storage backend not configured for testing", 18
+      skip "$store_name storage backend not configured for testing", 22
           unless $store;
 
       print "#\n##### TEST CONFIG: Store: $store_name\n#\n";
@@ -64,6 +64,9 @@ while ( ($store_name, $store) = each %stores ) {
       like( $feed, qr|<modwiki:importance>major</modwiki:importance>|,
 	    "change importance included and defaults to 'major'" );
 
+      like( $feed, qr|<?xml version="1.0"|, "is xml" );
+      like( $feed, qr|<?xml version="1.0" encoding="$wiki->{store}->{_charset}"|, "is xml" );
+
       # Check stuff that comes from the metadata.
       like( $feed, qr|<dc:contributor>Kake</dc:contributor>|,
 	    "username picked up as contributor" );
@@ -99,6 +102,7 @@ while ( ($store_name, $store) = each %stores ) {
 	    "make_diff_url used" );
 
       # Check that history url comes through.
+      # Will use a different character set
       $rss = Wiki::Toolkit::Feed::RSS->new(
           %default_config,
           make_history_url        => sub {
@@ -107,6 +111,7 @@ while ( ($store_name, $store) = each %stores ) {
                    . uri_escape($node_name)
                                       },
           site_url => "http://example.com/kakeswiki/",
+          encoding => "UTF-16"
       );
       $feed = $rss->recent_changes;
       like( $feed, qr|<modwiki:history>http://example.com/\?action=history;id=Calthorpe%20Arms</modwiki:history>|,
@@ -142,5 +147,10 @@ while ( ($store_name, $store) = each %stores ) {
                                   );
       unlike( $feed, qr|<title>Test Node 1</title>|,
               "can filter on two criteria" );
+
+      # Test the xml headers again, now we have given a character set
+      like( $feed, qr|<?xml version="1.0"|, "is xml" );
+      like( $feed, qr|<?xml version="1.0" encoding="UTF-16"|, "is xml" );
+
   }
 }

@@ -41,9 +41,14 @@ sub new
   $self->handle_supply_one_of(\%mustoneof,\%args);
   
   # Optional arguments.
-  foreach my $arg (qw/site_description software_name software_version software_homepage/)
+  foreach my $arg (qw/site_description software_name software_version software_homepage encoding/)
   {
     $self->{$arg} = $args{$arg} || '';
+  }
+
+  # Supply some defaults, if a blank string isn't what we want
+  unless($self->{encoding}) {
+    $self->{encoding} = $self->{wiki}->{store}->{_charset};
   }
 
   $self->{timestamp_fmt} = $Wiki::Toolkit::Store::Database::timestamp_fmt;
@@ -89,7 +94,7 @@ sub build_feed_start {
                  ? '<subtitle>' . $self->{site_description} . "</subtitle>\n"
                  : '';
                  
-  my $atom = qq{<?xml version="1.0" encoding="UTF-8"?>
+  my $atom = qq{<?xml version="1.0" encoding="} . $self->{encoding} . qq{"?>
 
 <feed 
  xmlns         = "http://www.w3.org/2005/Atom"

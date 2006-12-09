@@ -41,10 +41,15 @@ sub new
     $self->handle_supply_one_of(\%mustoneof,\%args);
   
     # Optional arguments.
-    foreach my $arg (qw/site_description interwiki_identifier make_diff_url make_history_url 
+    foreach my $arg (qw/site_description interwiki_identifier make_diff_url make_history_url encoding
                         software_name software_version software_homepage/)
     {
         $self->{$arg} = $args{$arg} || '';
+    }
+
+    # Supply some defaults, if a blank string isn't what we want
+    unless($self->{encoding}) {
+        $self->{encoding} = $self->{wiki}->{store}->{_charset};
     }
 
     $self->{timestamp_fmt} = $Wiki::Toolkit::Store::Database::timestamp_fmt;
@@ -64,7 +69,7 @@ sub build_feed_start {
   my ($self,$feed_timestamp) = @_;
 
   #"http://purl.org/rss/1.0/modules/wiki/"
-  return qq{<?xml version="1.0" encoding="UTF-8"?>
+  return qq{<?xml version="1.0" encoding="}. $self->{encoding} .qq{"?>
 
 <rdf:RDF
  xmlns         = "http://purl.org/rss/1.0/"

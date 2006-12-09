@@ -6,7 +6,7 @@ use URI::Escape;
 # Note - update the count in the skip block to match the number here
 #        we would put the number in a variable, but that doesn't seem to work
 use Test::More tests =>
-  (3 + 12 * $Wiki::Toolkit::TestConfig::Utilities::num_stores);
+  (3 + 16 * $Wiki::Toolkit::TestConfig::Utilities::num_stores);
 
 use_ok( "Wiki::Toolkit::Feed::Atom" );
 
@@ -23,7 +23,7 @@ my %stores = Wiki::Toolkit::TestConfig::Utilities->stores;
 my ($store_name, $store);
 while ( ($store_name, $store) = each %stores ) {
   SKIP: {
-      skip "$store_name storage backend not configured for testing", 12
+      skip "$store_name storage backend not configured for testing", 16
           unless $store;
 
       print "#\n##### TEST CONFIG: Store: $store_name\n#\n";
@@ -67,6 +67,9 @@ while ( ($store_name, $store) = each %stores ) {
       like( $feed, qr|<category term="TestCategory1" />|,
             "contains categories" );
 
+      like( $feed, qr|<?xml version="1.0"|, "is xml" );
+      like( $feed, qr|<?xml version="1.0" encoding="$wiki->{store}->{_charset}"|, "is xml" );
+
       # Test the 'items' parameter.
       $feed = $atom->recent_changes( items => 2 );
       unlike( $feed, qr|<title>Test Node 1</title>|, "items param works" );
@@ -79,6 +82,11 @@ while ( ($store_name, $store) = each %stores ) {
       $feed = $atom->recent_changes( ignore_minor_edits => 1 );
       unlike( $feed, qr|This is a minor change.|,
               "ignore_minor_edits works" );
+
+      # Get a new Atom feed maker, with a different encoding
+      $atom = eval {
+          Wiki::Toolkit::Feed::Atom->new( %default_config, site_url => "http://example.com/kakeswiki/", encoding => "UTF-16" );
+      };
 
       # Test personalised feeds.
       $feed = $atom->recent_changes(
@@ -96,5 +104,9 @@ while ( ($store_name, $store) = each %stores ) {
                                   );
       unlike( $feed, qr|<title>Test Node 1</title>|,
              "can filter on two criteria" );
+
+      # Test the xml headers again, now we have given a character set
+      like( $feed, qr|<?xml version="1.0"|, "is xml" );
+      like( $feed, qr|<?xml version="1.0" encoding="UTF-16"|, "is xml" );
   }
 }
