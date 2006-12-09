@@ -258,7 +258,7 @@ until they're tagged as moderated, when they will become the new node.
 
 sub set_node_moderation {
     my ($self, @args) = @_;
-    $self->store->set_node_moderation( @args );
+    return $self->store->set_node_moderation( @args );
 }
 
 =item B<rename_node>

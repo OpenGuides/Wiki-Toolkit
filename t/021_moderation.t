@@ -6,7 +6,7 @@ use Time::Piece;
 if ( scalar @Wiki::Toolkit::TestLib::wiki_info == 0 ) {
     plan skip_all => "no backends configured";
 } else {
-    plan tests => ( 85 * scalar @Wiki::Toolkit::TestLib::wiki_info );
+    plan tests => ( 86 * scalar @Wiki::Toolkit::TestLib::wiki_info );
 }
 
 my $iterator = Wiki::Toolkit::TestLib->new_wiki_maker;
@@ -213,4 +213,8 @@ while ( my $wiki = $iterator->new_wiki ) {
     is( 0, $wiki->node_required_moderation("MADE_UP"), "node_required_moderation behaves");
     is( 0, $wiki->node_required_moderation("Home"), "node_required_moderation behaves");
     is( 1, $wiki->node_required_moderation("Moderation"), "node_required_moderation behaves");
+
+	# Check that we get 0, not 1 back, when trying to set moderation
+	#  on a node that doesn't exist
+	is( 0, $wiki->set_node_moderation(name=>"NODE THAT DOES NOT EXIST", required=>1), "returns 0 if you set moderation on an unknown node" );
 }

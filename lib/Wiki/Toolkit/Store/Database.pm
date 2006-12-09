@@ -941,6 +941,11 @@ sub set_node_moderation {
 	my ($node_id) = $id_sth->fetchrow_array;
     $id_sth->finish;
 
+	# Check we really got an ID
+    unless($node_id) {
+        return 0;
+    }
+
 	# Mark it as requiring / not requiring moderation
 	my $mod_sql = 
 		 "UPDATE node "
@@ -1820,6 +1825,21 @@ sub list_unmoderated_nodes {
 
 	return @nodes;
 }
+
+=item B<list_metadata_by_type>
+	List all the currently defined values of the given type of metadata.
+
+	Will only work with the latest moderated version
+
+	# List all of the different metadata values with the type 'category'
+	my @categories = $wiki->list_metadata_by_type('category');
+=cut
+sub list_metadata_by_type {
+	my ($self, $type) = @_;
+
+	return 0 unless $type;
+}
+
 
 =item B<schema_current>
 
