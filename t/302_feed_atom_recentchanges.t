@@ -67,8 +67,9 @@ while ( ($store_name, $store) = each %stores ) {
       like( $feed, qr|<category term="TestCategory1" />|,
             "contains categories" );
 
+      my $charset = $wiki->store->{_charset};
       like( $feed, qr|<?xml version="1.0"|, "is xml" );
-      like( $feed, qr|<?xml version="1.0" encoding="$wiki->{store}->{_charset}"|, "is xml" );
+      like( $feed, qr|<?xml version="1.0" encoding="$charset"|, "is xml" );
 
       # Test the 'items' parameter.
       $feed = $atom->recent_changes( items => 2 );

@@ -49,7 +49,7 @@ sub new
 
     # Supply some defaults, if a blank string isn't what we want
     unless($self->{encoding}) {
-        $self->{encoding} = $self->{wiki}->{store}->{_charset};
+        $self->{encoding} = $self->{wiki}->store->{_charset};
     }
 
     $self->{timestamp_fmt} = $Wiki::Toolkit::Store::Database::timestamp_fmt;

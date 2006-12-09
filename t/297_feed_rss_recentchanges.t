@@ -64,8 +64,9 @@ while ( ($store_name, $store) = each %stores ) {
       like( $feed, qr|<modwiki:importance>major</modwiki:importance>|,
 	    "change importance included and defaults to 'major'" );
 
+      my $charset = $wiki->store->{_charset};
       like( $feed, qr|<?xml version="1.0"|, "is xml" );
-      like( $feed, qr|<?xml version="1.0" encoding="$wiki->{store}->{_charset}"|, "is xml" );
+      like( $feed, qr|<?xml version="1.0" encoding="$charset"|, "is xml" );
 
       # Check stuff that comes from the metadata.
       like( $feed, qr|<dc:contributor>Kake</dc:contributor>|,
