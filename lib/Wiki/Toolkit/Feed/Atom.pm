@@ -273,6 +273,18 @@ sub feed_timestamp
   return $time->strftime( "%Y-%m-%dT%H:%M:%S$utc_offset" );
 }
 
+
+=item B<parse_feed_timestamp>
+
+Take a feed_timestamp and return a Time::Piece object. 
+
+=cut
+sub parse_feed_timestamp {
+    my ($self, $feed_timestamp) = @_;
+   
+    $feed_timestamp = substr($feed_timestamp, 0, -length( $self->{utc_offset}));
+    return Time::Piece->strptime( $feed_timestamp, '%Y-%m-%dT%H:%M:%S' );
+}
 1;
 
 __END__

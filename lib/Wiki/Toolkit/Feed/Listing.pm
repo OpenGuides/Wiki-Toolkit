@@ -242,6 +242,16 @@ locations and distance from a reference point.
 
 =cut
 
+sub generate_node_name_distance_feed { die("Not implemented by feed renderer!"); }
+
+=item B<parse_feed_timestamp>
+
+Take a feed_timestamp and return a Time::Piece object. 
+
+=cut
+sub parse_feed_timestamp { die("Not implemented by feed renderer!"); }
+
+
 1;
 
 __END__

@@ -345,8 +345,7 @@ Generate the timestamp for the RSS, based on the newest node (if available).
 Will return a timestamp for now if no node dates are available
 
 =cut
-sub feed_timestamp
-{
+sub feed_timestamp {
     my ($self, $newest_node) = @_;
 
     my $time;
@@ -371,6 +370,18 @@ sub rss_timestamp {
                               $self->fetch_newest_for_recently_changed(%args)
     );
     return $feed_timestamp;
+}
+
+=item B<parse_feed_timestamp>
+
+Take a feed_timestamp and return a Time::Piece object. 
+
+=cut
+sub parse_feed_timestamp {
+    my ($self, $feed_timestamp) = @_;
+   
+    $feed_timestamp = substr($feed_timestamp, 0, -length( $self->{utc_offset}));
+    return Time::Piece->strptime( $feed_timestamp, '%Y-%m-%dT%H:%M:%S' );
 }
 
 1;
