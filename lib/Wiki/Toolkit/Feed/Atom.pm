@@ -353,6 +353,7 @@ This module is a straight port of L<Wiki::Toolkit::Feed::RSS>.
     software_name        => $your_software_name,     # e.g. "Wiki::Toolkit"
     software_version     => $your_software_version,  # e.g. "0.73"
     software_homepage    => $your_software_homepage, # e.g. "http://search.cpan.org/dist/CGI-Wiki/"
+    encoding             => 'UTF-8'
   );
 
 C<wiki> must be a L<Wiki::Toolkit> object. C<make_node_url>, if supplied, must 
@@ -389,6 +390,17 @@ The three optional arguments
 =back
 
 are used to generate the C<generator> part of the feed.
+
+The optional argument
+
+=over 4
+
+=item * encoding
+
+=back
+
+will be used to specify the character encoding in the feed. If not set,
+will default to the wiki store's encoding.
 
 =head2 C<recent_changes()>
 

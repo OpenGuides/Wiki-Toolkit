@@ -1,4 +1,7 @@
 0.73
+        Added parse_feed_timestamp method
+        Added encoding parameter to the Feed methods, to allow overriding
+          the store's encoding.
 
 0.72    15 September 2006
         Install wiki-toolkit-rename-node

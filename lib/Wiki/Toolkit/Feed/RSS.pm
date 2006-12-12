@@ -421,7 +421,8 @@ L<http://www.usemod.com/cgi-bin/mb.pl?ModWiki>
                              my ($node_name, $version) = @_;
                              return 'http://example.com/?id=' . uri_escape($node_name) . ';version=' . uri_escape($version);
                            },
-    html_equiv_link => 'http://example.com/?RecentChanges',
+    html_equiv_link     => 'http://example.com/?RecentChanges',
+    encoding            => 'UTF-8'
   );
 
   print "Content-type: application/xml\n\n";
@@ -494,6 +495,17 @@ The three optional arguments
 
 are used to generate DOAP (Description Of A Project - see L<http://usefulinc.com/doap>) metadata
 for the feed to show what generated it.
+
+The optional argument
+
+=over 4
+
+=item * encoding
+
+=back
+
+will be used to specify the character encoding in the feed. If not set,
+will default to the wiki store's encoding.
 
 =head2 C<recent_changes()>
 
