@@ -219,7 +219,7 @@ if ( $config{plucene} ) {
 # Write the Makefile.
 WriteMakefile( NAME         => "Wiki::Toolkit",
 	       VERSION_FROM => "lib/Wiki/Toolkit.pm",
-	       PREREQ_PM    => { 'Text::WikiFormat' => '0.45', #earlier's buggy
+	       PREREQ_PM    => { 'Text::WikiFormat' => '0.78', #earlier's buggy
 				 'HTML::PullParser' => 0,
 				 'Digest::MD5' => 0,
 			         'Test::More' => 0,
