@@ -1,3 +1,7 @@
+0.74    
+        Updated version on Text::WikiFormat dependency to avoid long-standing
+        test failure with old version
+
 0.73    12 December 2006
         Added parse_feed_timestamp method
         Added encoding parameter to the Feed methods, to allow overriding
