@@ -126,8 +126,7 @@ three optional arguments:
 
 =item user
 
-The user that connects to the database. It must have permission
-to create and drop tables in the database.
+The user that connects to the database.
 
 =item pass
 
