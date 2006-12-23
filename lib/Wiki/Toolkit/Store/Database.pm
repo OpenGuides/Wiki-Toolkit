@@ -11,7 +11,7 @@ use Time::Seconds;
 use Carp qw( carp croak );
 use Digest::MD5 qw( md5_hex );
 
-$VERSION = '0.27';
+$VERSION = '0.28';
 my $SCHEMA_VER = 9;
 
 # first, detect if Encode is available - it's not under 5.6. If we _are_
@@ -47,6 +47,7 @@ This is probably only useful for Wiki::Toolkit developers.
 					    dbuser  => "wiki",
 					    dbpass  => "wiki",
                                             dbhost  => "db.example.com",
+                                            dbport  => 1234,
                                             charset => "iso-8859-1" );
 or
 
@@ -56,8 +57,8 @@ C<charset> is optional, defaults to C<iso-8859-1>, and does nothing
 unless you're using perl 5.8 or newer.
 
 If you do not provide an active database handle in C<dbh>, then
-C<dbname> is mandatory. C<dbpass>, C<dbuser> and C<dbhost> are
-optional, but you'll want to supply them unless your database's
+C<dbname> is mandatory. C<dbpass>, C<dbuser>, C<dbhost> and C<dbport>
+are optional, but you'll want to supply them unless your database's
 authentication method doesn't require it.
 
 If you do provide C<database> then it must have the following
@@ -101,12 +102,13 @@ sub _init {
         $self->{_dbuser} = $args{dbuser} || "";
         $self->{_dbpass} = $args{dbpass} || "";
         $self->{_dbhost} = $args{dbhost} || "";
+        $self->{_dbport} = $args{dbport} || "";
         $self->{_charset} = $args{charset} || "iso-8859-1";
 
         # Connect to database and store the database handle.
-        my ($dbname, $dbuser, $dbpass, $dbhost) =
-                               @$self{qw(_dbname _dbuser _dbpass _dbhost)};
-        my $dsn = $self->_dsn($dbname, $dbhost)
+        my ($dbname, $dbuser, $dbpass, $dbhost, $dbport) =
+                               @$self{qw(_dbname _dbuser _dbpass _dbhost _dbport)};
+        my $dsn = $self->_dsn($dbname, $dbhost, $dbport)
             or croak "No data source string provided by class";
         $self->{_dbh} = DBI->connect( $dsn, $dbuser, $dbpass,
 				      { PrintError => 0, RaiseError => 1,
