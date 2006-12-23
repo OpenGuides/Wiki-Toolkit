@@ -2,12 +2,13 @@
 use strict;
 use Getopt::Long;
 
-my ($dbtype, $dbname, $dbuser, $dbpass, $dbhost, $help, $oldname, $newname);
+my ($dbtype, $dbname, $dbuser, $dbpass, $dbhost, $dbport, $help, $oldname, $newname);
 GetOptions( "type=s"         => \$dbtype,
             "name=s"         => \$dbname,
             "user=s"         => \$dbuser,
             "pass=s"         => \$dbpass,
             "host=s"         => \$dbhost,
+            "port=s"         => \$dbport,
             "help"           => \$help,
             "oldname=s"      => \$oldname,
             "newname=s"      => \$newname,
@@ -67,6 +68,7 @@ my $store;
 my $args = "dbname=>'$dbname', dbuser=>'$dbuser'";
 if($dbpass) { $args .= ", dbpass=>'$dbpass'"; }
 if($dbhost) { $args .= ", dbhost=>'$dbhost'"; }
+if($dbport) { $args .= ", dbport=>'$dbport'"; }
 eval "\$store = $class->new($args);";
 
 # Create a Wiki instance
@@ -93,6 +95,7 @@ wiki-toolkit-rename-node - Rename a node stored in a Wiki::Toolkit instance.
 		   --user wiki  \
 		   --pass wiki \
 		   --host 'db.example.com' \
+		   --port 1234
 		   --oldname MyOldNodeName \
 		   --nemname FancyNewNodeName
 
@@ -120,13 +123,14 @@ The new name for the node.
 
 =back
 
-three optional arguments:
+four optional arguments:
 
 =over 4
 
 =item user
 
-The user that connects to the database.
+The user that connects to the database. It must have permission
+to create and drop tables in the database.
 
 =item pass
 
@@ -139,6 +143,11 @@ for local databases).
 
 =back
 
+=item port
+
+The port number that the database server is expecting connections to.
+
+=back
 =head1 AUTHOR
 
 Nick Burch
