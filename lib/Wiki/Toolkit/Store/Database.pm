@@ -1828,6 +1828,48 @@ sub list_unmoderated_nodes {
 	return @nodes;
 }
 
+=item B<list_last_version_before>
+	List the last version of every node before a given date.
+	If no version existed before that date, will return undef for version.
+	Returns a hash of id, name, version and date
+
+	my @nv = $wiki->list_last_version_before('2007-01-02 10:34:11')
+	foreach my $data (@nv) {
+		
+	}
+=cut
+sub list_last_version_before {
+	my ($self, $date) = @_;
+
+	my $sql =
+		 "SELECT "
+		."	id, name, "
+		."MAX(content.version) AS version, MAX(content.modified) AS modified "
+		."FROM node "
+		."LEFT OUTER JOIN content "
+		."	ON (id = node_id "
+		."      AND content.modified <= ?) "
+		."GROUP BY id, name "
+		."ORDER BY id "
+	;
+
+	# Query
+    my $dbh = $self->dbh;
+    my $sth = $dbh->prepare( $sql );
+    $sth->execute( $date );
+
+	my @nodes;
+	while(my @results = $sth->fetchrow_array) {
+		my %data;
+		@data{ qw( id name version modified ) } = @results;
+		$data{'node_id'} = $data{'id'};
+		unless($data{'version'}) { $data{'version'} = undef; }
+		push @nodes, \%data;
+	}
+
+	return @nodes;
+}
+
 =item B<list_metadata_by_type>
 	List all the currently defined values of the given type of metadata.
 

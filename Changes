@@ -1,6 +1,10 @@
 0.74    
+		Added list_last_version_before method, to get the version of all the
+		 nodes at a given point in time
+		Add script wiki-toolkit-revert-to-date, which reverts a wiki to how
+		 it was at a given point in time
         Updated version on Text::WikiFormat dependency to avoid long-standing
-        test failure with old version
+         test failure with old version
 
 0.73    12 December 2006
         Added parse_feed_timestamp method
