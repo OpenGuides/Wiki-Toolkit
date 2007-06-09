@@ -35,7 +35,7 @@ while ( my $wiki = $iterator->new_wiki ) {
 
 
 	# Fetch everything before 2007
-    my @all = $wiki->store->list_last_version_before('2007-01-01');
+    my @all = $wiki->list_last_version_before('2007-01-01');
 
 	is( scalar @all, 3, "list_last_version_before gives the right number back" );
 
