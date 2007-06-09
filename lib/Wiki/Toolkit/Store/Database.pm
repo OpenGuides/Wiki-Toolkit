@@ -11,7 +11,7 @@ use Time::Seconds;
 use Carp qw( carp croak );
 use Digest::MD5 qw( md5_hex );
 
-$VERSION = '0.28';
+$VERSION = '0.29';
 my $SCHEMA_VER = 9;
 
 # first, detect if Encode is available - it's not under 5.6. If we _are_
@@ -1191,6 +1191,9 @@ sub post_delete_node {
 You I<must> supply one of the following constraints: C<days>
 (integer), C<since> (epoch), C<last_n_changes> (integer).
 
+You I<may> also supply moderation => 1 if you only want to see versions
+that are moderated.
+
 You I<may> also supply I<either> C<metadata_is> (and optionally
 C<metadata_isnt>), I<or> C<metadata_was> (and optionally
 C<metadata_wasnt>). Each of these should be a ref to a hash with
@@ -1256,9 +1259,11 @@ sub list_recent_changes {
 sub _find_recent_changes_by_criteria {
     my ($self, %args) = @_;
     my ($since, $limit, $between_days, $ignore_case,
-        $metadata_is,  $metadata_isnt, $metadata_was, $metadata_wasnt ) =
+        $metadata_is,  $metadata_isnt, $metadata_was, $metadata_wasnt,
+	$moderation ) =
          @args{ qw( since limit between_days ignore_case
-                    metadata_is metadata_isnt metadata_was metadata_wasnt) };
+                    metadata_is metadata_isnt metadata_was metadata_wasnt
+		    moderation ) };
     my $dbh = $self->dbh;
 
     my @where;
@@ -1277,6 +1282,9 @@ sub _find_recent_changes_by_criteria {
                                  . (($main_table eq "node") ? "id" : "node_id")
                                  . "=$mdt.node_id
                                  AND $main_table.version=$mdt.version\n";
+                if (defined $moderation) {
+                    push @metadata_joins, "AND $main_table.moderate=$moderation";
+                }
                 push @where, "( "
                          . $self->_get_comparison_sql(
                                           thing1      => "$mdt.metadata_type",

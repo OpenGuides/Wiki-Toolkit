@@ -6,7 +6,7 @@ use Time::Piece;
 if ( scalar @Wiki::Toolkit::TestLib::wiki_info == 0 ) {
     plan skip_all => "no backends configured";
 } else {
-    plan tests => ( 31 * scalar @Wiki::Toolkit::TestLib::wiki_info );
+    plan tests => ( 40 * scalar @Wiki::Toolkit::TestLib::wiki_info );
 }
 
 my $iterator = Wiki::Toolkit::TestLib->new_wiki_maker;
@@ -108,4 +108,22 @@ while ( my $wiki = $iterator->new_wiki ) {
 	is_deeply( $all_mod_nodes[2], \%m41, "Should have right data" );
 
 	is_deeply( $new_mod_nodes[0], \%m21, "Should have right data" );
+	
+	my @rc_mod_nodes = $wiki->list_recent_changes( days => 7,
+                                                 moderation => 1);
+
+#	use Data::Dumper;
+#	open (my $dbug, '>', 'dbug.out') or die 'Failed to write debug';
+#	print $dbug Dumper(\@rc_mod_nodes);
+
+	is( scalar(@rc_mod_nodes), 4, "Count of recent changes nodes");
+	is( $rc_mod_nodes[0]{name}, 'Home', "RC node 0 name" );
+	is( $rc_mod_nodes[0]{version}, 2, "RC node 0 version" );
+	is( $rc_mod_nodes[1]{name}, 'Moderation', "RC node 1 name" );
+	is( $rc_mod_nodes[1]{version}, 1, "RC node 1 version" );
+	is( $rc_mod_nodes[2]{name}, 'Moderation2', "RC node 2 name" );
+	is( $rc_mod_nodes[2]{version}, 1, "RC node 2 version" );
+	is( $rc_mod_nodes[3]{name}, 'Moderation3', "RC node 3 name" );
+	is( $rc_mod_nodes[3]{version}, 2, "RC node 3 version" );
 }
+

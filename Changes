@@ -1,3 +1,7 @@
+0.75	9  June 2007
+	Support for selecting versions by moderation status (see OpenGuides
+	ticket #142)
+
 0.74    9  June 2007
         Added list_last_version_before method, to get the version of all the
          nodes at a given point in time
