@@ -8,7 +8,7 @@ use Wiki::Toolkit::Store::Database;
 use Carp qw/carp croak/;
 
 @ISA = qw( Wiki::Toolkit::Store::Database );
-$VERSION = 0.03;
+$VERSION = 0.04;
 
 =head1 NAME
 
@@ -26,9 +26,10 @@ See Wiki::Toolkit::Store::Database
 
 # Internal method to return the data source string required by DBI.
 sub _dsn {
-    my ($self, $dbname, $dbhost) = @_;
+    my ($self, $dbname, $dbhost, $dbport) = @_;
     my $dsn = "dbi:mysql:$dbname";
     $dsn .= ";host=$dbhost" if $dbhost;
+    $dsn .= ";port=$dbport" if $dbport;
     return $dsn;
 }
 
