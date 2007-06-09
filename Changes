@@ -1,4 +1,4 @@
-0.74    
+0.74    9  June 2007
         Added list_last_version_before method, to get the version of all the
          nodes at a given point in time
         Updated version on Text::WikiFormat dependency to avoid long-standing
