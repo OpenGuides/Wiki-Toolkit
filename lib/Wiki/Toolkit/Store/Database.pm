@@ -44,11 +44,11 @@ This is probably only useful for Wiki::Toolkit developers.
 =item B<new>
 
   my $store = Wiki::Toolkit::Store::MySQL->new( dbname  => "wiki",
-					    dbuser  => "wiki",
-					    dbpass  => "wiki",
-                                            dbhost  => "db.example.com",
-                                            dbport  => 1234,
-                                            charset => "iso-8859-1" );
+                        dbuser  => "wiki",
+                        dbpass  => "wiki",
+                        dbhost  => "db.example.com",
+                        dbport  => 1234,
+                        charset => "iso-8859-1" );
 or
 
   my $store = Wiki::Toolkit::Store::MySQL->new( dbh => $dbh );
@@ -59,7 +59,7 @@ unless you're using perl 5.8 or newer.
 If you do not provide an active database handle in C<dbh>, then
 C<dbname> is mandatory. C<dbpass>, C<dbuser>, C<dbhost> and C<dbport>
 are optional, but you'll want to supply them unless your database's
-authentication method doesn't require it.
+connection method doesn't require them.
 
 If you do provide C<database> then it must have the following
 parameters set; otherwise you should just provide the connection
