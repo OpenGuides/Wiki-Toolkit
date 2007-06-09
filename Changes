@@ -5,6 +5,8 @@
          it was at a given point in time
         Updated version on Text::WikiFormat dependency to avoid long-standing
          test failure with old version
+        Bump version number of Wiki::Toolkit::Plugin as this was not done
+         the last time it was changed (for CPAN.pm compatibility)
 
 0.73    12 December 2006
         Added parse_feed_timestamp method
