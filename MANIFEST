@@ -79,3 +79,4 @@ t/304_feed_atom_gen_node_dist_feed.t
 t/lib/Wiki/Toolkit/Plugin/Bar.pm
 t/lib/Wiki/Toolkit/Plugin/Foo.pm
 
+META.yml                                 Module meta-data (added by MakeMaker)
