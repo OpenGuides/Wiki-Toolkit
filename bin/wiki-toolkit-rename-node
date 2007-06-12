@@ -141,13 +141,12 @@ The user's database password.
 The hostname of the machine the database server is running on (omit
 for local databases).
 
-=back
-
 =item port
 
 The port number that the database server is expecting connections to.
 
 =back
+
 =head1 AUTHOR
 
 Nick Burch
