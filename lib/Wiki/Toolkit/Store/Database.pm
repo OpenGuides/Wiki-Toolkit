@@ -277,7 +277,7 @@ sub _retrieve_node_content {
          . "WHERE name=" . $dbh->quote($self->charset_encode($args{name}))
          . " AND content.version=" . $version_sql_val;
     my @results = $self->charset_decode( $dbh->selectrow_array($sql) );
-    @results = ("", 0, "", 1, 0) unless scalar @results;
+    @results = ("", 0, "") unless scalar @results;
     my %data;
     @data{ qw( content version last_modified moderated node_requires_moderation ) } = @results;
     return %data;
