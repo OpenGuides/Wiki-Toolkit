@@ -109,12 +109,14 @@ while ( my $wiki = $iterator->new_wiki ) {
 
 	is_deeply( $new_mod_nodes[0], \%m21, "Should have right data" );
 	
+        # Check that we can make ->list_recent_changes show us only things
+        # that have been moderated.
 	my @rc_mod_nodes = $wiki->list_recent_changes( days => 7,
                                                  moderation => 1);
 
-#	use Data::Dumper;
-#	open (my $dbug, '>', 'dbug.out') or die 'Failed to write debug';
-#	print $dbug Dumper(\@rc_mod_nodes);
+        # Sort them by name, since otherwise we get spurious test failures
+        # if the initial node-writing takes more than a second.
+        @rc_mod_nodes = sort { $a->{name} cmp $b->{name} } @rc_mod_nodes;
 
 	is( scalar(@rc_mod_nodes), 4, "Count of recent changes nodes");
 	is( $rc_mod_nodes[0]{name}, 'Home', "RC node 0 name" );
