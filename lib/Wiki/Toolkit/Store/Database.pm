@@ -1468,10 +1468,10 @@ sub list_all_nodes {
 =item B<list_node_all_versions>
 
   my @all_versions = $store->list_node_all_versions(
-										name => 'HomePage',
-										with_content => 1,
-										with_metadata => 0
-					 );
+      name => 'HomePage',
+      with_content => 1,
+      with_metadata => 0
+  );
 
 Returns all the versions of a node, optionally including the content
 and metadata, as an array of hashes (newest versions first).
@@ -1481,97 +1481,98 @@ and metadata, as an array of hashes (newest versions first).
 sub list_node_all_versions {
     my ($self, %args) = @_;
 
-	my ($node_id,$name,$with_content,$with_metadata) = 
-			@args{ qw( node_id name with_content with_metadata ) };
+    my ($node_id,$name,$with_content,$with_metadata) = 
+                @args{ qw( node_id name with_content with_metadata ) };
 
     my $dbh = $self->dbh;
-	my $sql;
+    my $sql;
 
-	# If they only gave us the node name, get the node id
+    # If they only gave us the node name, get the node id
     unless ($node_id) {
         $sql = "SELECT id FROM node WHERE name=" . $dbh->quote($name);
         $node_id = $dbh->selectrow_array($sql);
     }
 
-	# If they didn't tell us what they wanted / we couldn't find it, 
-	#  return an empty array
-	return () unless($node_id);
+    # If they didn't tell us what they wanted / we couldn't find it, 
+    #  return an empty array
+    return () unless($node_id);
 
+    # Build up our SQL
+    $sql = "SELECT id, name, content.version, content.modified ";
+    if ( $with_content ) {
+        $sql .= ", content.text ";
+    }
+    if ( $with_metadata ) {
+        $sql .= ", metadata_type, metadata_value ";
+    }
+    $sql .= " FROM node INNER JOIN content ON (id = content.node_id) ";
+    if ( $with_metadata ) {
+        $sql .= " LEFT OUTER JOIN metadata ON "
+           . "(id = metadata.node_id AND content.version = metadata.version) ";
+    }
+    $sql .= " WHERE id = ? ORDER BY content.version DESC";
 
-	# Build up our SQL
-	$sql = "SELECT id, name, content.version, content.modified ";
-	if($with_content) {
-		$sql .= ", content.text ";
-	}
-	if($with_metadata) {
-		$sql .= ", metadata_type, metadata_value ";
-	}
-	$sql .= " FROM node INNER JOIN content ON (id = content.node_id) ";
-	if($with_metadata) {
-		$sql .= " LEFT OUTER JOIN metadata ON (id = metadata.node_id AND content.version = metadata.version) ";
-	}
-	$sql .= " WHERE id = ? ORDER BY content.version DESC";
-
-	# Do the fetch
+    # Do the fetch
     my $sth = $dbh->prepare( $sql );
     $sth->execute( $node_id );
 
-	# Need to hold onto the last row by hash ref, so we don't trash
-	#  it every time
-	my %first_data;
-	my $dataref = \%first_data;
+    # Need to hold onto the last row by hash ref, so we don't trash
+    #  it every time
+    my %first_data;
+    my $dataref = \%first_data;
 
-	# Haul out the data
-	my @versions;
-	while(my @results = $sth->fetchrow_array) {
-		my %data = %$dataref;
+    # Haul out the data
+    my @versions;
+    while ( my @results = $sth->fetchrow_array ) {
+        my %data = %$dataref;
 
-		# Is it the same version as last time?
-		if(%data && $data{'version'} != $results[2]) {
-			# New version
-			push @versions, $dataref;
-			%data = ();
-		} else {
-			# Same version as last time, must be more metadata
-		}
+        # Is it the same version as last time?
+        if ( %data && $data{'version'} != $results[2] ) {
+            # New version
+            push @versions, $dataref;
+            %data = ();
+        } else {
+            # Same version as last time, must be more metadata
+        }
 
-		# Grab the core data (will be the same on multi-row for metadata)
-		@data{ qw( node_id name version last_modified ) } = @results;
+        # Grab the core data (will be the same on multi-row for metadata)
+        @data{ qw( node_id name version last_modified ) } = @results;
 
-		my $i = 4;
-		if($with_content) {
-			$data{'content'} = $results[$i];
-			$i++;
-		}
-		if($with_metadata) {
-			my ($m_type,$m_value) = @results[$i,($i+1)];
-			unless($data{'metadata'}) { $data{'metadata'} = {}; }
+        my $i = 4;
+        if ( $with_content ) {
+            $data{'content'} = $results[$i];
+            $i++;
+        }
+        if ( $with_metadata ) {
+            my ($m_type,$m_value) = @results[$i,($i+1)];
+            unless ( $data{'metadata'} ) { $data{'metadata'} = {}; }
 
-			if($m_type) {
-				# If we have existing data, then put it into an array
-				if($data{'metadata'}->{$m_type}) {
-					unless(ref($data{'metadata'}->{$m_type}) eq "ARRAY") {
-						$data{'metadata'}->{$m_type} = [ $data{'metadata'}->{$m_type} ];
-					}
-					push @{$data{'metadata'}->{$m_type}}, $m_value;
-				} else {
-					# Otherwise, just store it in a normal string
-					$data{'metadata'}->{$m_type} = $m_value;
-				}
-			}
-		}
+            if ( $m_type ) {
+                # If we have existing data, then put it into an array
+                if ( $data{'metadata'}->{$m_type} ) {
+                    unless ( ref($data{'metadata'}->{$m_type}) eq "ARRAY" ) {
+                        $data{'metadata'}->{$m_type} =
+                                             [ $data{'metadata'}->{$m_type} ];
+                    }
+                    push @{$data{'metadata'}->{$m_type}}, $m_value;
+                } else {
+                    # Otherwise, just store it in a normal string
+                    $data{'metadata'}->{$m_type} = $m_value;
+                }
+            }
+        }
 
-		# Save where we've got to
-		$dataref = \%data;
-	}
+        # Save where we've got to
+        $dataref = \%data;
+    }
 
-	# Handle final row saving
-	if($dataref) {
-		push @versions, $dataref;
-	}
+    # Handle final row saving
+    if ( $dataref ) {
+        push @versions, $dataref;
+    }
 
-	# Return
-	return @versions;
+    # Return
+    return @versions;
 }
 
 =item B<list_nodes_by_metadata>
