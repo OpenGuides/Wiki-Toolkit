@@ -1184,7 +1184,7 @@ sub post_delete_node {
 
   # Last 10 changes that weren't minor edits.
   my @nodes = $store->list_recent_changes(
-      last_n_changes => 5,
+      last_n_changes => 10,
       metadata_wasnt  => { edit_type => "Minor tidying" }
   );
 

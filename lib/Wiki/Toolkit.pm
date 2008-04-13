@@ -423,94 +423,15 @@ sub list_nodes_by_missing_metadata {
 
 =item B<list_recent_changes>
 
-  # Nodes changed in last 7 days - each node listed only once.
+This is documented in L<Wiki::Toolkit::Store::Database>; see there for
+parameters and return values.  All parameters are passed through
+directly to the store object, so, for example,
+
   my @nodes = $wiki->list_recent_changes( days => 7 );
 
-  # All changes in last 7 days - nodes changed more than once will
-  # be listed more than once.
-  my @nodes = $wiki->list_recent_changes(
-                                          days => 7,
-                                          include_all_changes => 1,
-                                        );
+does exactly the same thing as
 
-  # Nodes changed between 1 and 7 days ago.
-  my @nodes = $wiki->list_recent_changes( between_days => [ 1, 7 ] );
-
-  # Changes since a given time.
-  my @nodes = $wiki->list_recent_changes( since => 1036235131 );
-
-  # Most recent change and its details.
-  my @nodes = $wiki->list_recent_changes( last_n_changes => 1 );
-  print "Node:          $nodes[0]{name}";
-  print "Last modified: $nodes[0]{last_modified}";
-  print "Comment:       $nodes[0]{metadata}{comment}";
-
-  # Last 5 restaurant nodes edited.
-  my @nodes = $wiki->list_recent_changes(
-      last_n_changes => 5,
-      metadata_is    => { category => "Restaurants" }
-  );
-
-  # Last 5 nodes edited by Kake.
-  my @nodes = $wiki->list_recent_changes(
-      last_n_changes => 5,
-      metadata_was   => { username => "Kake" }
-  );
-
-  # All minor edits made by Earle in the last week.
-  my @nodes = $wiki->list_recent_changes(
-      days           => 7,
-      metadata_was   => { username  => "Earle",
-                          edit_type => "Minor tidying." }
-  );
-
-  # Last 10 changes that weren't minor edits.
-  my @nodes = $wiki->list_recent_changes(
-      last_n_changes => 5,
-      metadata_wasnt  => { edit_type => "Minor tidying" }
-  );
-
-You I<must> supply one of the following constraints: C<days>
-(integer), C<since> (epoch), C<last_n_changes> (integer).
-
-You I<may> also supply I<either> C<metadata_is> (and optionally
-C<metadata_isnt>), I<or> C<metadata_was> (and optionally
-C<metadata_wasnt>). Each of these should be a ref to a hash with
-scalar keys and values.  If the hash has more than one entry, then
-only changes satisfying I<all> criteria will be returned when using
-C<metadata_is> or C<metadata_was>, but all changes which fail to
-satisfy any one of the criteria will be returned when using
-C<metadata_isnt> or C<metadata_is>.
-
-C<metadata_is> and C<metadata_isnt> look only at the metadata that the
-node I<currently> has. C<metadata_was> and C<metadata_wasnt> take into
-account the metadata of previous versions of a node.
-
-Returns results as an array, in reverse chronological order.  Each
-element of the array is a reference to a hash with the following entries:
-
-=over 4
-
-=item * B<name>: the name of the node
-
-=item * B<version>: the latest version number
-
-=item * B<last_modified>: the timestamp of when it was last modified
-
-=item * B<metadata>: a ref to a hash containing any metadata attached
-to the current version of the node
-
-=back
-
-Unless you supply C<include_all_changes>, C<metadata_was> or
-C<metadata_wasnt>, each node will only be returned once regardless of
-how many times it has been changed recently.
-
-By default, the case-sensitivity of both C<metadata_type> and
-C<metadata_value> depends on your database - if it will return rows
-with an attribute value of "Pubs" when you asked for "pubs", or not.
-If you supply a true value to the C<ignore_case> parameter, then you
-can be sure of its being case-insensitive.  This is recommended.
+  my @nodes = $wiki->store->list_recent_changes( days => 7 );
 
 =cut
 
