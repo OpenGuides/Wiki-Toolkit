@@ -9,7 +9,7 @@ use Time::Seconds;
 if ( scalar @Wiki::Toolkit::TestLib::wiki_info == 0 ) {
     plan skip_all => "no backends configured";
 } else {
-    plan tests => ( 9 * scalar @Wiki::Toolkit::TestLib::wiki_info );
+    plan tests => ( 10 * scalar @Wiki::Toolkit::TestLib::wiki_info );
 }
 
 # These tests are for the "new_only" parameter to ->list_recent_changes.
@@ -111,6 +111,17 @@ while ( my $wiki = $iterator->new_wiki ) {
     @names = sort map { $_->{name} } @nodes;
     is_deeply( \@names, [ "Ae Bar", "Ae Nother Pub", "Ae Restaurant" ],
                "...and metadata_wasnt works too" );
+
+    # Ae Nother Pub was the only pub added to the Pubs category on creation.
+    @nodes = $wiki->list_recent_changes(
+        days           => 10,
+        new_only       => 1,
+        metadata_was   => { category => "Pubs" },
+    );
+    @names = sort map { $_->{name} } @nodes;
+    is_deeply( \@names, [ "Ae Nother Pub" ],
+               "combination of new_only and metadata_was omits things which "
+               . "didn't have the relevant data when they were created" );
 
 }
 
