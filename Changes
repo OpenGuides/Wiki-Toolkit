@@ -1,6 +1,11 @@
 0.75	
-	Support for selecting versions by moderation status (see OpenGuides
-	ticket #142)
+        Added support for selecting versions by moderation status (see
+          OpenGuides ticket #142).
+        Added "new_only" parameter to ->list_recent_changes, so you can ask
+          for e.g. all pages added in the last week.  This involved a bit of
+          a rewrite of ->list_recent_changes, so please keep an eye out for
+          any bugs that may have been introduced (I'm not convinced the test
+          suite covered everything it should have).
 
 0.74    9  June 2007
         Added list_last_version_before method, to get the version of all the

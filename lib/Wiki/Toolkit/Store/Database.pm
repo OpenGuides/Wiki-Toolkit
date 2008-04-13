@@ -1144,6 +1144,12 @@ sub post_delete_node {
   # Nodes changed in last 7 days - each node listed only once.
   my @nodes = $store->list_recent_changes( days => 7 );
 
+  # Nodes added in the last 7 days.
+  my @nodes = $store->list_recent_changes(
+                                           days     => 7,
+                                           new_only => 1,
+                                         );
+
   # All changes in last 7 days - nodes changed more than once will
   # be listed more than once.
   my @nodes = $store->list_recent_changes(
@@ -1194,6 +1200,9 @@ You I<must> supply one of the following constraints: C<days>
 You I<may> also supply moderation => 1 if you only want to see versions
 that are moderated.
 
+Another optional parameter is C<new_only>, which if set to 1 will only
+return newly added nodes.
+
 You I<may> also supply I<either> C<metadata_is> (and optionally
 C<metadata_isnt>), I<or> C<metadata_was> (and optionally
 C<metadata_wasnt>). Each of these should be a ref to a hash with
@@ -1205,7 +1214,8 @@ C<metadata_isnt> or C<metadata_is>.
 
 C<metadata_is> and C<metadata_isnt> look only at the metadata that the
 node I<currently> has. C<metadata_was> and C<metadata_wasnt> take into
-account the metadata of previous versions of a node.
+account the metadata of previous versions of a node.  Don't mix C<is>
+with C<was> - there's no check for this, but the results are undefined.
 
 Returns results as an array, in reverse chronological order.  Each
 element of the array is a reference to a hash with the following entries:
@@ -1258,34 +1268,88 @@ sub list_recent_changes {
 
 sub _find_recent_changes_by_criteria {
     my ($self, %args) = @_;
-    my ($since, $limit, $between_days, $ignore_case,
+    my ($since, $limit, $between_days, $ignore_case, $new_only,
         $metadata_is,  $metadata_isnt, $metadata_was, $metadata_wasnt,
-	$moderation ) =
-         @args{ qw( since limit between_days ignore_case
+	$moderation, $include_all_changes ) =
+         @args{ qw( since limit between_days ignore_case new_only
                     metadata_is metadata_isnt metadata_was metadata_wasnt
-		    moderation ) };
+		    moderation include_all_changes) };
     my $dbh = $self->dbh;
 
     my @where;
     my @metadata_joins;
-    my $main_table = $args{include_all_changes} ? "content" : "node";
-    if ( $metadata_is || $metadata_isnt ) {
-        if ( $metadata_is ) {
-            my $i = 0;
-            foreach my $type ( keys %$metadata_is ) {
-                $i++;
-                my $value  = $metadata_is->{$type};
-                croak "metadata_is must have scalar values" if ref $value;
-                my $mdt = "md_is_$i";
-                push @metadata_joins, "LEFT JOIN metadata AS $mdt
-                                 ON $main_table."
-                                 . (($main_table eq "node") ? "id" : "node_id")
-                                 . "=$mdt.node_id
-                                 AND $main_table.version=$mdt.version\n";
-                if (defined $moderation) {
-                    push @metadata_joins, "AND $main_table.moderate=$moderation";
-                }
-                push @where, "( "
+    my $use_content_table; # some queries won't need this
+
+    if ( $metadata_is ) {
+        my $main_table = "node";
+        if ( $include_all_changes ) {
+            $main_table = "content";
+            $use_content_table = 1;
+        }
+        my $i = 0;
+        foreach my $type ( keys %$metadata_is ) {
+            $i++;
+            my $value  = $metadata_is->{$type};
+            croak "metadata_is must have scalar values" if ref $value;
+            my $mdt = "md_is_$i";
+            push @metadata_joins, "LEFT JOIN metadata AS $mdt
+                                   ON $main_table."
+                                   . ( ($main_table eq "node") ? "id"
+                                                               : "node_id" )
+                                   . "=$mdt.node_id
+                                   AND $main_table.version=$mdt.version\n";
+            # Why is this inside 'if ( $metadata_is )'?
+            # Shouldn't it apply to all cases?
+            # What's it doing in @metadata_joins?
+            if (defined $moderation) {
+                push @metadata_joins, "AND $main_table.moderate=$moderation";
+            }
+            push @where, "( "
+                         . $self->_get_comparison_sql(
+                                          thing1      => "$mdt.metadata_type",
+                                          thing2      => $dbh->quote($type),
+                                          ignore_case => $ignore_case,
+                                                     )
+                         . " AND "
+                         . $self->_get_comparison_sql(
+                                          thing1      => "$mdt.metadata_value",
+                                          thing2      => $dbh->quote( $self->charset_encode($value) ),
+                                          Ignore_case => $ignore_case,
+                                                     )
+                         . " )";
+	}
+    }
+
+    if ( $metadata_isnt ) {
+        foreach my $type ( keys %$metadata_isnt ) {
+            my $value  = $metadata_isnt->{$type};
+            croak "metadata_isnt must have scalar values" if ref $value;
+	}
+        my @omits = $self->_find_recent_changes_by_criteria(
+            since        => $since,
+            between_days => $between_days,
+            metadata_is  => $metadata_isnt,
+            ignore_case  => $ignore_case,
+        );
+        foreach my $omit ( @omits ) {
+            push @where, "( node.name != " . $dbh->quote($omit->{name})
+                 . "  OR node.version != " . $dbh->quote($omit->{version})
+                 . ")";
+	}
+    }
+
+    if ( $metadata_was ) {
+        $use_content_table = 1;
+        my $i = 0;
+        foreach my $type ( keys %$metadata_was ) {
+            $i++;
+            my $value  = $metadata_was->{$type};
+            croak "metadata_was must have scalar values" if ref $value;
+            my $mdt = "md_was_$i";
+            push @metadata_joins, "LEFT JOIN metadata AS $mdt
+                                   ON content.node_id=$mdt.node_id
+                                   AND content.version=$mdt.version\n";
+            push @where, "( "
                          . $self->_get_comparison_sql(
                                           thing1      => "$mdt.metadata_type",
                                           thing2      => $dbh->quote($type),
@@ -1298,75 +1362,42 @@ sub _find_recent_changes_by_criteria {
                                           ignore_case => $ignore_case,
                                                      )
                          . " )";
-	    }
-	}
-        if ( $metadata_isnt ) {
-            foreach my $type ( keys %$metadata_isnt ) {
-                my $value  = $metadata_isnt->{$type};
-                croak "metadata_isnt must have scalar values" if ref $value;
-	    }
-            my @omits = $self->_find_recent_changes_by_criteria(
-                since        => $since,
-                between_days => $between_days,
-                metadata_is  => $metadata_isnt,
-                ignore_case  => $ignore_case,
-            );
-            foreach my $omit ( @omits ) {
-                push @where, "( node.name != " . $dbh->quote($omit->{name})
-                     . "  OR node.version != " . $dbh->quote($omit->{version})
-                     . ")";
-	    }
-	}
-    } else {
-        if ( $metadata_was ) {
-            $main_table = "content";
-            my $i = 0;
-            foreach my $type ( keys %$metadata_was ) {
-                $i++;
+        }
+    }
+
+    if ( $metadata_wasnt ) {
+        foreach my $type ( keys %$metadata_wasnt ) {
                 my $value  = $metadata_was->{$type};
                 croak "metadata_was must have scalar values" if ref $value;
-                my $mdt = "md_was_$i";
-                push @metadata_joins, "LEFT JOIN metadata AS $mdt
-                                 ON $main_table.node_id=$mdt.node_id
-                                 AND $main_table.version=$mdt.version\n";
-                push @where, "( "
-                         . $self->_get_comparison_sql(
-                                          thing1      => "$mdt.metadata_type",
-                                          thing2      => $dbh->quote($type),
-                                          ignore_case => $ignore_case,
-                                                     )
-                         . " AND "
-                         . $self->_get_comparison_sql(
-                                          thing1      => "$mdt.metadata_value",
-                                          thing2      => $dbh->quote( $self->charset_encode($value) ),
-                                          ignore_case => $ignore_case,
-                                                     )
-                         . " )";
-	    }
 	}
-        if ( $metadata_wasnt ) {
-            $main_table = "content";
-            foreach my $type ( keys %$metadata_wasnt ) {
-                my $value  = $metadata_was->{$type};
-                croak "metadata_was must have scalar values" if ref $value;
-	    }
-            my @omits = $self->_find_recent_changes_by_criteria(
+        my @omits = $self->_find_recent_changes_by_criteria(
                 since        => $since,
                 between_days => $between_days,
                 metadata_was => $metadata_wasnt,
                 ignore_case  => $ignore_case,
-            );
-            foreach my $omit ( @omits ) {
-                push @where, "( node.name != " . $dbh->quote($omit->{name})
+        );
+        foreach my $omit ( @omits ) {
+            push @where, "( node.name != " . $dbh->quote($omit->{name})
                  . "  OR content.version != " . $dbh->quote($omit->{version})
                  . ")";
-	    }
 	}
+        $use_content_table = 1;
+    }
+
+    # Figure out which table we should be joining to to check the dates and
+    # versions - node or content.
+    my $date_table = "node";
+    if ( $include_all_changes || $new_only ) {
+        $date_table = "content";
+        $use_content_table = 1;
+    }
+    if ( $new_only ) {
+        push @where, "content.version=1";
     }
 
     if ( $since ) {
         my $timestamp = $self->_get_timestamp( $since );
-        push @where, "$main_table.modified >= " . $dbh->quote($timestamp);
+        push @where, "$date_table.modified >= " . $dbh->quote($timestamp);
     } elsif ( $between_days ) {
         my $now = localtime;
         # Start is the larger number of days ago.
@@ -1374,28 +1405,30 @@ sub _find_recent_changes_by_criteria {
         ($start, $end) = ($end, $start) if $start < $end;
         my $ts_start = $self->_get_timestamp( $now - (ONE_DAY * $start) ); 
         my $ts_end = $self->_get_timestamp( $now - (ONE_DAY * $end) ); 
-        push @where, "$main_table.modified >= " . $dbh->quote($ts_start);
-        push @where, "$main_table.modified <= " . $dbh->quote($ts_end);
+        push @where, "$date_table.modified >= " . $dbh->quote($ts_start);
+        push @where, "$date_table.modified <= " . $dbh->quote($ts_end);
     }
 
     my $sql = "SELECT DISTINCT
                                node.name,
-                               $main_table.version,
-                               $main_table.modified
-               FROM $main_table
-              "
-              . (
-                  ($main_table ne "node") 
-                    ? "INNER JOIN node ON (id = $main_table.node_id) "
-                    : ""
-              )
-            . join("\n", @metadata_joins)
+              ";
+    if ( $include_all_changes ) {
+        $sql .= " content.version, content.modified ";
+    } else {
+        $sql .= " node.version, node.modified ";
+    }
+    $sql .= " FROM node ";
+    if ( $use_content_table ) {
+        $sql .= " INNER JOIN content ON (node.id = content.node_id ) ";
+    }
+
+    $sql .= join("\n", @metadata_joins)
             . (
                 scalar @where
                               ? " WHERE " . join(" AND ",@where) 
                               : ""
               )
-            . " ORDER BY $main_table.modified DESC";
+            . " ORDER BY $date_table.modified DESC";
     if ( $limit ) {
         croak "Bad argument $limit" unless $limit =~ /^\d+$/;
         $sql .= " LIMIT $limit";

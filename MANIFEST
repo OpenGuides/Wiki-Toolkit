@@ -60,6 +60,7 @@ t/040_rename.t
 t/050_mysql_store.t
 t/051_pg_store.t
 t/052_sqlite_store.t
+t/060_recent_changes_new_only.t
 t/100_formatting.t
 t/101_default_formatter.t
 t/102_multiple_formatter.t
