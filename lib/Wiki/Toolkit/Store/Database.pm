@@ -1412,7 +1412,7 @@ sub _find_recent_changes_by_criteria {
     my $sql = "SELECT DISTINCT
                                node.name,
               ";
-    if ( $include_all_changes ) {
+    if ( $include_all_changes || $new_only ) {
         $sql .= " content.version, content.modified ";
     } else {
         $sql .= " node.version, node.modified ";
