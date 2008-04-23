@@ -1412,7 +1412,7 @@ sub _find_recent_changes_by_criteria {
     my $sql = "SELECT DISTINCT
                                node.name,
               ";
-    if ( $include_all_changes || $new_only ) {
+    if ( $include_all_changes || $new_only || $use_content_table ) {
         $sql .= " content.version, content.modified ";
     } else {
         $sql .= " node.version, node.modified ";
@@ -1428,7 +1428,9 @@ sub _find_recent_changes_by_criteria {
                               ? " WHERE " . join(" AND ",@where) 
                               : ""
               )
-            . " ORDER BY $date_table.modified DESC";
+            . " ORDER BY "
+            . ( $use_content_table ? "content" : "node" )
+            . ".modified DESC";
     if ( $limit ) {
         croak "Bad argument $limit" unless $limit =~ /^\d+$/;
         $sql .= " LIMIT $limit";

@@ -5,7 +5,7 @@ use Test::More;
 if ( scalar @Wiki::Toolkit::TestLib::wiki_info == 0 ) {
     plan skip_all => "no backends configured";
 } else {
-    plan tests => ( 24 * scalar @Wiki::Toolkit::TestLib::wiki_info );
+    plan tests => ( 25 * scalar @Wiki::Toolkit::TestLib::wiki_info );
 }
 
 my $iterator = Wiki::Toolkit::TestLib->new_wiki_maker;
@@ -18,7 +18,7 @@ while ( my $wiki = $iterator->new_wiki ) {
     #####
     #####   Node1 (Kake, minor tidying)
     #####   Everyone's Favourite Hobby (nou)
-    #####   Another Node
+    #####   Another Node (nou)
 
     my $start_time = time;
     do_sleep();
@@ -155,6 +155,7 @@ while ( my $wiki = $iterator->new_wiki ) {
     is( scalar @nodes, 1,
        "metadata_was returns nodes whose current version doesn't match" );
     is( $nodes[0]{name}, "Another Node", "...correctly" );
+    is( $nodes[0]{version}, 1, "...and the correct version" );
 
     ##### Testing metadata_wasnt - Everyone's Favourite Hobby and
     ##### Another Node were both written as *not* minor edits, but
