@@ -1123,6 +1123,21 @@ sub delete_node {
     return 1;
 }
 
+# Returns the name of the node with the given ID
+# Not normally used except when doing low-level maintenance
+sub node_name_for_id {
+	my ($self, $node_id) = @_;
+    my $dbh = $self->dbh;
+
+    my $name_sql = "SELECT name FROM node WHERE id=?";
+    my $name_sth = $dbh->prepare($name_sql);
+    $name_sth->execute($node_id);
+	my ($name) = $name_sth->fetchrow_array;
+    $name_sth->finish;
+
+	return $name;
+}
+
 # Internal Method
 sub post_delete_node {
 	my ($name,$node_id,$version,$plugins) = @_;

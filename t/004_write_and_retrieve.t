@@ -5,7 +5,7 @@ use Test::More;
 if ( scalar @Wiki::Toolkit::TestLib::wiki_info == 0 ) {
     plan skip_all => "no backends configured";
 } else {
-    plan tests => ( 11 * scalar @Wiki::Toolkit::TestLib::wiki_info );
+    plan tests => ( 12 * scalar @Wiki::Toolkit::TestLib::wiki_info );
 }
 
 my $iterator = Wiki::Toolkit::TestLib->new_wiki_maker;
@@ -37,4 +37,8 @@ while ( my $wiki = $iterator->new_wiki ) {
     ok( ! $wiki->node_exists("This Is A Nonexistent Node"),
 	    "...and false for a nonexistent one" );
 
+    # Test -> node_name_for_id
+    my $id = $wiki->store->{_dbh}->selectrow_array("SELECT id FROM node WHERE name = 'A Node'");
+    is( "A Node", $wiki->store->node_name_for_id($id),
+        "Can fetch the name of a node with a id" );
 }

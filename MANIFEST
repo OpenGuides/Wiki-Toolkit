@@ -5,6 +5,7 @@ Makefile.PL
 README
 SIGNATURE
 bin/wiki-toolkit-rename-node
+bin/wiki-toolkit-delete-node
 bin/wiki-toolkit-setupdb
 bin/user-setup-mysql-dbixfts.pl
 lib/Wiki/Toolkit/Extending.pod
