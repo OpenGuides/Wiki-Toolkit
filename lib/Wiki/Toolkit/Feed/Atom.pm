@@ -94,7 +94,9 @@ sub build_feed_start {
   my $subtitle = $self->{site_description}
                  ? '<subtitle>' . $self->{site_description} . "</subtitle>\n"
                  : '';
-                 
+
+  $atom_timestamp ||= '';
+
   my $atom = qq{<?xml version="1.0" encoding="} . $self->{encoding} . qq{"?>
 
 <feed 

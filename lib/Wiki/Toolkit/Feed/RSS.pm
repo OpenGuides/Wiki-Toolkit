@@ -124,6 +124,8 @@ if ($self->{software_name})
 </foaf:maker>\n};
 }
 
+$feed_timestamp ||= '';
+
 $rss .= qq{<title>}   . $self->{site_name}             . qq{</title>
 <link>}               . $self->{html_equiv_link}       . qq{</link>
 <description>}        . $self->{site_description}      . qq{</description>

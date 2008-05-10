@@ -8,6 +8,7 @@
           suite covered everything it should have).
         Fix some badly-formatted POD documentation which accidentally included
           some code
+        Fix uninitialized warnings in feed tests
 
 0.74    9  June 2007
         Added list_last_version_before method, to get the version of all the
