@@ -18,6 +18,7 @@ sub fetch_upgrade_old_to_8 {
 	# Compatible with old_to_9
 	fetch_upgrade_old_to_9(@_);
 }
+
 # Fetch from the old style database, ready for an upgrade to db version 9
 sub fetch_upgrade_old_to_9 {
 	my $dbh = shift;
@@ -100,6 +101,7 @@ sub fetch_upgrade_old_to_9 {
 	# Return it all
 	return (\%nodes,\%contents,\%metadatas,\@internal_links,\%ids);
 }
+
 # Fetch from schema version 8, and upgrade to version 9
 sub fetch_upgrade_8_to_9 {
 	my $dbh = shift;
@@ -167,7 +169,6 @@ sub fetch_upgrade_8_to_9 {
 	return (\%nodes,\%contents,\%metadatas,\@internal_links);
 }
 
-
 # Get the version of the database schema
 sub get_database_version {
 	my $dbh = shift;
@@ -200,7 +201,6 @@ sub get_database_upgrade_required {
 		return $schema_version."_to_".$new_ver;
 	}
 }
-
 
 # Put the latest data into the latest database structure
 sub bulk_data_insert {

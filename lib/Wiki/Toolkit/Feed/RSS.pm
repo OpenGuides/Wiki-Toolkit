@@ -65,6 +65,7 @@ Internal method, to build all the stuff that will go at the start of a feed.
 Generally will output namespaces, headers and so on.
 
 =cut
+
 sub build_feed_start {
   my ($self,$feed_timestamp) = @_;
 
@@ -90,6 +91,7 @@ sub build_feed_start {
 Internal method, to build all the stuff (except items) to go inside the channel
 
 =cut
+
 sub build_feed_mid {
     my ($self,$feed_timestamp) = @_;
 
@@ -136,6 +138,7 @@ $rss .= qq{<title>}   . $self->{site_name}             . qq{</title>
 Internal method, to build all the stuff that will go at the end of a feed
 
 =cut
+
 sub build_feed_end {
     my ($self,$feed_timestamp) = @_;
 
@@ -148,6 +151,7 @@ sub build_feed_end {
 Generate and return an RSS feed for a list of nodes
 
 =cut
+
 sub generate_node_list_feed {
   my ($self,$feed_timestamp,@nodes) = @_;
 
@@ -279,6 +283,7 @@ Generate a very cut down rss feed, based just on the nodes, their locations
 Typically used on search feeds.
 
 =cut
+
 sub generate_node_name_distance_feed {
   my ($self,$feed_timestamp,@nodes) = @_;
 
@@ -350,6 +355,7 @@ Generate the timestamp for the RSS, based on the newest node (if available).
 Will return a timestamp for now if no node dates are available
 
 =cut
+
 sub feed_timestamp {
     my ($self, $newest_node) = @_;
 
@@ -382,6 +388,7 @@ sub rss_timestamp {
 Take a feed_timestamp and return a Time::Piece object. 
 
 =cut
+
 sub parse_feed_timestamp {
     my ($self, $feed_timestamp) = @_;
    

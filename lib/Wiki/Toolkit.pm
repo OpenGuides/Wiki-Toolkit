@@ -233,6 +233,7 @@ sub retrieve_node {
 Marks the given version of the node as moderated. If this is the
 highest moderated version, then update the node's contents to hold
 this version.
+
 =cut
 
 sub moderate_node {
@@ -254,6 +255,7 @@ Sets if a node requires moderation or not.
 
 When moderation is required, new versions of a node will sit about
 until they're tagged as moderated, when they will become the new node.
+
 =cut
 
 sub set_node_moderation {
@@ -270,6 +272,7 @@ Renames a node, updating any references to it as required.
 Uses the internal_links table to identify the nodes that link to this
 one, and re-writes any wiki links in these to point to the new name. If
 required, it can mark these updates to other pages as a new version.
+
 =cut
 
 sub rename_node {
@@ -415,7 +418,9 @@ metadata type is required).
   my @nodes = $store->list_nodes_by_missing_metadata(
       metadata_type  => "latitude"
   );
+
 =cut
+
 sub list_nodes_by_missing_metadata {
     my ($self, @args) = @_;
     $self->store->list_nodes_by_missing_metadata( @args );
@@ -459,6 +464,7 @@ sub list_recent_changes {
    the latest version needs moderating are returned.
   Otherwise, all node versions (including old ones, and possibly multiple
    per node) are returned.
+
 =cut
 
 sub list_unmoderated_nodes {
@@ -478,7 +484,9 @@ sub list_unmoderated_nodes {
 
 Returns all the versions of a node, optionally including the content
 and metadata, as an array of hashes (newest versions first).
+
 =cut
+
 sub list_node_all_versions {
     my ($self,@argsarray) = @_;
 
@@ -501,7 +509,9 @@ sub list_node_all_versions {
 	foreach my $data (@nv) {
 		
 	}
+
 =cut
+
 sub list_last_version_before {
     my ($self,@argsarray) = @_;
 

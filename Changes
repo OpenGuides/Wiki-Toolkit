@@ -6,6 +6,8 @@
           a rewrite of ->list_recent_changes, so please keep an eye out for
           any bugs that may have been introduced (I'm not convinced the test
           suite covered everything it should have).
+        Fix some badly-formatted POD documentation which accidentally included
+          some code
 
 0.74    9  June 2007
         Added list_last_version_before method, to get the version of all the

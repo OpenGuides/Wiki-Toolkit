@@ -24,7 +24,6 @@ BEGIN {
   $CAN_USE_ENCODE = $@ ? 0 : 1;
 }
 
-
 =head1 NAME
 
 Wiki::Toolkit::Store::Database - parent class for database storage backends
@@ -142,7 +141,6 @@ sub handle_pre_plugin_ret {
 		warn("Pre_ plugin returned invalid accept/deny value of '$result'");
 	}
 }
-
 
 =item B<retrieve_node>
 
@@ -679,7 +677,9 @@ chosen formatter supports rename, that is).
 
 Uses the internal_links table to identify the nodes that link to this
 one, and re-writes any wiki links in these to point to the new name.
+
 =cut
+
 sub rename_node {
     my ($self, %args) = @_;
     my ($old_name,$new_name,$wiki,$create_new_versions) = 
@@ -826,6 +826,7 @@ sub rename_node {
 Marks the given version of the node as moderated. If this is the
 highest moderated version, then update the node's contents to hold
 this version.
+
 =cut
 
 sub moderate_node {
@@ -927,6 +928,7 @@ sub moderate_node {
                        );
 
 Sets if new node versions will require moderation or not
+
 =cut
 
 sub set_node_moderation {
@@ -1699,7 +1701,9 @@ Unlike list_nodes_by_metadata(), the metadata value is optional.
   my @nodes = $store->list_nodes_by_missing_metadata(
       metadata_type  => "latitude"
   );
+
 =cut
+
 sub list_nodes_by_missing_metadata {
     my ($self, %args) = @_;
     my ( $type, $value ) = @args{ qw( metadata_type metadata_value ) };
@@ -1745,11 +1749,14 @@ sub list_nodes_by_missing_metadata {
 }
 
 =item B<_get_list_by_metadata_sql>
+
 Return the SQL to do a match by metadata. Should expect the metadata type
 as the first SQL parameter, and the metadata value as the second.
 
 If possible, should take account of $args{ignore_case}
+
 =cut
+
 sub _get_list_by_metadata_sql {
 	# SQL 99 version
     #  Can be over-ridden by database-specific subclasses
@@ -1774,11 +1781,14 @@ sub _get_list_by_metadata_sql {
 }
 
 =item B<_get_list_by_missing_metadata_sql>
+
 Return the SQL to do a match by missing metadata. Should expect the metadata 
 type as the first SQL parameter.
 
 If possible, should take account of $args{ignore_case}
+
 =cut
+
 sub _get_list_by_missing_metadata_sql {
 	# SQL 99 version
     #  Can be over-ridden by database-specific subclasses
@@ -1888,15 +1898,18 @@ sub list_unmoderated_nodes {
 }
 
 =item B<list_last_version_before>
-	List the last version of every node before a given date.
-	If no version existed before that date, will return undef for version.
-	Returns a hash of id, name, version and date
 
-	my @nv = $wiki->list_last_version_before('2007-01-02 10:34:11')
-	foreach my $data (@nv) {
-		
-	}
+    List the last version of every node before a given date.
+    If no version existed before that date, will return undef for version.
+    Returns a hash of id, name, version and date
+
+    my @nv = $wiki->list_last_version_before('2007-01-02 10:34:11')
+    foreach my $data (@nv) {
+    	
+    }
+
 =cut
+
 sub list_last_version_before {
 	my ($self, $date) = @_;
 
@@ -1930,13 +1943,16 @@ sub list_last_version_before {
 }
 
 =item B<list_metadata_by_type>
-	List all the currently defined values of the given type of metadata.
 
-	Will only work with the latest moderated version
+    List all the currently defined values of the given type of metadata.
 
-	# List all of the different metadata values with the type 'category'
-	my @categories = $wiki->list_metadata_by_type('category');
+    Will only work with the latest moderated version
+
+    # List all of the different metadata values with the type 'category'
+    my @categories = $wiki->list_metadata_by_type('category');
+
 =cut
+
 sub list_metadata_by_type {
 	my ($self, $type) = @_;
 

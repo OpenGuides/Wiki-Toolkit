@@ -93,5 +93,4 @@ sub _get_node_exists_ignore_case_sql {
     return "SELECT name FROM node WHERE lower(name) = lower(?) ";
 }
 
-
 1;
