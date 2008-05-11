@@ -145,7 +145,7 @@ Omit $dbhost if the database is local.
 
 Set up a Postgres database for use as a Wiki::Toolkit store.
 
-=head1 FUNCIONS
+=head1 FUNCTIONS
 
 =over 4
 
@@ -374,7 +374,7 @@ Kake Pugh (kake@earth.li).
 =head1 COPYRIGHT
 
      Copyright (C) 2002-2004 Kake Pugh.  All Rights Reserved.
-     Copyright (C) 2006 the Wiki::Toolkit team. All Rights Reserved.
+     Copyright (C) 2006-2008 the Wiki::Toolkit team. All Rights Reserved.
 
 This module is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.

@@ -3,7 +3,7 @@ package Wiki::Toolkit::Feed::RSS;
 use strict;
 
 use vars qw( @ISA $VERSION );
-$VERSION = '0.10';
+$VERSION = '0.11';
 
 use POSIX 'strftime';
 use Time::Piece;
@@ -583,7 +583,7 @@ The Wiki::Toolkit project. Originally by Kake Pugh <kake@earth.li>.
 
 Copyright 2003-4 Kake Pugh.
 Copyright 2005 Earle Martin.
-Copyright 2006 the Wiki::Toolkit team
+Copyright 2006-2008 the Wiki::Toolkit team
 
 This module is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.

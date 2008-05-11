@@ -3,7 +3,7 @@ package Wiki::Toolkit::Feed::Atom;
 use strict;
 
 use vars qw( @ISA $VERSION );
-$VERSION = '0.01';
+$VERSION = '0.02';
 
 use POSIX 'strftime';
 use Time::Piece;
@@ -476,7 +476,7 @@ The Wiki::Toolkit team, http://www.wiki-toolkit.org/.
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright 2006 Earle Martin and the Wiki::Toolkit team.
+Copyright 2006-2008 Earle Martin and the Wiki::Toolkit team.
 
 This module is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.

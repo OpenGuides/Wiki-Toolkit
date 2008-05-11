@@ -7,7 +7,7 @@ use Wiki::Toolkit::TestConfig;
 use DBI;
 
 use vars qw( $VERSION @wiki_info );
-$VERSION = '0.03';
+$VERSION = '0.04';
 
 =head1 NAME
 
