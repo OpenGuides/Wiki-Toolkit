@@ -10,6 +10,8 @@
           some code
         Fix uninitialized warnings in feed tests
         Fix database setup to ignore tables that aren't Wiki::Toolkit tables
+        Fix test suite's incorrect passing of DBIxFTSMySQL connection
+          parameters
 
 0.74    9  June 2007
         Added list_last_version_before method, to get the version of all the

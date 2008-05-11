@@ -227,7 +227,7 @@ sub new_wiki {
           or croak "Can't connect to $dbconfig{dbname} using $dsn: " . DBI->errstr;
         require Wiki::Toolkit::Setup::DBIxFTSMySQL;
         Wiki::Toolkit::Setup::DBIxFTSMySQL::setup(
-                                 @dbconfig{ qw( dbuser dbname dbpass dbhost ) }
+                                 @dbconfig{ qw( dbname dbuser dbpass dbhost ) }
                                              );
         require Wiki::Toolkit::Search::DBIxFTS;
         $wiki_config{search} = Wiki::Toolkit::Search::DBIxFTS->new( dbh => $dbh );
