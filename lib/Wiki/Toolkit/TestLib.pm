@@ -4,6 +4,7 @@ use strict;
 use Carp "croak";
 use Wiki::Toolkit;
 use Wiki::Toolkit::TestConfig;
+use DBI;
 
 use vars qw( $VERSION @wiki_info );
 $VERSION = '0.03';
@@ -42,11 +43,23 @@ search and storage backends.
 my %configured = %Wiki::Toolkit::TestConfig::config;
 
 my %datastore_info;
+
+my %dsn_prefix = ( MySQL  => "dbi:mysql:",
+                   Pg     => "dbi:Pg:dbname=",
+                   SQLite => "dbi:SQLite:dbname=");
+
 foreach my $dbtype (qw( MySQL Pg SQLite )) {
     if ( $configured{$dbtype}{dbname} ) {
         my %config = %{ $configured{$dbtype} };
 	my $store_class = "Wiki::Toolkit::Store::$dbtype";
 	my $setup_class = "Wiki::Toolkit::Setup::$dbtype";
+        my $dsn = $dsn_prefix{$dbtype}.$config{dbname};
+        my $err;
+        if ($err = _test_dsn( $dsn, $config{dbuser}, $config{dbpass}, $config{dbhost})) {
+            warn "connecting to test $dbtype database failed: $err\n";
+            warn "will skip $dbtype tests\n";
+            next;
+        }
         $datastore_info{$dbtype} = {
                                      class  => $store_class,
                                      setup_class => $setup_class,
@@ -257,6 +270,16 @@ sub new_wiki {
     return $wiki;
 }
 
+sub _test_dsn {
+    my ( $dsn, $dbuser, $dbpass, $dbhost ) = @_;
+    $dsn .= ";host=$dbhost" if $dbhost;
+    my $dbh = eval {
+        DBI->connect($dsn, $dbuser, $dbpass, {RaiseError => 1});
+    };
+    return $@;
+}
+
+
 =back
 
 =head1 SEE ALSO
@@ -270,6 +293,7 @@ Kake Pugh (kake@earth.li).
 =head1 COPYRIGHT
 
      Copyright (C) 2003-2004 Kake Pugh.  All Rights Reserved.
+     Copyright (C) 2008 the Wiki::Toolkit team. All Rights Reserved.
 
 This module is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.

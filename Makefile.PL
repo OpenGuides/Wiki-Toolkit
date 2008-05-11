@@ -1,5 +1,4 @@
 use ExtUtils::MakeMaker;
-use DBI;
 use Data::Dumper;
 use strict;
 
@@ -75,8 +74,6 @@ if ($Wiki::Toolkit::TestConfig::configured
     }
 
     # Finally ask questions; then check the settings work.
-    my %dsn_prefix = ( MySQL => "dbi:mysql:",
-		       Pg    => "dbi:Pg:dbname=" );
     my %driver = ( MySQL => "DBD::mysql",
 	           Pg    => "DBD::Pg" );
     foreach my $store_type (qw(MySQL Pg)) {
@@ -105,20 +102,6 @@ if ($Wiki::Toolkit::TestConfig::configured
 	                     $config{$store_type}{dbhost};
             undef $dbhost unless ($dbhost and $dbhost ne "undef");
 
-            # Check that these connection parameters actually work.
-            my $dsn = $dsn_prefix{$store_type}.$dbname;
-            $dsn .= ";host=$dbhost" if $dbhost;
-            my $dbh = eval { DBI->connect($dsn,
- 				          $dbuser, $dbpass, {PrintError => 1})
-			         or die DBI->errstr;
-			   };
-            die "\nCan't connect to $store_type with those parameters:"
-		     . "\n" . $@ . "\n\n"
-		     . "Please re-run 'perl Makefile.PL' and supply correct "
-		     . "parameters.\n\n" if $@;
-            $dbh->disconnect;
-
-            # Save them if they do.
             $config{$store_type}{dbname} = $dbname;
             $config{$store_type}{dbuser} = $dbuser;
             $config{$store_type}{dbpass} = $dbpass;
