@@ -187,18 +187,19 @@ sub get_database_version {
 
 # Is an upgrade to the database required?
 sub get_database_upgrade_required {
-    my ($dbh,$VERSION) = @_;
+    my ($dbh,$new_version) = @_;
 
     # Get the schema version
     my $schema_version = get_database_version($dbh);
 
     # Compare it
-    my $new_ver = $VERSION * 100;
-    if($schema_version eq $new_ver) {
+    if($schema_version eq $new_version) {
         # At latest version
         return undef;
+    } elsif ($schema_version eq 'old' or $schema_version < $new_version) {
+        return $schema_version."_to_".$new_version;
     } else {
-        return $schema_version."_to_".$new_ver;
+        die "Aiee! We seem to be trying to downgrade the database schema from $schema_version to $new_version. Aborting.\n";
     }
 }
 

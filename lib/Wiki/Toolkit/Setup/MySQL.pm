@@ -12,16 +12,19 @@ $VERSION = '0.09';
 use DBI;
 use Carp;
 
-my %create_sql = (
-    schema_info => [ qq|
+my $SCHEMA_VERSION = $VERSION*100;
+
+my $create_sql = {
+    9 => {
+        schema_info => [ qq|
 CREATE TABLE schema_info (
   version   int(10)      NOT NULL default 0
 )
 |, qq|
-INSERT INTO schema_info VALUES (|.($VERSION*100).qq|)
+INSERT INTO schema_info VALUES (9)
 | ],
 
-    node => [ qq|
+        node => [ qq|
 CREATE TABLE node (
   id        integer      NOT NULL AUTO_INCREMENT,
   name      varchar(200) NOT NULL DEFAULT '',
@@ -33,7 +36,7 @@ CREATE TABLE node (
 )
 | ],
 
-    content => [ qq|
+        content => [ qq|
 CREATE TABLE content (
   node_id   integer      NOT NULL,
   version   int(10)      NOT NULL default 0,
@@ -44,14 +47,14 @@ CREATE TABLE content (
   PRIMARY KEY (node_id, version)
 )
 | ],
-    internal_links => [ qq|
+        internal_links => [ qq|
 CREATE TABLE internal_links (
   link_from varchar(200) NOT NULL default '',
   link_to   varchar(200) NOT NULL default '',
   PRIMARY KEY (link_from, link_to)
 )
 | ],
-    metadata => [ qq|
+        metadata => [ qq|
 CREATE TABLE metadata (
   node_id        integer      NOT NULL,
   version        int(10)      NOT NULL default 0,
@@ -61,7 +64,8 @@ CREATE TABLE metadata (
 |, qq|
 CREATE INDEX metadata_index ON metadata(node_id, version, metadata_type, metadata_value(10))
 | ]
-);
+    },
+};
 
 =head1 NAME
 
@@ -112,6 +116,7 @@ sub setup {
     my @args = @_;
     my $dbh = _get_dbh( @args );
     my $disconnect_required = _disconnect_required( @args );
+    my $wanted_schema = _get_wanted_schema( @args ) || $SCHEMA_VERSION;
 
     # Check whether tables exist
     my %tables = fetch_tables_listing($dbh);
@@ -121,7 +126,7 @@ sub setup {
     my $upgrade_schema;
     my @cur_data;
     if(scalar keys %tables > 0) {
-        $upgrade_schema = Wiki::Toolkit::Setup::Database::get_database_upgrade_required($dbh,$VERSION);
+        $upgrade_schema = Wiki::Toolkit::Setup::Database::get_database_upgrade_required($dbh,$SCHEMA_VERSION);
     }
     if($upgrade_schema) {
         # Grab current data
@@ -144,12 +149,12 @@ sub setup {
     }
 
     # Set up tables if not found
-    foreach my $required ( keys %create_sql ) {
+    foreach my $required ( keys %{$create_sql->{$SCHEMA_VERSION}} ) {
         if ( $tables{$required} ) {
             print "Table $required already exists... skipping...\n";
         } else {
             print "Creating table $required... done\n";
-            foreach my $sql ( @{ $create_sql{$required} } ) {
+            foreach my $sql ( @{$create_sql->{$SCHEMA_VERSION}->{$required}} ) {
                 $dbh->do($sql) or croak $dbh->errstr;
             }
         }
@@ -173,7 +178,7 @@ sub fetch_tables_listing {
     $sth->execute;
     my %tables;
     while ( my $table = $sth->fetchrow_array ) {
-        exists $create_sql{$table} and $tables{$table} = 1;
+        exists $create_sql->{$SCHEMA_VERSION}->{$table} and $tables{$table} = 1;
     }
     return %tables;
 }
@@ -214,7 +219,7 @@ sub cleardb {
     my $disconnect_required = _disconnect_required( @args );
 
     print "Dropping tables... ";
-    $dbh->do("DROP TABLE IF EXISTS " . join( ",", keys %create_sql ) )
+    $dbh->do("DROP TABLE IF EXISTS " . join( ",", keys %{$create_sql->{$SCHEMA_VERSION}} ) )
       or croak $dbh->errstr;
     print "done\n";
 
@@ -245,6 +250,22 @@ sub _get_dbh {
                       dbpass => $_[2],
                       dbhost => $_[3],
                     );
+}
+
+sub _get_wanted_schema {
+    # Database handle passed in.
+    if ( ref $_[0] and ref $_[0] eq 'DBI::db' ) {
+        return undef;
+    }
+
+    # Args passed as hashref.
+    if ( ref $_[0] and ref $_[0] eq 'HASH' ) {
+        my %args = %{$_[0]};
+        return $args{wanted_schema};
+    }
+
+    # Args passed as list of connection details.
+    return $_[1];
 }
 
 sub _disconnect_required {

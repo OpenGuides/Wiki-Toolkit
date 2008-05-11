@@ -270,6 +270,19 @@ sub new_wiki {
     return $wiki;
 }
 
+=item B<wiki_info>
+
+  my @wiki_info = $iterator->wiki_info;
+
+  Returns the @wiki_info array detailing configured test backends.
+  Useful for very low-level testing only.
+
+=cut
+
+sub wiki_info {
+    @wiki_info;
+}
+
 sub _test_dsn {
     my ( $dsn, $dbuser, $dbpass, $dbhost ) = @_;
     $dsn .= ";host=$dbhost" if $dbhost;
