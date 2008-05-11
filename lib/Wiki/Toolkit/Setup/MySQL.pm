@@ -164,7 +164,7 @@ sub setup {
     $dbh->disconnect if $disconnect_required;
 }
 
-# Internal method - what tables are defined?
+# Internal method - what Wiki::Toolkit tables are defined?
 sub fetch_tables_listing {
 	my $dbh = shift;
 
@@ -173,7 +173,7 @@ sub fetch_tables_listing {
     $sth->execute;
     my %tables;
     while ( my $table = $sth->fetchrow_array ) {
-        $tables{$table} = 1;
+        exists $create_sql{$table} and $tables{$table} = 1;
     }
 	return %tables;
 }

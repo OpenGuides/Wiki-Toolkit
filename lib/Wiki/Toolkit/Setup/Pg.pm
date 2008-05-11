@@ -188,7 +188,7 @@ sub setup {
     $sth->execute;
     my %tables;
     while ( my $table = $sth->fetchrow_array ) {
-        $tables{$table} = 1;
+        exists $create_sql{$table} and $tables{$table} = 1;
     }
 
 	# Do we need to upgrade the schema of existing tables?
