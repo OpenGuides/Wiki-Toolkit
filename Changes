@@ -1,4 +1,4 @@
-0.75	
+0.75	11 May 2008
         Added support for selecting versions by moderation status (see
           OpenGuides ticket #142).
         Added "new_only" parameter to ->list_recent_changes, so you can ask
