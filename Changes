@@ -1,3 +1,6 @@
+0.76
+        Really add missing prereq of DBI!
+
 0.75	11 May 2008
         Added support for selecting versions by moderation status (see
           OpenGuides ticket #142).
