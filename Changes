@@ -14,6 +14,8 @@
           parameters
         Add missing prereq of DBI (caught by the CPAN testers) and don't
           use DBI in Makefile.PL
+        Add new scripts wiki-toolkit-delete-node and
+          wiki-toolkit-revert-to-date
 
 0.74    9  June 2007
         Added list_last_version_before method, to get the version of all the
