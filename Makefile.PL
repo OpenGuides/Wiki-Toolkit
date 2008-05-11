@@ -201,7 +201,8 @@ if ( $config{plucene} ) {
 }
 
 # Write the Makefile.
-WriteMakefile( NAME         => "Wiki::Toolkit",
+WriteMakefile( (MM->can('signature_target') ? (SIGN => 1) : ()),
+               NAME         => "Wiki::Toolkit",
                VERSION_FROM => "lib/Wiki/Toolkit.pm",
                PREREQ_PM    => { 'Text::WikiFormat' => '0.78', #earlier's buggy
                                  'HTML::PullParser' => 0,
