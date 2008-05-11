@@ -270,17 +270,22 @@ sub new_wiki {
     return $wiki;
 }
 
-=item B<wiki_info>
+=item B<configured_databases>
 
-  my @wiki_info = $iterator->wiki_info;
+  my @configured_databases = $iterator->configured_databases;
 
-  Returns the @wiki_info array detailing configured test backends.
+  Returns the @configured_databases array detailing configured test databases.
   Useful for very low-level testing only.
 
 =cut
 
-sub wiki_info {
-    @wiki_info;
+sub configured_databases {
+    my @configured_databases;
+    foreach my $dbtype (qw( MySQL Pg SQLite )) {
+        push @configured_databases, $datastore_info{$dbtype}
+            if $datastore_info{$dbtype};
+    }
+    return @configured_databases;
 }
 
 sub _test_dsn {

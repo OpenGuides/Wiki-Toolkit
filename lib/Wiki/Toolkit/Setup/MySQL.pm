@@ -2,7 +2,7 @@ package Wiki::Toolkit::Setup::MySQL;
 
 use strict;
 
-use vars qw( @ISA $VERSION );
+use vars qw( @ISA $VERSION $SCHEMA_VERSION );
 
 use Wiki::Toolkit::Setup::Database;
 
@@ -12,7 +12,7 @@ $VERSION = '0.09';
 use DBI;
 use Carp;
 
-my $SCHEMA_VERSION = $VERSION*100;
+$SCHEMA_VERSION = $VERSION*100;
 
 my $create_sql = {
     9 => {
