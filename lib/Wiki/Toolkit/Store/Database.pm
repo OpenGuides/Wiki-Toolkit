@@ -20,8 +20,8 @@ my $SCHEMA_VER = 9;
 
 my $CAN_USE_ENCODE;
 BEGIN {
-  eval " use Encode ";
-  $CAN_USE_ENCODE = $@ ? 0 : 1;
+    eval " use Encode ";
+    $CAN_USE_ENCODE = $@ ? 0 : 1;
 }
 
 =head1 NAME
@@ -106,13 +106,13 @@ sub _init {
 
         # Connect to database and store the database handle.
         my ($dbname, $dbuser, $dbpass, $dbhost, $dbport) =
-                               @$self{qw(_dbname _dbuser _dbpass _dbhost _dbport)};
+                           @$self{qw(_dbname _dbuser _dbpass _dbhost _dbport)};
         my $dsn = $self->_dsn($dbname, $dbhost, $dbport)
             or croak "No data source string provided by class";
         $self->{_dbh} = DBI->connect( $dsn, $dbuser, $dbpass,
-				      { PrintError => 0, RaiseError => 1,
-				        AutoCommit => 1 } )
-          or croak "Can't connect to database $dbname using $dsn: "
+                      { PrintError => 0, RaiseError => 1,
+                        AutoCommit => 1 } )
+            or croak "Can't connect to database $dbname using $dsn: "
                    . DBI->errstr;
     }
 
@@ -129,17 +129,17 @@ sub _init {
 # Internal method, used to handle the logic of how to add up return
 #  values from pre_ plugins
 sub handle_pre_plugin_ret {
-	my ($running_total_ref,$result) = @_;
+    my ($running_total_ref,$result) = @_;
 
-	if(($result && $result == 0) || !$result) {
-		# No opinion, no need to change things
-	} elsif($result == -1 || $result == 1) {
-		# Increase or decrease as requested
-		$$running_total_ref += $result;
-	} else {
-		# Invalid return code
-		warn("Pre_ plugin returned invalid accept/deny value of '$result'");
-	}
+    if(($result && $result == 0) || !$result) {
+        # No opinion, no need to change things
+    } elsif($result == -1 || $result == 1) {
+        # Increase or decrease as requested
+        $$running_total_ref += $result;
+    } else {
+        # Invalid return code
+        warn("Pre_ plugin returned invalid accept/deny value of '$result'");
+    }
 }
 
 =item B<retrieve_node>
@@ -157,7 +157,7 @@ sub handle_pre_plugin_ret {
 
   # Or get an earlier version:
   my %node = $store->retrieve_node(name    => "HomePage",
-			             version => 2 );
+                         version => 2 );
   print $node{content};
 
 
@@ -188,27 +188,27 @@ even if that type of metadata only has one value.
 sub retrieve_node {
     my $self = shift;
     my %args = scalar @_ == 1 ? ( name => $_[0] ) : @_;
-	unless($args{'version'}) { $args{'version'} = undef; }
+    unless($args{'version'}) { $args{'version'} = undef; }
 
     # Call pre_retrieve on any plugins, in case they want to tweak anything
     my @plugins = @{ $args{plugins} || [ ] };
     foreach my $plugin (@plugins) {
         if ( $plugin->can( "pre_retrieve" ) ) {
             $plugin->pre_retrieve( 
-				node     => \$args{'name'},
-				version  => \$args{'version'}
-			);
+                node     => \$args{'name'},
+                version  => \$args{'version'}
+            );
         }
     }
 
     # Note _retrieve_node_data is sensitive to calling context.
-	unless(wantarray) {
-		# Scalar context, will return just the content
-		return $self->_retrieve_node_data( %args );
-	}
+    unless(wantarray) {
+        # Scalar context, will return just the content
+        return $self->_retrieve_node_data( %args );
+    }
 
     my %data = $self->_retrieve_node_data( %args );
-	$data{'checksum'} = $self->_checksum(%data);
+    $data{'checksum'} = $self->_checksum(%data);
     return %data;
 }
 
@@ -216,10 +216,10 @@ sub retrieve_node {
 sub _retrieve_node_data {
     my ($self, %args) = @_;
     my %data = $self->_retrieve_node_content( %args );
-	unless(wantarray) {
-		# Scalar context, return just the content
-		return $data{content};
-	}
+    unless(wantarray) {
+        # Scalar context, return just the content
+        return $data{content};
+    }
 
     # If we want additional data then get it.  Note that $data{version}
     # will already have been set by C<_retrieve_node_content>, if it wasn't
@@ -236,8 +236,8 @@ sub _retrieve_node_data {
     my %metadata;
     while ( my ($type, $val) = $self->charset_decode( $sth->fetchrow_array ) ) {
         if ( defined $metadata{$type} ) {
-	        push @{$metadata{$type}}, $val;
-	    } else {
+            push @{$metadata{$type}}, $val;
+        } else {
             $metadata{$type} = [ $val ];
         }
     }
@@ -255,17 +255,17 @@ sub _retrieve_node_content {
     my $dbh = $self->dbh;
     my $sql;
 
-	my $version_sql_val;
-	my $text_source;
+    my $version_sql_val;
+    my $text_source;
     if ( $args{version} ) {
-		# Version given - get that version, and the content for that version
-		$version_sql_val = $dbh->quote($self->charset_encode($args{version}));
-		$text_source = "content";
-	} else {
-		# No version given, grab latest version (and content for that)
-		$version_sql_val = "node.version";
-		$text_source = "node";
-	}
+        # Version given - get that version, and the content for that version
+        $version_sql_val = $dbh->quote($self->charset_encode($args{version}));
+        $text_source = "content";
+    } else {
+        # No version given, grab latest version (and content for that)
+        $version_sql_val = "node.version";
+        $text_source = "node";
+    }
     $sql = "SELECT "
          . "     $text_source.text, content.version, "
          . "     content.modified, content.moderated, "
@@ -337,7 +337,7 @@ sub node_exists {
     } else {
         my %args = @_;
         return $self->_do_old_node_exists( $args{name} )
-          unless $args{ignore_case};
+            unless $args{ignore_case};
         my $sql = $self->_get_node_exists_ignore_case_sql;
         my $sth = $self->dbh->prepare( $sql );
         $sth->execute( $args{name} );
@@ -484,64 +484,64 @@ sub write_node_post_locking {
     my $timestamp = $self->_get_timestamp();
     my @links_to = @{ $links_to_ref || [] }; # default to empty array
     my $version;
-	unless($requires_moderation) { $requires_moderation = 0; }
+    unless($requires_moderation) { $requires_moderation = 0; }
 
     # Call pre_write on any plugins, in case they want to tweak anything
     my @preplugins = @{ $args{plugins} || [ ] };
-	my $write_allowed = 1;
+    my $write_allowed = 1;
     foreach my $plugin (@preplugins) {
         if ( $plugin->can( "pre_write" ) ) {
-			handle_pre_plugin_ret(
-				\$write_allowed,
-				$plugin->pre_write( 
-					node     => \$node,
-					content  => \$content,
-					metadata => \$metadata_ref )
-			);
+            handle_pre_plugin_ret(
+                \$write_allowed,
+                $plugin->pre_write( 
+                    node     => \$node,
+                    content  => \$content,
+                    metadata => \$metadata_ref )
+            );
         }
     }
-	if($write_allowed < 1) {
-		# The plugins didn't want to allow this action
-		return -1;
-	}
+    if($write_allowed < 1) {
+        # The plugins didn't want to allow this action
+        return -1;
+    }
 
     # Either inserting a new page or updating an old one.
     my $sql = "SELECT count(*) FROM node WHERE name=" . $dbh->quote($node);
     my $exists = @{ $dbh->selectcol_arrayref($sql) }[0] || 0;
 
 
-	# If it doesn't exist, add it right now
+    # If it doesn't exist, add it right now
     if(! $exists) {
-		# Add in a new version
+        # Add in a new version
         $version = 1;
 
-		# Handle initial moderation
-		my $node_content = $content;
-		if($requires_moderation) {
-			$node_content = "=== This page has yet to be moderated. ===";
-		}
+        # Handle initial moderation
+        my $node_content = $content;
+        if($requires_moderation) {
+            $node_content = "=== This page has yet to be moderated. ===";
+        }
 
-		# Add the node and content
+        # Add the node and content
         my $add_sql = 
-			 "INSERT INTO node "
-			."    (name, version, text, modified, moderate) "
-			."VALUES (?, ?, ?, ?, ?)";
-		my $add_sth = $dbh->prepare($add_sql);
-		$add_sth->execute(
-			map{ $self->charset_encode($_) }
-				($node, $version, $node_content, $timestamp, $requires_moderation)
-		) or croak "Error updating database: " . DBI->errstr;
+             "INSERT INTO node "
+            ."    (name, version, text, modified, moderate) "
+            ."VALUES (?, ?, ?, ?, ?)";
+        my $add_sth = $dbh->prepare($add_sql);
+        $add_sth->execute(
+            map{ $self->charset_encode($_) }
+                ($node, $version, $node_content, $timestamp, $requires_moderation)
+        ) or croak "Error updating database: " . DBI->errstr;
     }
 
     # Get the ID of the node we've added / we're about to update
-	# Also get the moderation status for it
+    # Also get the moderation status for it
     $sql = "SELECT id, moderate FROM node WHERE name=" . $dbh->quote($node);
     my ($node_id,$node_requires_moderation) = $dbh->selectrow_array($sql);
 
-	# Only update node if it exists, and moderation isn't enabled on the node
-	# Whatever happens, if it exists, generate a new version number
+    # Only update node if it exists, and moderation isn't enabled on the node
+    # Whatever happens, if it exists, generate a new version number
     if($exists) {
-		# Get the new version number
+        # Get the new version number
         $sql = "SELECT max(content.version) FROM node
                 INNER JOIN content ON (id = node_id)
                 WHERE name=" . $dbh->quote($node);
@@ -549,31 +549,31 @@ sub write_node_post_locking {
         croak "Can't get version number" unless $version;
         $version++;
 
-		# Update the node only if node doesn't require moderation
-		if(!$node_requires_moderation) {
-			$sql = "UPDATE node SET version=" . $dbh->quote($version)
-			 . ", text=" . $dbh->quote($self->charset_encode($content))
-			 . ", modified=" . $dbh->quote($timestamp)
-			 . " WHERE name=" . $dbh->quote($self->charset_encode($node));
-			$dbh->do($sql) or croak "Error updating database: " . DBI->errstr;
-		}
+        # Update the node only if node doesn't require moderation
+        if(!$node_requires_moderation) {
+            $sql = "UPDATE node SET version=" . $dbh->quote($version)
+             . ", text=" . $dbh->quote($self->charset_encode($content))
+             . ", modified=" . $dbh->quote($timestamp)
+             . " WHERE name=" . $dbh->quote($self->charset_encode($node));
+            $dbh->do($sql) or croak "Error updating database: " . DBI->errstr;
+        }
 
-		# You can't use this to enable moderation on an existing node
+        # You can't use this to enable moderation on an existing node
         if($requires_moderation) {
            warn("Moderation not added to existing node '$node', use normal moderation methods instead");
         }
-	}
+    }
 
 
     # Now node is updated (if required), add to the history
     my $add_sql = 
-		 "INSERT INTO content "
-		."	(node_id, version, text, modified, moderated) "
-		."VALUES (?, ?, ?, ?, ?)";
-	my $add_sth = $dbh->prepare($add_sql);
-	$add_sth->execute(
-		map { $self->charset_encode($_) }
-			($node_id, $version, $content, $timestamp, (1-$node_requires_moderation))
+         "INSERT INTO content "
+        ."    (node_id, version, text, modified, moderated) "
+        ."VALUES (?, ?, ?, ?, ?)";
+    my $add_sth = $dbh->prepare($add_sql);
+    $add_sth->execute(
+        map { $self->charset_encode($_) }
+            ($node_id, $version, $content, $timestamp, (1-$node_requires_moderation))
     ) or croak "Error updating database: " . DBI->errstr;
 
 
@@ -620,12 +620,12 @@ sub write_node_post_locking {
             @values = keys %unique;
 
             foreach my $value ( @values ) {
-				$add_sth->execute(
+                $add_sth->execute(
                     map { $self->charset_encode($_) }
                         ( $node_id, $version, $type, $value )
-	            ) or croak $dbh->errstr;
+                ) or croak $dbh->errstr;
             }
-	    } else {
+        } else {
             # Otherwise grab a checksum and store that.
             my $type_to_store  = "__" . $type . "__checksum";
             my $value_to_store = $self->_checksum_hashes( @values );
@@ -633,7 +633,7 @@ sub write_node_post_locking {
                   map { $self->charset_encode($_) }
                       ( $node_id, $version, $type_to_store, $value_to_store )
             )  or croak $dbh->errstr;
-	    }
+        }
     }
 
     # Finally call post_write on any plugins.
@@ -641,11 +641,11 @@ sub write_node_post_locking {
     foreach my $plugin (@postplugins) {
         if ( $plugin->can( "post_write" ) ) {
             $plugin->post_write( 
-				node     => $node,
-				node_id  => $node_id,
-				version  => $version,
-				content  => $content,
-				metadata => $metadata_ref );
+                node     => $node,
+                node_id  => $node_id,
+                version  => $version,
+                content  => $content,
+                metadata => $metadata_ref );
         }
     }
 
@@ -658,7 +658,7 @@ sub _get_timestamp {
     # I don't care about no steenkin' timezones (yet).
     my $time = shift || localtime; # Overloaded by Time::Piece.
     unless( ref $time ) {
-	$time = localtime($time); # Make it into an object for strftime
+    $time = localtime($time); # Make it into an object for strftime
     }
     return $time->strftime($timestamp_fmt); # global
 }
@@ -683,135 +683,135 @@ one, and re-writes any wiki links in these to point to the new name.
 sub rename_node {
     my ($self, %args) = @_;
     my ($old_name,$new_name,$wiki,$create_new_versions) = 
-		@args{ qw( old_name new_name wiki create_new_versions ) };
+        @args{ qw( old_name new_name wiki create_new_versions ) };
     my $dbh = $self->dbh;
-	my $formatter = $wiki->{_formatter};
+    my $formatter = $wiki->{_formatter};
 
     my $timestamp = $self->_get_timestamp();
 
     # Call pre_rename on any plugins, in case they want to tweak anything
     my @preplugins = @{ $args{plugins} || [ ] };
-	my $rename_allowed = 1;
+    my $rename_allowed = 1;
     foreach my $plugin (@preplugins) {
         if ( $plugin->can( "pre_rename" ) ) {
-			handle_pre_plugin_ret(
-				\$rename_allowed,
-				$plugin->pre_rename( 
-					old_name => \$old_name,
-					new_name => \$new_name,
-					create_new_versions => \$create_new_versions,
-				)
-			);
+            handle_pre_plugin_ret(
+                \$rename_allowed,
+                $plugin->pre_rename( 
+                    old_name => \$old_name,
+                    new_name => \$new_name,
+                    create_new_versions => \$create_new_versions,
+                )
+            );
         }
     }
-	if($rename_allowed < 1) {
-		# The plugins didn't want to allow this action
-		return -1;
-	}
+    if($rename_allowed < 1) {
+        # The plugins didn't want to allow this action
+        return -1;
+    }
 
-	# Get the ID of the node
-	my $sql = "SELECT id FROM node WHERE name=?";
-	my $sth = $dbh->prepare($sql);
-	$sth->execute($old_name);
-	my ($node_id) = $sth->fetchrow_array;
+    # Get the ID of the node
+    my $sql = "SELECT id FROM node WHERE name=?";
+    my $sth = $dbh->prepare($sql);
+    $sth->execute($old_name);
+    my ($node_id) = $sth->fetchrow_array;
     $sth->finish;
 
 
-	# If the formatter supports it, get a list of the internal
-	#  links to the page, which will have their links re-written
-	# (Do now before we update the name of the node, in case of
-	#  self links)
-	my @links;
-	if($formatter->can("rename_links")) {
-		# Get a list of the pages that link to the page
-		$sql = "SELECT id, name, version "
-			."FROM internal_links "
-			."INNER JOIN node "
-			."	ON (link_from = name) "
-			."WHERE link_to = ?";
-		$sth = $dbh->prepare($sql);
-		$sth->execute($old_name);
+    # If the formatter supports it, get a list of the internal
+    #  links to the page, which will have their links re-written
+    # (Do now before we update the name of the node, in case of
+    #  self links)
+    my @links;
+    if($formatter->can("rename_links")) {
+        # Get a list of the pages that link to the page
+        $sql = "SELECT id, name, version "
+            ."FROM internal_links "
+            ."INNER JOIN node "
+            ."    ON (link_from = name) "
+            ."WHERE link_to = ?";
+        $sth = $dbh->prepare($sql);
+        $sth->execute($old_name);
 
-		# Grab them all, then update, so no locking problems
-		while(my @l = $sth->fetchrow_array) { push (@links, \@l); }
-	}
+        # Grab them all, then update, so no locking problems
+        while(my @l = $sth->fetchrow_array) { push (@links, \@l); }
+    }
 
-	
-	# Rename the node
-	$sql = "UPDATE node SET name=? WHERE id=?";
-	$sth = $dbh->prepare($sql);
-	$sth->execute($new_name,$node_id);
-
-
-	# Fix the internal links from this page
-	# (Otherwise write_node will get confused if we rename links later on)
-	$sql = "UPDATE internal_links SET link_from=? WHERE link_from=?";
-	$sth = $dbh->prepare($sql);
-	$sth->execute($new_name,$old_name);
+    
+    # Rename the node
+    $sql = "UPDATE node SET name=? WHERE id=?";
+    $sth = $dbh->prepare($sql);
+    $sth->execute($new_name,$node_id);
 
 
-	# Update the text of internal links, if the formatter supports it
-	if($formatter->can("rename_links")) {
-		# Update the linked pages (may include renamed page)
-		foreach my $l (@links) {
-			my ($page_id, $page_name, $page_version) = @$l;
-			# Self link special case
-			if($page_name eq $old_name) { $page_name = $new_name; }
+    # Fix the internal links from this page
+    # (Otherwise write_node will get confused if we rename links later on)
+    $sql = "UPDATE internal_links SET link_from=? WHERE link_from=?";
+    $sth = $dbh->prepare($sql);
+    $sth->execute($new_name,$old_name);
 
-			# Grab the latest version of that page
-			my %page = $self->retrieve_node(
-					name=>$page_name, version=>$page_version
-			);
 
-			# Update the content of the page
-			my $new_content = 
-				$formatter->rename_links($old_name,$new_name,$page{'content'});
+    # Update the text of internal links, if the formatter supports it
+    if($formatter->can("rename_links")) {
+        # Update the linked pages (may include renamed page)
+        foreach my $l (@links) {
+            my ($page_id, $page_name, $page_version) = @$l;
+            # Self link special case
+            if($page_name eq $old_name) { $page_name = $new_name; }
 
-			# Did it change?
-			if($new_content ne $page{'content'}) {
-				# Write the updated page out
-				if($create_new_versions) {
-					# Write out as a new version of the node
-					# (This will also fix our internal links)
-					$wiki->write_node(
-								$page_name, 
-								$new_content,
-								$page{checksum},
-								$page{metadata}
-					);
-				} else {
-					# Just update the content
-					my $update_sql_a = "UPDATE node SET text=? WHERE id=?";
-					my $update_sql_b = "UPDATE content SET text=? ".
-									   "WHERE node_id=? AND version=?";
+            # Grab the latest version of that page
+            my %page = $self->retrieve_node(
+                    name=>$page_name, version=>$page_version
+            );
 
-					my $u_sth = $dbh->prepare($update_sql_a);
-					$u_sth->execute($new_content,$page_id);
-					$u_sth = $dbh->prepare($update_sql_b);
-					$u_sth->execute($new_content,$page_id,$page_version);
-				}
-			}
-		}
+            # Update the content of the page
+            my $new_content = 
+                $formatter->rename_links($old_name,$new_name,$page{'content'});
 
-		# Fix the internal links if we didn't create new versions of the node
-		if(! $create_new_versions) {
-			$sql = "UPDATE internal_links SET link_to=? WHERE link_to=?";
-			$sth = $dbh->prepare($sql);
-			$sth->execute($new_name,$old_name);
-		}
-	} else {
-		warn("Internal links not updated following node rename - unsupported by formatter");
-	}
+            # Did it change?
+            if($new_content ne $page{'content'}) {
+                # Write the updated page out
+                if($create_new_versions) {
+                    # Write out as a new version of the node
+                    # (This will also fix our internal links)
+                    $wiki->write_node(
+                                $page_name, 
+                                $new_content,
+                                $page{checksum},
+                                $page{metadata}
+                    );
+                } else {
+                    # Just update the content
+                    my $update_sql_a = "UPDATE node SET text=? WHERE id=?";
+                    my $update_sql_b = "UPDATE content SET text=? ".
+                                       "WHERE node_id=? AND version=?";
+
+                    my $u_sth = $dbh->prepare($update_sql_a);
+                    $u_sth->execute($new_content,$page_id);
+                    $u_sth = $dbh->prepare($update_sql_b);
+                    $u_sth->execute($new_content,$page_id,$page_version);
+                }
+            }
+        }
+
+        # Fix the internal links if we didn't create new versions of the node
+        if(! $create_new_versions) {
+            $sql = "UPDATE internal_links SET link_to=? WHERE link_to=?";
+            $sth = $dbh->prepare($sql);
+            $sth->execute($new_name,$old_name);
+        }
+    } else {
+        warn("Internal links not updated following node rename - unsupported by formatter");
+    }
 
     # Call post_rename on any plugins, in case they want to do anything
     my @postplugins = @{ $args{plugins} || [ ] };
     foreach my $plugin (@postplugins) {
         if ( $plugin->can( "post_rename" ) ) {
             $plugin->post_rename( 
-				old_name => $old_name,
-				new_name => $new_name,
-				node_id => $node_id,
-			);
+                old_name => $old_name,
+                new_name => $new_name,
+                node_id => $node_id,
+            );
         }
     }
 }
@@ -834,90 +834,90 @@ sub moderate_node {
     my %args = scalar @_ == 2 ? ( name => $_[0], version => $_[1] ) : @_;
     my $dbh = $self->dbh;
 
-	my ($name,$version) = ($args{name},$args{version});
+    my ($name,$version) = ($args{name},$args{version});
 
     # Call pre_moderate on any plugins.
     my @plugins = @{ $args{plugins} || [ ] };
-	my $moderation_allowed = 1;
+    my $moderation_allowed = 1;
     foreach my $plugin (@plugins) {
         if ( $plugin->can( "pre_moderate" ) ) {
-			handle_pre_plugin_ret(
-				\$moderation_allowed,
-				$plugin->pre_moderate( 
-					node     => \$name,
-					version  => \$version )
-			);
+            handle_pre_plugin_ret(
+                \$moderation_allowed,
+                $plugin->pre_moderate( 
+                    node     => \$name,
+                    version  => \$version )
+            );
         }
     }
-	if($moderation_allowed < 1) {
-		# The plugins didn't want to allow this action
-		return -1;
-	}
+    if($moderation_allowed < 1) {
+        # The plugins didn't want to allow this action
+        return -1;
+    }
 
-	# Get the ID of this node
+    # Get the ID of this node
     my $id_sql = "SELECT id FROM node WHERE name=?";
     my $id_sth = $dbh->prepare($id_sql);
     $id_sth->execute($name);
-	my ($node_id) = $id_sth->fetchrow_array;
+    my ($node_id) = $id_sth->fetchrow_array;
     $id_sth->finish;
 
-	# Check what the current highest moderated version is
-	my $hv_sql = 
-		 "SELECT max(version) "
-		."FROM content "
-		."WHERE node_id = ? "
-		."AND moderated = ?";
-	my $hv_sth = $dbh->prepare($hv_sql);
-	$hv_sth->execute($node_id, "1") or croak $dbh->errstr;
-	my ($highest_mod_version) = $hv_sth->fetchrow_array;
+    # Check what the current highest moderated version is
+    my $hv_sql = 
+         "SELECT max(version) "
+        ."FROM content "
+        ."WHERE node_id = ? "
+        ."AND moderated = ?";
+    my $hv_sth = $dbh->prepare($hv_sql);
+    $hv_sth->execute($node_id, "1") or croak $dbh->errstr;
+    my ($highest_mod_version) = $hv_sth->fetchrow_array;
     $hv_sth->finish;
-	unless($highest_mod_version) { $highest_mod_version = 0; }
+    unless($highest_mod_version) { $highest_mod_version = 0; }
 
-	# Mark this version as moderated
-	my $update_sql = 
-		 "UPDATE content "
-		."SET moderated = ? "
-		."WHERE node_id = ? "
-		."AND version = ?";
-	my $update_sth = $dbh->prepare($update_sql);
-	$update_sth->execute("1", $node_id, $version) or croak $dbh->errstr;
+    # Mark this version as moderated
+    my $update_sql = 
+         "UPDATE content "
+        ."SET moderated = ? "
+        ."WHERE node_id = ? "
+        ."AND version = ?";
+    my $update_sth = $dbh->prepare($update_sql);
+    $update_sth->execute("1", $node_id, $version) or croak $dbh->errstr;
 
-	# Are we now the highest moderated version?
-	if(int($version) > int($highest_mod_version)) {
-		# Newly moderated version is newer than previous moderated version
-		# So, make the current version the latest version
-		my %new_data = $self->retrieve_node( name => $name, version => $version );
+    # Are we now the highest moderated version?
+    if(int($version) > int($highest_mod_version)) {
+        # Newly moderated version is newer than previous moderated version
+        # So, make the current version the latest version
+        my %new_data = $self->retrieve_node( name => $name, version => $version );
 
-		# Make sure last modified is properly null, if not set
-		unless($new_data{last_modified}) { $new_data{last_modified} = undef; }
+        # Make sure last modified is properly null, if not set
+        unless($new_data{last_modified}) { $new_data{last_modified} = undef; }
 
-		my $newv_sql = 
-			 "UPDATE node "
-			."SET version=?, text=?, modified=? "
-			."WHERE id = ?";
-		my $newv_sth = $dbh->prepare($newv_sql);
-		$newv_sth->execute(
-			$version, $self->charset_encode($new_data{content}), 
-			$new_data{last_modified}, $node_id
-		) or croak $dbh->errstr;
-	} else {
-		# A higher version is already moderated, so don't change node
-	}
+        my $newv_sql = 
+             "UPDATE node "
+            ."SET version=?, text=?, modified=? "
+            ."WHERE id = ?";
+        my $newv_sth = $dbh->prepare($newv_sql);
+        $newv_sth->execute(
+            $version, $self->charset_encode($new_data{content}), 
+            $new_data{last_modified}, $node_id
+        ) or croak $dbh->errstr;
+    } else {
+        # A higher version is already moderated, so don't change node
+    }
 
-	# TODO: Do something about internal links, if required
+    # TODO: Do something about internal links, if required
 
     # Finally call post_moderate on any plugins.
     @plugins = @{ $args{plugins} || [ ] };
     foreach my $plugin (@plugins) {
         if ( $plugin->can( "post_moderate" ) ) {
             $plugin->post_moderate( 
-				node     => $name,
-				node_id  => $node_id,
-				version  => $version );
+                node     => $name,
+                node_id  => $node_id,
+                version  => $version );
         }
     }
 
-	return 1;
+    return 1;
 }
 
 =item B<set_node_moderation>
@@ -936,29 +936,29 @@ sub set_node_moderation {
     my %args = scalar @_ == 2 ? ( name => $_[0], required => $_[1] ) : @_;
     my $dbh = $self->dbh;
 
-	my ($name,$required) = ($args{name},$args{required});
+    my ($name,$required) = ($args{name},$args{required});
 
-	# Get the ID of this node
+    # Get the ID of this node
     my $id_sql = "SELECT id FROM node WHERE name=?";
     my $id_sth = $dbh->prepare($id_sql);
     $id_sth->execute($name);
-	my ($node_id) = $id_sth->fetchrow_array;
+    my ($node_id) = $id_sth->fetchrow_array;
     $id_sth->finish;
 
-	# Check we really got an ID
+    # Check we really got an ID
     unless($node_id) {
         return 0;
     }
 
-	# Mark it as requiring / not requiring moderation
-	my $mod_sql = 
-		 "UPDATE node "
-		."SET moderate = ? "
-		."WHERE id = ? ";
-	my $mod_sth = $dbh->prepare($mod_sql);
-	$mod_sth->execute("$required", $node_id) or croak $dbh->errstr;
+    # Mark it as requiring / not requiring moderation
+    my $mod_sql = 
+         "UPDATE node "
+        ."SET moderate = ? "
+        ."WHERE id = ? ";
+    my $mod_sth = $dbh->prepare($mod_sql);
+    $mod_sth->execute("$required", $node_id) or croak $dbh->errstr;
 
-	return 1;
+    return 1;
 }
 
 =item B<delete_node>
@@ -998,7 +998,7 @@ sub delete_node {
     my $id_sql = "SELECT id FROM node WHERE name=?";
     my $id_sth = $dbh->prepare($id_sql);
     $id_sth->execute($name);
-	my ($node_id) = $id_sth->fetchrow_array;
+    my ($node_id) = $id_sth->fetchrow_array;
     $id_sth->finish;
 
     # Trivial case - delete the whole node and all its history.
@@ -1016,16 +1016,16 @@ sub delete_node {
         $dbh->do($sql) or croak "Deletion failed: " . DBI->errstr;
 
         # And finish it here.
-		post_delete_node($name,$node_id,$version,$args{plugins});
+        post_delete_node($name,$node_id,$version,$args{plugins});
         return 1;
     }
 
     # Skip out early if we're trying to delete a nonexistent version.
     my %verdata = $self->retrieve_node( name => $name, version => $version );
-	unless($verdata{version}) {
-		warn("Asked to delete non existant version $version of node $node_id ($name)");
-		return 1;
-	}
+    unless($verdata{version}) {
+        warn("Asked to delete non existant version $version of node $node_id ($name)");
+        return 1;
+    }
 
     # Reduce to trivial case if deleting the only version.
     my $sql = "SELECT COUNT(*) FROM content WHERE node_id = $node_id";
@@ -1033,15 +1033,15 @@ sub delete_node {
     $sth->execute() or croak "Deletion failed: " . $dbh->errstr;
     my ($count) = $sth->fetchrow_array;
     $sth->finish;
-	if($count == 1) {
-		# Only one version, so can do the non version delete
-	    return $self->delete_node( name=>$name, plugins=>$args{plugins} );
-	}
+    if($count == 1) {
+        # Only one version, so can do the non version delete
+        return $self->delete_node( name=>$name, plugins=>$args{plugins} );
+    }
 
     # Check whether we're deleting the latest (moderated) version.
     my %currdata = $self->retrieve_node( name => $name );
     if ( $currdata{version} == $version ) {
-		# Deleting latest version, so need to update the copy in node
+        # Deleting latest version, so need to update the copy in node
         # (Can't just grab version ($version - 1) since it may have been
         #  deleted itself, or might not be moderated.)
         my $try = $version - 1;
@@ -1060,17 +1060,17 @@ sub delete_node {
                  WHERE name=?";
         my $sth = $dbh->prepare( $sql );
         $sth->execute( @prevdata{ qw( version content last_modified ) }, $name)
-          or croak "Deletion failed: " . $dbh->errstr;
+            or croak "Deletion failed: " . $dbh->errstr;
 
-		# Remove the current version from content
+        # Remove the current version from content
         $sql = "DELETE FROM content 
                 WHERE node_id = $node_id 
                 AND version = $version";
         $sth = $dbh->prepare( $sql );
         $sth->execute()
-          or croak "Deletion failed: " . $dbh->errstr;
+            or croak "Deletion failed: " . $dbh->errstr;
 
-		# Update the internal links to reflect the new version
+        # Update the internal links to reflect the new version
         $sql = "DELETE FROM internal_links WHERE link_from=?";
         $sth = $dbh->prepare( $sql );
         $sth->execute( $name )
@@ -1092,16 +1092,16 @@ sub delete_node {
             carp "Couldn't index backlink: " . $dbh->errstr if $@;
         }
 
-		# Delete the metadata for the old version
+        # Delete the metadata for the old version
         $sql = "DELETE FROM metadata 
                 WHERE node_id = $node_id 
                 AND version = $version";
         $sth = $dbh->prepare( $sql );
         $sth->execute()
-          or croak "Deletion failed: " . $dbh->errstr;
+            or croak "Deletion failed: " . $dbh->errstr;
 
-		# All done
-		post_delete_node($name,$node_id,$version,$args{plugins});
+        # All done
+        post_delete_node($name,$node_id,$version,$args{plugins});
         return 1;
     }
 
@@ -1112,46 +1112,46 @@ sub delete_node {
             AND version=?";
     $sth = $dbh->prepare( $sql );
     $sth->execute( $version )
-      or croak "Deletion failed: " . $dbh->errstr;
+        or croak "Deletion failed: " . $dbh->errstr;
     $sql = "DELETE FROM metadata 
             WHERE node_id = $node_id
             AND version=?";
     $sth = $dbh->prepare( $sql );
     $sth->execute( $version )
-      or croak "Deletion failed: " . $dbh->errstr;
+        or croak "Deletion failed: " . $dbh->errstr;
 
-	# All done
-	post_delete_node($name,$node_id,$version,$args{plugins});
+    # All done
+    post_delete_node($name,$node_id,$version,$args{plugins});
     return 1;
 }
 
 # Returns the name of the node with the given ID
 # Not normally used except when doing low-level maintenance
 sub node_name_for_id {
-	my ($self, $node_id) = @_;
+    my ($self, $node_id) = @_;
     my $dbh = $self->dbh;
 
     my $name_sql = "SELECT name FROM node WHERE id=?";
     my $name_sth = $dbh->prepare($name_sql);
     $name_sth->execute($node_id);
-	my ($name) = $name_sth->fetchrow_array;
+    my ($name) = $name_sth->fetchrow_array;
     $name_sth->finish;
 
-	return $name;
+    return $name;
 }
 
 # Internal Method
 sub post_delete_node {
-	my ($name,$node_id,$version,$plugins) = @_;
+    my ($name,$node_id,$version,$plugins) = @_;
 
     # Call post_delete on any plugins, having done the delete
     my @plugins = @{ $plugins || [ ] };
     foreach my $plugin (@plugins) {
         if ( $plugin->can( "post_delete" ) ) {
             $plugin->post_delete( 
-				node     => $name,
-				node_id  => $node_id,
-				version  => $version );
+                node     => $name,
+                node_id  => $node_id,
+                version  => $version );
         }
     }
 }
@@ -1271,7 +1271,7 @@ sub list_recent_changes {
         return $self->_find_recent_changes_by_criteria( %args );
     } elsif ( $args{days} ) {
         my $now = localtime;
-	my $then = $now - ( ONE_DAY * $args{days} );
+    my $then = $now - ( ONE_DAY * $args{days} );
         $args{since} = $then;
         delete $args{days};
         return $self->_find_recent_changes_by_criteria( %args );
@@ -1279,7 +1279,7 @@ sub list_recent_changes {
         $args{limit} = delete $args{last_n_changes};
         return $self->_find_recent_changes_by_criteria( %args );
     } else {
-	croak "Need to supply some criteria to list_recent_changes.";
+        croak "Need to supply some criteria to list_recent_changes.";
     }
 }
 
@@ -1287,10 +1287,10 @@ sub _find_recent_changes_by_criteria {
     my ($self, %args) = @_;
     my ($since, $limit, $between_days, $ignore_case, $new_only,
         $metadata_is,  $metadata_isnt, $metadata_was, $metadata_wasnt,
-	$moderation, $include_all_changes ) =
+    $moderation, $include_all_changes ) =
          @args{ qw( since limit between_days ignore_case new_only
                     metadata_is metadata_isnt metadata_was metadata_wasnt
-		    moderation include_all_changes) };
+            moderation include_all_changes) };
     my $dbh = $self->dbh;
 
     my @where;
@@ -1334,14 +1334,14 @@ sub _find_recent_changes_by_criteria {
                                           Ignore_case => $ignore_case,
                                                      )
                          . " )";
-	}
+    }
     }
 
     if ( $metadata_isnt ) {
         foreach my $type ( keys %$metadata_isnt ) {
             my $value  = $metadata_isnt->{$type};
             croak "metadata_isnt must have scalar values" if ref $value;
-	}
+    }
         my @omits = $self->_find_recent_changes_by_criteria(
             since        => $since,
             between_days => $between_days,
@@ -1352,7 +1352,7 @@ sub _find_recent_changes_by_criteria {
             push @where, "( node.name != " . $dbh->quote($omit->{name})
                  . "  OR node.version != " . $dbh->quote($omit->{version})
                  . ")";
-	}
+    }
     }
 
     if ( $metadata_was ) {
@@ -1386,7 +1386,7 @@ sub _find_recent_changes_by_criteria {
         foreach my $type ( keys %$metadata_wasnt ) {
                 my $value  = $metadata_was->{$type};
                 croak "metadata_was must have scalar values" if ref $value;
-	}
+    }
         my @omits = $self->_find_recent_changes_by_criteria(
                 since        => $since,
                 between_days => $between_days,
@@ -1397,7 +1397,7 @@ sub _find_recent_changes_by_criteria {
             push @where, "( node.name != " . $dbh->quote($omit->{name})
                  . "  OR content.version != " . $dbh->quote($omit->{version})
                  . ")";
-	}
+    }
         $use_content_table = 1;
     }
 
@@ -1452,28 +1452,27 @@ sub _find_recent_changes_by_criteria {
         croak "Bad argument $limit" unless $limit =~ /^\d+$/;
         $sql .= " LIMIT $limit";
     }
-#print "\n\n$sql\n\n";
     my $nodesref = $dbh->selectall_arrayref($sql);
     my @finds = map { { name          => $_->[0],
-			version       => $_->[1],
-			last_modified => $_->[2] }
-		    } @$nodesref;
+                        version       => $_->[1],
+                        last_modified => $_->[2] }
+                    } @$nodesref;
     foreach my $find ( @finds ) {
         my %metadata;
         my $sth = $dbh->prepare( "SELECT metadata_type, metadata_value
                                   FROM node
                                   INNER JOIN metadata 
-                                        ON (id = node_id)
+                                  ON (id = node_id)
                                   WHERE name=?
                                   AND metadata.version=?" );
         $sth->execute( $find->{name}, $find->{version} );
         while ( my ($type, $value) = $self->charset_decode( $sth->fetchrow_array ) ) {
-	    if ( defined $metadata{$type} ) {
+        if ( defined $metadata{$type} ) {
                 push @{$metadata{$type}}, $value;
-	    } else {
+        } else {
                 $metadata{$type} = [ $value ];
             }
-	}
+    }
         $find->{metadata} = \%metadata;
     }
     return @finds;
@@ -1497,24 +1496,24 @@ Optionally also returns the id, version and moderation flag.
 sub list_all_nodes {
     my ($self,%args) = @_;
     my $dbh = $self->dbh;
-	my @nodes;
+    my @nodes;
 
-	if($args{with_details}) {
-		my $sql = "SELECT id, name, version, moderate FROM node;";
-		my $sth = $dbh->prepare( $sql );
-		$sth->execute();
+    if($args{with_details}) {
+        my $sql = "SELECT id, name, version, moderate FROM node;";
+        my $sth = $dbh->prepare( $sql );
+        $sth->execute();
 
-		while(my @results = $sth->fetchrow_array) {
-			my %data;
-			@data{ qw( node_id name version moderate ) } = @results;
-			push @nodes, \%data;
-		}
-	} else {
-		my $sql = "SELECT name FROM node;";
-		my $raw_nodes = $dbh->selectall_arrayref($sql); 
-		@nodes = ( map { $self->charset_decode( $_->[0] ) } (@$raw_nodes) );
-	}
-	return @nodes;
+        while(my @results = $sth->fetchrow_array) {
+            my %data;
+            @data{ qw( node_id name version moderate ) } = @results;
+            push @nodes, \%data;
+        }
+    } else {
+        my $sql = "SELECT name FROM node;";
+        my $raw_nodes = $dbh->selectall_arrayref($sql); 
+        @nodes = ( map { $self->charset_decode( $_->[0] ) } (@$raw_nodes) );
+    }
+    return @nodes;
 }
 
 =item B<list_node_all_versions>
@@ -1715,35 +1714,35 @@ sub list_nodes_by_missing_metadata {
         $value = lc( $value );
     }
 
-	my @nodes;
+    my @nodes;
 
-	# If the don't want to match by value, then we can do it with 
-	#  a LEFT OUTER JOIN, and either NULL or LENGTH() = 0
-	if( ! $value ) {
-		my $sql = $self->_get_list_by_missing_metadata_sql( 
-										ignore_case => $args{ignore_case}
-		      );
-		my $sth = $dbh->prepare( $sql );
-		$sth->execute( $type );
+    # If the don't want to match by value, then we can do it with 
+    #  a LEFT OUTER JOIN, and either NULL or LENGTH() = 0
+    if( ! $value ) {
+        my $sql = $self->_get_list_by_missing_metadata_sql( 
+                                        ignore_case => $args{ignore_case}
+              );
+        my $sth = $dbh->prepare( $sql );
+        $sth->execute( $type );
 
-		while ( my ($id, $node) = $sth->fetchrow_array ) {
-        	push @nodes, $node;
-		}
+        while ( my ($id, $node) = $sth->fetchrow_array ) {
+            push @nodes, $node;
+        }
     } else {
-		# To find those without the value in this case would involve
-		#  some seriously brain hurting SQL.
-		# So, cheat - find those with, and return everything else
-		my @with = $self->list_nodes_by_metadata(%args);
-		my %with_hash;
-		foreach my $node (@with) { $with_hash{$node} = 1; }
+        # To find those without the value in this case would involve
+        #  some seriously brain hurting SQL.
+        # So, cheat - find those with, and return everything else
+        my @with = $self->list_nodes_by_metadata(%args);
+        my %with_hash;
+        foreach my $node (@with) { $with_hash{$node} = 1; }
 
-		my @all_nodes = $self->list_all_nodes();
-		foreach my $node (@all_nodes) {
-			unless($with_hash{$node}) {
-				push @nodes, $node;
-			}
-		}
-	}
+        my @all_nodes = $self->list_all_nodes();
+        foreach my $node (@all_nodes) {
+            unless($with_hash{$node}) {
+                push @nodes, $node;
+            }
+        }
+    }
 
     return @nodes;
 }
@@ -1758,7 +1757,7 @@ If possible, should take account of $args{ignore_case}
 =cut
 
 sub _get_list_by_metadata_sql {
-	# SQL 99 version
+    # SQL 99 version
     #  Can be over-ridden by database-specific subclasses
     my ($self, %args) = @_;
     if ( $args{ignore_case} ) {
@@ -1790,11 +1789,11 @@ If possible, should take account of $args{ignore_case}
 =cut
 
 sub _get_list_by_missing_metadata_sql {
-	# SQL 99 version
+    # SQL 99 version
     #  Can be over-ridden by database-specific subclasses
     my ($self, %args) = @_;
 
-	my $sql = "";
+    my $sql = "";
     if ( $args{ignore_case} ) {
         $sql = "SELECT node.id, node.name "
              . "FROM node "
@@ -1802,7 +1801,7 @@ sub _get_list_by_missing_metadata_sql {
              . "   ON (node.id = metadata.node_id "
              . "       AND node.version=metadata.version "
              . "       AND ". $self->_get_lowercase_compare_sql("metadata.metadata_type")
-			 . ")";
+             . ")";
     } else {
         $sql = "SELECT node.id, node.name "
              . "FROM node "
@@ -1813,32 +1812,32 @@ sub _get_list_by_missing_metadata_sql {
              . ")";
     }
 
-	$sql .= "WHERE (metadata.metadata_value IS NULL OR LENGTH(metadata.metadata_value) = 0) ";
-	return $sql;
+    $sql .= "WHERE (metadata.metadata_value IS NULL OR LENGTH(metadata.metadata_value) = 0) ";
+    return $sql;
 }
 
 sub _get_lowercase_compare_sql {
-	my ($self, $column) = @_;
-	# SQL 99 version
+    my ($self, $column) = @_;
+    # SQL 99 version
     #  Can be over-ridden by database-specific subclasses
-	return "lower($column) = ?";
+    return "lower($column) = ?";
 }
 sub _get_casesensitive_compare_sql {
-	my ($self, $column) = @_;
-	# SQL 99 version
+    my ($self, $column) = @_;
+    # SQL 99 version
     #  Can be over-ridden by database-specific subclasses
-	return "$column = ?";
+    return "$column = ?";
 }
 
 sub _get_comparison_sql {
     my ($self, %args) = @_;
-	# SQL 99 version
+    # SQL 99 version
     #  Can be over-ridden by database-specific subclasses
     return "$args{thing1} = $args{thing2}";
 }
 
 sub _get_node_exists_ignore_case_sql {
-	# SQL 99 version
+    # SQL 99 version
     #  Can be over-ridden by database-specific subclasses
     return "SELECT name FROM node WHERE name = ? ";
 }
@@ -1863,38 +1862,38 @@ sub _get_node_exists_ignore_case_sql {
 =cut
 
 sub list_unmoderated_nodes {
-	my ($self,%args) = @_;
+    my ($self,%args) = @_;
 
-	my $only_where_lastest = $args{'only_where_latest'};
+    my $only_where_lastest = $args{'only_where_latest'};
 
-	my $sql =
-		 "SELECT "
-		."	id, name, "
-		."	node.version AS last_moderated_version, "
-		."	content.version AS version "
-		."FROM content "
-		."INNER JOIN node "
-		."	ON (id = node_id) "
-		."WHERE moderated = ? "
-	;
-	if($only_where_lastest) {
-		$sql .= "AND node.version = content.version ";
-	}
-	$sql .= "ORDER BY name, content.version ";
+    my $sql =
+         "SELECT "
+        ."    id, name, "
+        ."    node.version AS last_moderated_version, "
+        ."    content.version AS version "
+        ."FROM content "
+        ."INNER JOIN node "
+        ."    ON (id = node_id) "
+        ."WHERE moderated = ? "
+    ;
+    if($only_where_lastest) {
+        $sql .= "AND node.version = content.version ";
+    }
+    $sql .= "ORDER BY name, content.version ";
 
-	# Query
+    # Query
     my $dbh = $self->dbh;
     my $sth = $dbh->prepare( $sql );
     $sth->execute( "0" );
 
-	my @nodes;
-	while(my @results = $sth->fetchrow_array) {
-		my %data;
-		@data{ qw( node_id name moderated_version version ) } = @results;
-		push @nodes, \%data;
-	}
+    my @nodes;
+    while(my @results = $sth->fetchrow_array) {
+        my %data;
+        @data{ qw( node_id name moderated_version version ) } = @results;
+        push @nodes, \%data;
+    }
 
-	return @nodes;
+    return @nodes;
 }
 
 =item B<list_last_version_before>
@@ -1905,41 +1904,41 @@ sub list_unmoderated_nodes {
 
     my @nv = $wiki->list_last_version_before('2007-01-02 10:34:11')
     foreach my $data (@nv) {
-    	
+        
     }
 
 =cut
 
 sub list_last_version_before {
-	my ($self, $date) = @_;
+    my ($self, $date) = @_;
 
-	my $sql =
-		 "SELECT "
-		."	id, name, "
-		."MAX(content.version) AS version, MAX(content.modified) AS modified "
-		."FROM node "
-		."LEFT OUTER JOIN content "
-		."	ON (id = node_id "
-		."      AND content.modified <= ?) "
-		."GROUP BY id, name "
-		."ORDER BY id "
-	;
+    my $sql =
+         "SELECT "
+        ."    id, name, "
+        ."MAX(content.version) AS version, MAX(content.modified) AS modified "
+        ."FROM node "
+        ."LEFT OUTER JOIN content "
+        ."    ON (id = node_id "
+        ."      AND content.modified <= ?) "
+        ."GROUP BY id, name "
+        ."ORDER BY id "
+    ;
 
-	# Query
+    # Query
     my $dbh = $self->dbh;
     my $sth = $dbh->prepare( $sql );
     $sth->execute( $date );
 
-	my @nodes;
-	while(my @results = $sth->fetchrow_array) {
-		my %data;
-		@data{ qw( id name version modified ) } = @results;
-		$data{'node_id'} = $data{'id'};
-		unless($data{'version'}) { $data{'version'} = undef; }
-		push @nodes, \%data;
-	}
+    my @nodes;
+    while(my @results = $sth->fetchrow_array) {
+        my %data;
+        @data{ qw( id name version modified ) } = @results;
+        $data{'node_id'} = $data{'id'};
+        unless($data{'version'}) { $data{'version'} = undef; }
+        push @nodes, \%data;
+    }
 
-	return @nodes;
+    return @nodes;
 }
 
 =item B<list_metadata_by_type>
@@ -1954,9 +1953,9 @@ sub list_last_version_before {
 =cut
 
 sub list_metadata_by_type {
-	my ($self, $type) = @_;
+    my ($self, $type) = @_;
 
-	return 0 unless $type;
+    return 0 unless $type;
 }
 
 
@@ -2070,31 +2069,31 @@ sub DESTROY {
 # decode a string of octets into perl's internal encoding, based on the
 # charset parameter we were passed. Takes a list, returns a list.
 sub charset_decode {
-  my $self = shift;
-  my @input = @_;
-  if ($CAN_USE_ENCODE) {
-    my @output;
-    for (@input) {
-      push( @output, Encode::decode( $self->{_charset}, $_ ) );
+    my $self = shift;
+    my @input = @_;
+    if ($CAN_USE_ENCODE) {
+        my @output;
+        for (@input) {
+            push( @output, Encode::decode( $self->{_charset}, $_ ) );
+        }
+        return @output;
     }
-    return @output;
-  }
-  return @input;
+    return @input;
 }
 
 # convert a perl string into a series of octets we can put into the database
 # takes a list, returns a list
 sub charset_encode {
-  my $self = shift;
-  my @input = @_;
-  if ($CAN_USE_ENCODE) {
-    my @output;
-    for (@input) {
-      push( @output, Encode::encode( $self->{_charset}, $_ ) );
+    my $self = shift;
+    my @input = @_;
+    if ($CAN_USE_ENCODE) {
+        my @output;
+        for (@input) {
+            push( @output, Encode::encode( $self->{_charset}, $_ ) );
+        }
+        return @output;
     }
-    return @output;
-  }
-  return @input;
+    return @input;
 }
 
 1;

@@ -28,7 +28,7 @@ A formatter backend for L<Wiki::Toolkit>.
   # See below for parameter details.
   my $formatter = Wiki::Toolkit::Formatter::Default->new( %config );
   my $wiki      = Wiki::Toolkit->new( store     => $store,
-                                  formatter => $formatter );
+                                      formatter => $formatter );
 
 =head1 METHODS
 
@@ -41,7 +41,7 @@ A formatter backend for L<Wiki::Toolkit>.
                  implicit_links  => 1,
                  allowed_tags    => [qw(b i)],  # defaults to none
                  macros          => {},
-	         node_prefix     => 'wiki.cgi?node=' );
+                 node_prefix     => 'wiki.cgi?node=' );
 
 Parameters will default to the values shown above (apart from
 C<allowed_tags>, which defaults to allowing no tags).
@@ -57,7 +57,7 @@ we can add in subs if we think it might be useful.
 Macro example:
 
   macros => { qr/(^|\b)\@SEARCHBOX(\b|$)/ =>
- 	        qq(<form action="wiki.cgi" method="get">
+              qq(<form action="wiki.cgi" method="get">
                    <input type="hidden" name="action" value="search">
                    <input type="text" size="20" name="terms">
                    <input type="submit"></form>) }
@@ -77,11 +77,11 @@ sub _init {
 
     # Store the parameters or their defaults.
     my %defs = ( extended_links  => 0,
-	         implicit_links  => 1,
-		 allowed_tags    => [],
-		 macros          => {},
-	         node_prefix     => 'wiki.cgi?node=',
-	       );
+                 implicit_links  => 1,
+                 allowed_tags    => [],
+                 macros          => {},
+                 node_prefix     => 'wiki.cgi?node=',
+               );
 
     my %collated = (%defs, %args);
     foreach my $k (keys %defs) {
@@ -110,15 +110,15 @@ sub format {
 
     if (scalar keys %allowed) {
         # If we are allowing some HTML, parse and get rid of the nasties.
-	my $parser = HTML::PullParser->new(doc   => $raw,
-					   start => '"TAG", tag, text',
-					   end   => '"TAG", tag, text',
-					   text  => '"TEXT", tag, text');
-	while (my $token = $parser->get_token) {
+        my $parser = HTML::PullParser->new(doc   => $raw,
+                                           start => '"TAG", tag, text',
+                                           end   => '"TAG", tag, text',
+                                           text  => '"TEXT", tag, text');
+        while (my $token = $parser->get_token) {
             my ($flag, $tag, $text) = @$token;
-	    if ($flag eq "TAG" and !defined $allowed{lc($tag)}) {
-	        $safe .= CGI::escapeHTML($text);
-	    } else {
+            if ($flag eq "TAG" and !defined $allowed{lc($tag)}) {
+                $safe .= CGI::escapeHTML($text);
+            } else {
                 $safe .= $text;
             }
         }
@@ -134,9 +134,9 @@ sub format {
     }
 
     return wikiformat($safe, {},
-		      { extended       => $self->{_extended_links},
-			prefix         => $self->{_node_prefix},
-			implicit_links => $self->{_implicit_links} } );
+              { extended       => $self->{_extended_links},
+                prefix         => $self->{_node_prefix},
+                implicit_links => $self->{_implicit_links} } );
 }
 
 =back

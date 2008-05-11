@@ -40,7 +40,7 @@ sub _dsn {
 =item B<check_and_write_node>
 
   $store->check_and_write_node( node     => $node,
-				checksum => $checksum,
+                checksum => $checksum,
                                 %other_args );
 
 Locks the node, verifies the checksum, calls
@@ -61,7 +61,7 @@ sub check_and_write_node {
     my $ok = $self->verify_checksum($node, $checksum);
     unless ($ok) {
         $self->_unlock_node($node) or carp "Can't unlock node";
-	return 0;
+        return 0;
     }
     $ok = $self->write_node_post_locking( %args );
     $self->_unlock_node($node) or carp "Can't unlock node";

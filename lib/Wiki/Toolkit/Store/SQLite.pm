@@ -51,7 +51,7 @@ sub new {
 =item B<check_and_write_node>
 
   $store->check_and_write_node( node     => $node,
-				checksum => $checksum,
+                checksum => $checksum,
                                 %other_args );
 
 Locks the node, verifies the checksum, calls
@@ -77,8 +77,8 @@ sub check_and_write_node {
     if ($@) {
         my $error = $@;
         $dbh->rollback;
-	$dbh->{AutoCommit} = 1;
-	if (   $error =~ /database is locked/
+        $dbh->{AutoCommit} = 1;
+        if ( $error =~ /database is locked/
             or $error =~ /DBI connect.+failed/ ) {
             return 0;
         } else {
@@ -86,8 +86,8 @@ sub check_and_write_node {
         }
     } else {
         $dbh->commit;
-	$dbh->{AutoCommit} = 1;
-	return $ok;
+        $dbh->{AutoCommit} = 1;
+        return $ok;
     }
 }
 

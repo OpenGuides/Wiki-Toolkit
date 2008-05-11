@@ -14,10 +14,9 @@ use Digest::MD5 "md5_hex";
 
 my $CAN_USE_ENCODE;
 BEGIN {
-  eval " use Encode ";
-  $CAN_USE_ENCODE = $@ ? 0 : 1;
+    eval " use Encode ";
+    $CAN_USE_ENCODE = $@ ? 0 : 1;
 }
-
 
 =head1 NAME
 
@@ -44,7 +43,7 @@ you.  You will still need to write some code - this isn't an instant Wiki.
       indexdb => $indexdb );
 
   my $wiki      = Wiki::Toolkit->new( store     => $store,
-                                  search    => $search );
+                                      search    => $search );
 
   # Do all the CGI stuff.
   my $q      = CGI->new;
@@ -55,13 +54,13 @@ you.  You will still need to write some code - this isn't an instant Wiki.
       my $raw    = $wiki->retrieve_node($node);
       my $cooked = $wiki->format($raw);
       print_page(node    => $node,
-		 content => $cooked);
+                 content => $cooked);
   } elsif ($action eq 'preview') {
       my $submitted_content = $q->param("content");
       my $preview_html      = $wiki->format($submitted_content);
       print_editform(node    => $node,
-	             content => $submitted_content,
-	             preview => $preview_html);
+                     content => $submitted_content,
+                     preview => $preview_html);
   } elsif ($action eq 'commit') {
       my $submitted_content = $q->param("content");
       my $cksum = $q->param("checksum");
@@ -141,7 +140,7 @@ sub _init {
         carp "You seem to be using a script written for a pre-0.10 version "
            . "of Wiki::Toolkit - the $obsolete_param parameter is no longer used. "
            . "Please read the documentation with 'perldoc Wiki::Toolkit'"
-          if $args{$obsolete_param};
+            if $args{$obsolete_param};
     }
 
     croak "No store supplied" unless $args{store};
@@ -157,9 +156,9 @@ sub _init {
         # following options to alter the default behaviour of Text::WikiFormat.
         my %config;
         foreach ( qw( extended_links implicit_links allowed_tags
-		    macros node_prefix ) ) {
+            macros node_prefix ) ) {
             $config{$_} = $args{$_} if defined $args{$_};
-	}
+    }
         $self->{_formatter} = Wiki::Toolkit::Formatter::Default->new( %config );
     }
 
@@ -218,7 +217,7 @@ even if that type of metadata only has one value.
 sub retrieve_node {
     my ($self, @rawargs) = @_;
 
-	my %args = scalar @rawargs == 1 ? ( name => $rawargs[0] ) : @rawargs;
+    my %args = scalar @rawargs == 1 ? ( name => $rawargs[0] ) : @rawargs;
 
     my @plugins = $self->get_registered_plugins;
     $args{plugins} = \@plugins if scalar @plugins;
@@ -242,8 +241,8 @@ sub moderate_node {
     $args{plugins} = \@plugins if scalar @plugins;
 
     my $ret = $self->store->moderate_node( %args );
-	if($ret == -1) { return $ret; }
-	return 1;
+    if($ret == -1) { return $ret; }
+    return 1;
 }
 
 =item B<set_node_moderation>
@@ -277,24 +276,26 @@ required, it can mark these updates to other pages as a new version.
 
 sub rename_node {
     my ($self, @argsarray) = @_;
-	my %args = @argsarray;
-	if((scalar @argsarray) == 2 || (scalar @argsarray) == 3) {
-		# Missing keys
-		%args = (
-			old_name => $argsarray[0],
-			new_name => $argsarray[1],
-			create_new_versions => $argsarray[2]
-		);
-	}
+    my %args = @argsarray;
+    if ((scalar @argsarray) == 2 || (scalar @argsarray) == 3) {
+        # Missing keys
+        %args = (
+            old_name => $argsarray[0],
+            new_name => $argsarray[1],
+            create_new_versions => $argsarray[2]
+        );
+    }
 
     my @plugins = $self->get_registered_plugins;
     $args{plugins} = \@plugins if scalar @plugins;
-	$args{wiki} = $self;
+    $args{wiki} = $self;
 
     my $ret = $self->store->rename_node( %args );
 
-	if($ret && $ret == -1) { return $ret; }
-	return 1;
+    if ($ret && $ret == -1) {
+        return $ret;
+    }
+    return 1;
 }
 
 =item B<verify_checksum>
@@ -449,8 +450,8 @@ sub list_recent_changes {
 
   my @nodes = $wiki->list_unmoderated_nodes();
   my @nodes = $wiki->list_unmoderated_nodes(
-												only_where_latest => 1
-											);
+                                                only_where_latest => 1
+                                            );
 
   $nodes[0]->{'name'}              # The name of the node
   $nodes[0]->{'node_id'}           # The id of the node
@@ -501,20 +502,19 @@ sub list_node_all_versions {
 }
 
 =item B<list_last_version_before>
-	List the last version of every node before a given date.
-	If no version existed before that date, will return undef for version.
-	Returns a hash of id, name, version and date
+    List the last version of every node before a given date.
+    If no version existed before that date, will return undef for version.
+    Returns a hash of id, name, version and date
 
-	my @nv = $wiki->list_last_version_before('2007-01-02 10:34:11')
-	foreach my $data (@nv) {
-		
-	}
+    my @nv = $wiki->list_last_version_before('2007-01-02 10:34:11')
+    foreach my $data (@nv) {
+        
+    }
 
 =cut
 
 sub list_last_version_before {
     my ($self,@argsarray) = @_;
-
     return $self->store->list_last_version_before(@argsarray);
 }
 
@@ -556,8 +556,12 @@ sub node_required_moderation {
     my %node = $self->retrieve_node(@args);
 
     # Return false if it doesn't exist
-    unless(%node) { return 0; }
-    unless($node{node_requires_moderation}) { return 0; }
+    unless(%node) {
+        return 0;
+    }
+    unless($node{node_requires_moderation}) {
+        return 0;
+    }
 
     # Otherwise return the state of the flag
     return $node{node_requires_moderation};
@@ -586,7 +590,7 @@ sub delete_node {
     my %args = ( scalar @_ == 1 ) ? ( name => $_[0] ) : @_;
 
     my @plugins = $self->get_registered_plugins;
-	my $plugins_ref = \@plugins if scalar @plugins;
+    my $plugins_ref = \@plugins if scalar @plugins;
 
     return 1 unless $self->node_exists( $args{name} );
     $self->store->delete_node(
@@ -603,7 +607,7 @@ sub delete_node {
         my $new_current_content = $self->retrieve_node( $args{name } );
         if ( $new_current_content ) {
             $search->index_node( $args{name}, $new_current_content );
-	}
+        }
     }
 
     return 1;
@@ -830,17 +834,19 @@ sub write_node {
     }
 
     my %data = ( node     => $node,
-		 content  => $content,
-		 checksum => $checksum,
-		 metadata => $metadata,
-		 requires_moderation => $requires_moderation );
+         content  => $content,
+         checksum => $checksum,
+         metadata => $metadata,
+         requires_moderation => $requires_moderation );
     $data{links_to} = \@links_to if scalar @links_to;
     my @plugins = $self->get_registered_plugins;
     $data{plugins} = \@plugins if scalar @plugins;
 
     my $store = $self->store;
     my $ret = $store->check_and_write_node( %data ) or return 0;
-	if($ret == -1) { return -1; }
+    if($ret == -1) {
+        return -1;
+    }
 
     my $search = $self->{_search};
     if ($search and $content) {
@@ -870,9 +876,9 @@ sub format {
     # Nasty hack to work around an HTML::Parser deficiency
     # see http://rt.cpan.org/NoAuth/Bug.html?id=7014
     if ($CAN_USE_ENCODE) {
-      if (Encode::is_utf8($raw)) {
-        Encode::_utf8_on( $result );
-      }
+        if (Encode::is_utf8($raw)) {
+            Encode::_utf8_on( $result );
+        }
     }
 
     return $result;

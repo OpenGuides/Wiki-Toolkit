@@ -22,15 +22,15 @@ my %stores;
 foreach my $dbtype (qw( MySQL Pg SQLite )) {
     if ($Wiki::Toolkit::TestConfig::config{$dbtype}->{dbname}) {
         my %config = %{$Wiki::Toolkit::TestConfig::config{$dbtype}};
-	my $store_class = "Wiki::Toolkit::Store::$dbtype";
-	eval "require $store_class";
-	my $store = $store_class->new( dbname => $config{dbname},
-				       dbuser => $config{dbuser},
-				       dbpass => $config{dbpass},
-				       dbhost => $config{dbhost} );
-	$stores{$dbtype} = $store;
+        my $store_class = "Wiki::Toolkit::Store::$dbtype";
+        eval "require $store_class";
+        my $store = $store_class->new( dbname => $config{dbname},
+                                       dbuser => $config{dbuser},
+                                       dbpass => $config{dbpass},
+                                       dbhost => $config{dbhost} );
+        $stores{$dbtype} = $store;
     } else {
-	$stores{$dbtype} = undef;
+        $stores{$dbtype} = undef;
     }
 }
 
@@ -56,7 +56,7 @@ if ( $Wiki::Toolkit::TestConfig::config{search_invertedindex} && $stores{MySQL} 
                        -db_name    => $dbconfig{dbname},
                        -username   => $dbconfig{dbuser},
                        -password   => $dbconfig{dbpass},
-	   	       -hostname   => $dbconfig{dbhost} || "",
+                       -hostname   => $dbconfig{dbhost} || "",
                        -table_name => 'siindex',
                        -lock_mode  => 'EX' );
     $searches{SIIMySQL} = Wiki::Toolkit::Search::SII->new( indexdb => $indexdb );
@@ -76,7 +76,7 @@ if ( $Wiki::Toolkit::TestConfig::config{search_invertedindex} && $stores{Pg}
                        -db_name    => $dbconfig{dbname},
                        -username   => $dbconfig{dbuser},
                        -password   => $dbconfig{dbpass},
-	   	       -hostname   => $dbconfig{dbhost},
+                       -hostname   => $dbconfig{dbhost},
                        -table_name => 'siindex',
                        -lock_mode  => 'EX' );
     $searches{SIIPg} = Wiki::Toolkit::Search::SII->new( indexdb => $indexdb );
@@ -98,28 +98,28 @@ if ( $Wiki::Toolkit::TestConfig::config{search_invertedindex} ) {
 
 my @combinations; # which searches work with which stores.
 push @combinations, { store_name  => "MySQL",
-		      store       => $stores{MySQL},
-		      search_name => "DBIxFTSMySQL",
-		      search      => $searches{DBIxFTSMySQL} };
+                      store       => $stores{MySQL},
+                      search_name => "DBIxFTSMySQL",
+                      search      => $searches{DBIxFTSMySQL} };
 push @combinations, { store_name  => "MySQL",
-		      store       => $stores{MySQL},
-		      search_name => "SIIMySQL",
-		      search      => $searches{SIIMySQL} };
+                      store       => $stores{MySQL},
+                      search_name => "SIIMySQL",
+                      search      => $searches{SIIMySQL} };
 push @combinations, { store_name  => "Pg",
-		      store       => $stores{Pg},
-		      search_name => "SIIPg",
-		      search      => $searches{SIIPg} };
+                      store       => $stores{Pg},
+                      search_name => "SIIPg",
+                      search      => $searches{SIIPg} };
 
 # All stores are compatible with the default S::II search, and with no search.
 foreach my $store_name ( keys %stores ) {
     push @combinations, { store_name  => $store_name,
-			  store       => $stores{$store_name},
-			  search_name => "SII",
-			  search      => $searches{SII} };
+                          store       => $stores{$store_name},
+                          search_name => "SII",
+                          search      => $searches{SII} };
     push @combinations, { store_name  => $store_name,
-			  store       => $stores{$store_name},
-			  search_name => "undef",
-			  search      => undef };
+                          store       => $stores{$store_name},
+                          search_name => "undef",
+                          search      => undef };
 }
 
 foreach my $comb ( @combinations ) {
@@ -146,9 +146,9 @@ sub reinitialise_stores {
         my $setup_class = "Wiki::Toolkit::Setup::$store_name";
         eval "require $setup_class";
         {
-          no strict "refs";
-          &{"$setup_class\:\:cleardb"}($dbname, $dbuser, $dbpass, $dbhost);
-          &{"$setup_class\:\:setup"}($dbname, $dbuser, $dbpass, $dbhost);
+            no strict "refs";
+            &{"$setup_class\:\:cleardb"}($dbname, $dbuser, $dbpass, $dbhost);
+            &{"$setup_class\:\:setup"}($dbname, $dbuser, $dbpass, $dbhost);
         }
     }
 }

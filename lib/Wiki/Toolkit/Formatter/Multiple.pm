@@ -36,7 +36,7 @@ Wiki::Toolkit formatters, depending on supplied metadata.
   );
 
   my $wiki = Wiki::Toolkit->new( store     => ...,
-                             formatter => $formatter );
+                                 formatter => $formatter );
   my $output = $wiki->format( "This is some discussion.",
                               { formatter => "discussion" } );
   
@@ -114,11 +114,11 @@ sub find_internal_links {
 # page.
 
 sub _formatter {
-  my $self = shift;
-  my $metadata = shift;
-  my $label = $metadata->{formatter} || "_DEFAULT";
-  $label = $label->[0] if ref($label);
-  return $self->{formatters}{$label} || $self->{formatters}{_DEFAULT};
+    my $self = shift;
+    my $metadata = shift;
+    my $label = $metadata->{formatter} || "_DEFAULT";
+    $label = $label->[0] if ref($label);
+    return $self->{formatters}{$label} || $self->{formatters}{_DEFAULT};
 }
 
 =back

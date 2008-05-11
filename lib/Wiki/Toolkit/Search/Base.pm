@@ -8,7 +8,7 @@ use vars qw( @ISA $VERSION );
 sub _abstract {
     my $who = (caller(1))[3];
     croak "$who is an abstract method which the ".(ref shift).
-    " class has not provided";
+          " class has not provided";
 }
 
 $VERSION = 0.01;
@@ -98,11 +98,11 @@ words that contain at least 1 word characters.
 sub analyze {
     my ($self, $string) = @_;
     return grep { length > 1            # ignore single characters
-                 and ! /^\W*$/ }        # and things composed entirely
-                                        #   of non-word characters
-          split( /\b/,                  # split at word boundaries
+                  and ! /^\W*$/ }       # and things composed entirely
+                                        # of non-word characters
+           split( /\b/,                 # split at word boundaries
                        lc($string)      # be case-insensitive
-                   );
+                );
 }
 
 =item B<fuzzy_title_match>

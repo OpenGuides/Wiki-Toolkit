@@ -37,7 +37,7 @@ See also L<Wiki::Toolkit::Search::Base>, for methods not documented here.
                    -db_name    => $dbname,
                    -username   => $dbuser,
                    -password   => $dbpass,
-		   -hostname   => '',
+           -hostname   => '',
                    -table_name => 'siindex',
                    -lock_mode  => 'EX' );
 
@@ -61,7 +61,7 @@ sub _init {
     my $indexdb = $args{indexdb};
 
     my $map = Search::InvertedIndex->new( -database => $indexdb )
-      or croak "Couldn't set up Search::InvertedIndex map";
+        or croak "Couldn't set up Search::InvertedIndex map";
     $map->add_group( -group => "nodes" );
     $map->add_group( -group => "fuzzy_titles" );
 
@@ -92,7 +92,7 @@ sub _do_search {
     my %results;
     for my $i ( 1 .. $num_results ) {
         my ($index, $data, $ranking) = $result->entry( -number => $i - 1 );
-	$results{$index} = $ranking;
+        $results{$index} = $ranking;
     }
     return %results;
 }
@@ -111,7 +111,7 @@ sub _fuzzy_match {
     my %results;
     for my $i ( 1 .. $num_results ) {
         my ($index, $data) = $result->entry( -number => $i - 1 );
-	$results{$data} = $data eq $string ? 2 : 1;
+        $results{$data} = $data eq $string ? 2 : 1;
     }
     return %results;
 }

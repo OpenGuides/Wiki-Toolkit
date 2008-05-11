@@ -13,7 +13,7 @@ GetOptions( "type=s"         => \$dbtype,
             "id=s"           => \$id,
             "nodename=s"     => \$node_name,
             "version=s"      => \$version,
-           );
+          );
 
 unless (defined($dbtype)) {
     print "You must supply a database type with the --type option.\n";
@@ -28,15 +28,16 @@ unless (defined($dbname)) {
 }
 
 if(defined($id) and defined($node_name)) {
-	print "You should supply either a node name, or an id, but not both.\n";
-	print "Further help can be found by typing 'perldoc $0'\n";
-	exit 1;
+    print "You should supply either a node name, or an id, but not both.\n";
+    print "Further help can be found by typing 'perldoc $0'\n";
+    exit 1;
 }
+
 if(not defined($id) and not defined($node_name)) {
-	print "You must supply the id of the node with the --id option,\n";
-	print " or the node name of the node with the --nodename option.\n";
-	print "Further help can be found by typing 'perldoc $0'\n";
-	exit 1;
+    print "You must supply the id of the node with the --id option,\n";
+    print " or the node name of the node with the --nodename option.\n";
+    print "Further help can be found by typing 'perldoc $0'\n";
+    exit 1;
 }
 
 if ($help) {
@@ -45,8 +46,8 @@ if ($help) {
 }
 
 my %setup_modules = ( postgres => "Wiki::Toolkit::Store::Pg",
-		      mysql    => "Wiki::Toolkit::Store::MySQL",
-		      sqlite  => "Wiki::Toolkit::Store::SQLite"
+                      mysql    => "Wiki::Toolkit::Store::MySQL",
+                      sqlite  => "Wiki::Toolkit::Store::SQLite"
 );
 
 unless ( defined($setup_modules{$dbtype}) ) {
@@ -67,9 +68,15 @@ if ( $@ ) {
 # Create a store instance
 my $store;
 my $args = "dbname=>'$dbname', dbuser=>'$dbuser'";
-if($dbpass) { $args .= ", dbpass=>'$dbpass'"; }
-if($dbhost) { $args .= ", dbhost=>'$dbhost'"; }
-if($dbport) { $args .= ", dbport=>'$dbport'"; }
+if($dbpass) {
+    $args .= ", dbpass=>'$dbpass'";
+}
+if($dbhost) {
+    $args .= ", dbhost=>'$dbhost'";
+}
+if($dbport) {
+    $args .= ", dbport=>'$dbport'";
+}
 eval "\$store = $class->new($args);";
 
 # Create a Wiki instance
@@ -77,19 +84,19 @@ my $wiki = Wiki::Toolkit->new(store=>$store);
 
 # If they gave the ID, get the name
 if($id) {
-	$node_name = $wiki->store->node_name_for_id($id);
-	unless($node_name) {
-		die("No node found with id '$id'\n");
-	}
+    $node_name = $wiki->store->node_name_for_id($id);
+    unless($node_name) {
+        die("No node found with id '$id'\n");
+    }
 }
 
 # Report what we're going to do
 print "Deleting node with name '$node_name'";
 if($id) {
-	print " (id $id)";
+    print " (id $id)";
 }
 if($version) {
-	print " at version $version";
+    print " at version $version";
 }
 print "\n";
 
@@ -98,7 +105,6 @@ $wiki->delete_node(name => $node_name, verion => $version);
 
 # All done
 print "done.\n";
-
 
 =head1 NAME
 
@@ -109,21 +115,21 @@ wiki-toolkit-delete-node - Delete a node stored in a Wiki::Toolkit instance.
   # Delete a node in a Wiki::Toolkit instance
 
   wiki-toolkit-delete-node --type postgres
-		   --name mywiki \
-		   --user wiki  \
-		   --pass wiki \
-		   --host 'db.example.com' \
-		   --port 1234 \
-		   --nodename MyNodeName 
+           --name mywiki \
+           --user wiki  \
+           --pass wiki \
+           --host 'db.example.com' \
+           --port 1234 \
+           --nodename MyNodeName 
 
   wiki-toolkit-delete-node --type postgres
-		   --name mywiki \
-		   --user wiki  \
-		   --pass wiki \
-		   --host 'db.example.com' \
-		   --port 1234 \
-		   --id 2 \
-		   --version 7
+           --name mywiki \
+           --user wiki  \
+           --pass wiki \
+           --host 'db.example.com' \
+           --port 1234 \
+           --id 2 \
+           --version 7
 
 =head1 DESCRIPTION
 

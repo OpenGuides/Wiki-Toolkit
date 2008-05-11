@@ -21,7 +21,7 @@ Wiki::Toolkit::Setup::SII - Set up Search::InvertedIndex indexes for Wiki::Toolk
                    -db_name    => $dbname,
                    -username   => $dbuser,
                    -password   => $dbpass,
-		   -hostname   => '',
+           -hostname   => '',
                    -table_name => 'siindex',
                    -lock_mode  => 'EX' );
   Wiki::Toolkit::Setup::SII::setup( indexdb => $indexdb );
@@ -53,12 +53,12 @@ sub setup {
     # If we've been passed a store, index all its data.
     my $store = $args{store};
     if ( $store ) {
-	my @nodes = $store->list_all_nodes;
-	my $search = Wiki::Toolkit::Search::SII->new( indexdb => $indexdb );
-	foreach my $node ( @nodes ) {
-	    my $content = $store->retrieve_node( $node );
-	    $search->index_node( $node, $content );
-	}
+        my @nodes = $store->list_all_nodes;
+        my $search = Wiki::Toolkit::Search::SII->new( indexdb => $indexdb );
+        foreach my $node ( @nodes ) {
+            my $content = $store->retrieve_node( $node );
+            $search->index_node( $node, $content );
+        }
     }
 }
 

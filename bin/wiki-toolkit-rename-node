@@ -12,7 +12,7 @@ GetOptions( "type=s"         => \$dbtype,
             "help"           => \$help,
             "oldname=s"      => \$oldname,
             "newname=s"      => \$newname,
-           );
+          );
 
 unless (defined($dbtype)) {
     print "You must supply a database type with the --type option.\n";
@@ -27,15 +27,15 @@ unless (defined($dbname)) {
 }
 
 unless (defined($oldname)) {
-	print "You must supply the old node name with the --oldname option.\n";
-	print "Further help can be found by typing 'perldoc $0'\n";
-	exit 1;
+    print "You must supply the old node name with the --oldname option.\n";
+    print "Further help can be found by typing 'perldoc $0'\n";
+    exit 1;
 }
 
 unless (defined($newname)) {
-	print "You must supply the new node name with the --newname option.\n";
-	print "Further help can be found by typing 'perldoc $0'\n";
-	exit 1;
+    print "You must supply the new node name with the --newname option.\n";
+    print "Further help can be found by typing 'perldoc $0'\n";
+    exit 1;
 }
 
 if ($help) {
@@ -44,8 +44,8 @@ if ($help) {
 }
 
 my %setup_modules = ( postgres => "Wiki::Toolkit::Store::Pg",
-		      mysql    => "Wiki::Toolkit::Store::MySQL",
-		      sqlite  => "Wiki::Toolkit::Store::SQLite"
+                      mysql    => "Wiki::Toolkit::Store::MySQL",
+                      sqlite  => "Wiki::Toolkit::Store::SQLite"
 );
 
 unless ( defined($setup_modules{$dbtype}) ) {
@@ -66,9 +66,15 @@ if ( $@ ) {
 # Create a store instance
 my $store;
 my $args = "dbname=>'$dbname', dbuser=>'$dbuser'";
-if($dbpass) { $args .= ", dbpass=>'$dbpass'"; }
-if($dbhost) { $args .= ", dbhost=>'$dbhost'"; }
-if($dbport) { $args .= ", dbport=>'$dbport'"; }
+if($dbpass) {
+    $args .= ", dbpass=>'$dbpass'";
+}
+if($dbhost) {
+    $args .= ", dbhost=>'$dbhost'";
+}
+if($dbport) {
+    $args .= ", dbport=>'$dbport'";
+}
 eval "\$store = $class->new($args);";
 
 # Create a Wiki instance
@@ -80,7 +86,6 @@ $wiki->rename_node(old_name=>$oldname, new_name=>$newname);
 # All done
 print "Renamed '$oldname' to '$newname'\n";
 
-
 =head1 NAME
 
 wiki-toolkit-rename-node - Rename a node stored in a Wiki::Toolkit instance.
@@ -91,13 +96,13 @@ wiki-toolkit-rename-node - Rename a node stored in a Wiki::Toolkit instance.
   #  and references if the formatter supports link re-writing.
 
   wiki-toolkit-rename-node --type postgres
-		   --name mywiki \
-		   --user wiki  \
-		   --pass wiki \
-		   --host 'db.example.com' \
-		   --port 1234
-		   --oldname MyOldNodeName \
-		   --nemname FancyNewNodeName
+           --name mywiki \
+           --user wiki  \
+           --pass wiki \
+           --host 'db.example.com' \
+           --port 1234
+           --oldname MyOldNodeName \
+           --nemname FancyNewNodeName
 
 =head1 DESCRIPTION
 

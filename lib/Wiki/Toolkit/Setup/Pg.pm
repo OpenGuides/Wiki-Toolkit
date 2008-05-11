@@ -13,7 +13,7 @@ use DBI;
 use Carp;
 
 my %create_sql = (
-	schema_info => [ qq|
+    schema_info => [ qq|
 CREATE TABLE schema_info (
   version   integer      NOT NULL default 0
 )
@@ -74,7 +74,7 @@ CREATE INDEX metadata_index ON metadata (node_id, version, metadata_type, metada
 );
 
 my %upgrades = (
-	old_to_8 => [ qq|
+    old_to_8 => [ qq|
 CREATE SEQUENCE node_seq;
 ALTER TABLE node ADD COLUMN id INTEGER;
 UPDATE node SET id = NEXTVAL('node_seq');
@@ -90,7 +90,7 @@ CREATE UNIQUE INDEX node_name ON node (name)
 qq|
 ALTER TABLE content ADD COLUMN node_id INTEGER;
 UPDATE content SET node_id = 
-	(SELECT id FROM node where node.name = content.name)
+    (SELECT id FROM node where node.name = content.name)
 |, qq|
 DELETE FROM content WHERE node_id IS NULL;
 ALTER TABLE content ALTER COLUMN node_id SET NOT NULL;
@@ -102,7 +102,7 @@ ALTER TABLE content ADD CONSTRAINT fk_node_id FOREIGN KEY (node_id) REFERENCES n
 qq|
 ALTER TABLE metadata ADD COLUMN node_id INTEGER;
 UPDATE metadata SET node_id = 
-	(SELECT id FROM node where node.name = metadata.node)
+    (SELECT id FROM node where node.name = metadata.node)
 |, qq|
 DELETE FROM metadata WHERE node_id IS NULL;
 ALTER TABLE metadata ALTER COLUMN node_id SET NOT NULL;
@@ -191,16 +191,16 @@ sub setup {
         exists $create_sql{$table} and $tables{$table} = 1;
     }
 
-	# Do we need to upgrade the schema of existing tables?
-	# (Don't check if no tables currently exist)
-	my $upgrade_schema;
-	if(scalar keys %tables > 0) {
-		$upgrade_schema = Wiki::Toolkit::Setup::Database::get_database_upgrade_required($dbh,$VERSION);
-	} else {
-		print "Skipping schema upgrade check - no tables found\n";
-	}
+    # Do we need to upgrade the schema of existing tables?
+    # (Don't check if no tables currently exist)
+    my $upgrade_schema;
+    if(scalar keys %tables > 0) {
+        $upgrade_schema = Wiki::Toolkit::Setup::Database::get_database_upgrade_required($dbh,$VERSION);
+    } else {
+        print "Skipping schema upgrade check - no tables found\n";
+    }
 
-	# Set up tables if not found
+    # Set up tables if not found
     foreach my $required ( reverse sort keys %create_sql ) {
         if ( $tables{$required} ) {
             print "Table $required already exists... skipping...\n";
@@ -212,22 +212,22 @@ sub setup {
         }
     }
 
-	# Do the upgrade if required
-	if($upgrade_schema) {
-		print "Upgrading schema: $upgrade_schema\n";
-		my @updates = @{$upgrades{$upgrade_schema}};
-		foreach my $update (@updates) {
-			if(ref($update) eq "CODE") {
-				&$update($dbh);
-			} elsif(ref($update) eq "ARRAY") {
-				foreach my $nupdate (@$update) {
-					$dbh->do($nupdate);
-				}
-			} else {
-				$dbh->do($update);
-			}
-		}
-	}
+    # Do the upgrade if required
+    if($upgrade_schema) {
+        print "Upgrading schema: $upgrade_schema\n";
+        my @updates = @{$upgrades{$upgrade_schema}};
+        foreach my $update (@updates) {
+            if(ref($update) eq "CODE") {
+                &$update($dbh);
+            } elsif(ref($update) eq "ARRAY") {
+                foreach my $nupdate (@$update) {
+                    $dbh->do($nupdate);
+                }
+            } else {
+                $dbh->do($update);
+            }
+        }
+    }
 
     # Clean up if we made our own dbh.
     $dbh->disconnect if $disconnect_required;
@@ -299,7 +299,7 @@ sub _get_dbh {
         my %args = %{$_[0]};
         if ( $args{dbh} ) {
             return $args{dbh};
-	} else {
+    } else {
             return _make_dbh( %args );
         }
     }
@@ -324,7 +324,7 @@ sub _disconnect_required {
         my %args = %{$_[0]};
         if ( $args{dbh} ) {
             return 0;
-	} else {
+    } else {
             return 1;
         }
     }
@@ -338,9 +338,9 @@ sub _make_dbh {
     my $dsn = "dbi:Pg:dbname=$args{dbname}";
     $dsn .= ";host=$args{dbhost}" if $args{dbhost};
     my $dbh = DBI->connect($dsn, $args{dbuser}, $args{dbpass},
-			   { PrintError => 1, RaiseError => 1,
-			     AutoCommit => 1 } )
-      or croak DBI::errstr;
+               { PrintError => 1, RaiseError => 1,
+                 AutoCommit => 1 } )
+        or croak DBI::errstr;
     return $dbh;
 }
 

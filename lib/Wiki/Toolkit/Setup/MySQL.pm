@@ -13,7 +13,7 @@ use DBI;
 use Carp;
 
 my %create_sql = (
-	schema_info => [ qq|
+    schema_info => [ qq|
 CREATE TABLE schema_info (
   version   int(10)      NOT NULL default 0
 )
@@ -116,18 +116,18 @@ sub setup {
     # Check whether tables exist
     my %tables = fetch_tables_listing($dbh);
 
-	# Do we need to upgrade the schema of existing tables?
-	# (Don't check if no tables currently exist)
-	my $upgrade_schema;
-	my @cur_data;
-	if(scalar keys %tables > 0) {
-		$upgrade_schema = Wiki::Toolkit::Setup::Database::get_database_upgrade_required($dbh,$VERSION);
-	}
-	if($upgrade_schema) {
-		# Grab current data
-		print "Upgrading: $upgrade_schema\n";
-		@cur_data = eval("&Wiki::Toolkit::Setup::Database::fetch_upgrade_".$upgrade_schema."(\$dbh)");
-		if($@) { warn $@; }
+    # Do we need to upgrade the schema of existing tables?
+    # (Don't check if no tables currently exist)
+    my $upgrade_schema;
+    my @cur_data;
+    if(scalar keys %tables > 0) {
+        $upgrade_schema = Wiki::Toolkit::Setup::Database::get_database_upgrade_required($dbh,$VERSION);
+    }
+    if($upgrade_schema) {
+        # Grab current data
+        print "Upgrading: $upgrade_schema\n";
+        @cur_data = eval("&Wiki::Toolkit::Setup::Database::fetch_upgrade_".$upgrade_schema."(\$dbh)");
+        if($@) { warn $@; }
 
         # Check to make sure we can create, index and drop tables
         # before doing any more
@@ -136,14 +136,14 @@ sub setup {
             die "Unable to create/drop database tables as required by upgrade: $perm_check";
         }
         
-		# Drop the current tables
-		cleardb($dbh);
+        # Drop the current tables
+        cleardb($dbh);
 
-		# Grab new list of tables
-		%tables = fetch_tables_listing($dbh);
-	}
+        # Grab new list of tables
+        %tables = fetch_tables_listing($dbh);
+    }
 
-	# Set up tables if not found
+    # Set up tables if not found
     foreach my $required ( keys %create_sql ) {
         if ( $tables{$required} ) {
             print "Table $required already exists... skipping...\n";
@@ -155,10 +155,10 @@ sub setup {
         }
     }
 
-	# If upgrading, load in the new data
-	if($upgrade_schema) {
-		Wiki::Toolkit::Setup::Database::bulk_data_insert($dbh,@cur_data);
-	}
+    # If upgrading, load in the new data
+    if($upgrade_schema) {
+        Wiki::Toolkit::Setup::Database::bulk_data_insert($dbh,@cur_data);
+    }
 
     # Clean up if we made our own dbh.
     $dbh->disconnect if $disconnect_required;
@@ -166,7 +166,7 @@ sub setup {
 
 # Internal method - what Wiki::Toolkit tables are defined?
 sub fetch_tables_listing {
-	my $dbh = shift;
+    my $dbh = shift;
 
     # Check what tables exist
     my $sth = $dbh->prepare("SHOW TABLES") or croak $dbh->errstr;
@@ -175,7 +175,7 @@ sub fetch_tables_listing {
     while ( my $table = $sth->fetchrow_array ) {
         exists $create_sql{$table} and $tables{$table} = 1;
     }
-	return %tables;
+    return %tables;
 }
 
 =item B<cleardb>
@@ -233,7 +233,7 @@ sub _get_dbh {
         my %args = %{$_[0]};
         if ( $args{dbh} ) {
             return $args{dbh};
-	} else {
+    } else {
             return _make_dbh( %args );
         }
     }
@@ -258,7 +258,7 @@ sub _disconnect_required {
         my %args = %{$_[0]};
         if ( $args{dbh} ) {
             return 0;
-	} else {
+    } else {
             return 1;
         }
     }
@@ -272,9 +272,9 @@ sub _make_dbh {
     my $dsn = "dbi:mysql:$args{dbname}";
     $dsn .= ";host=$args{dbhost}" if $args{dbhost};
     my $dbh = DBI->connect($dsn, $args{dbuser}, $args{dbpass},
-			   { PrintError => 1, RaiseError => 1,
-			     AutoCommit => 1 } )
-      or croak DBI::errstr;
+               { PrintError => 1, RaiseError => 1,
+                 AutoCommit => 1 } )
+        or croak DBI::errstr;
     return $dbh;
 }
 

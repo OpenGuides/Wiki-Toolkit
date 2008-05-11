@@ -14,8 +14,7 @@ eval "use Wiki::Toolkit::TestConfig";
 # the appropriate environment variable.
 if ($Wiki::Toolkit::TestConfig::configured
     and not (@ARGV and $ARGV[0] eq '-s')
-    and not $ENV{WIKI_TOOLKIT_RERUN_CONFIG}
-   ) {
+    and not $ENV{WIKI_TOOLKIT_RERUN_CONFIG}) {
     print "\nFor the test suite, we use the database and user info\n"
         . "specified during the previous run.  If you want to change\n"
         . "some or all of the values, run 'perl Makefile.PL -s'.\n\n"
@@ -31,7 +30,7 @@ if ($Wiki::Toolkit::TestConfig::configured
     print "\nYou should supply at least one set of options for testing,\n"
         . "preferably relevant to the backend(s) you intend to use live.\n"
         . "Running the tests under every possible backend combination is\n"
-	. "recommended.  To enter an undefined value, accept the empty\n"
+        . "recommended.  To enter an undefined value, accept the empty\n"
         . "string or explicitly enter 'undef'.\n\n"
         . "****        THESE TESTS ARE DESTRUCTIVE.         ****\n"
         . "**** DO NOT RUN THEM ON A DATABASE THAT CONTAINS ****\n"
@@ -52,18 +51,19 @@ if ($Wiki::Toolkit::TestConfig::configured
     # Grab information from environment variables.
     foreach my $store (qw(MySQL Pg)) {
         my $dbname = $ENV{"WIKI_TOOLKIT_".uc($store)."_DBNAME"};
-	if ($dbname and $dbname ne "undef") {
-	    $config{$store}{dbname} = $dbname;
+        if ($dbname and $dbname ne "undef") {
+            $config{$store}{dbname} = $dbname;
             foreach my $var (qw(dbuser dbpass dbhost)) {
                 my $value = $ENV{"WIKI_TOOLKIT_".uc($store)."_".uc($var)};
-		if ($value and $value ne "undef") {  	            $config{$store}{$var} = $value;
-		} elsif ($value eq "undef") {
-		    $config{$store}{$var} = undef;
-		}
-	    }
-	} elsif ($dbname eq "undef") {
-	    $config{$store}{dbname} = undef;
-	}
+                if ($value and $value ne "undef") {
+                    $config{$store}{$var} = $value;
+                } elsif ($value eq "undef") {
+                    $config{$store}{$var} = undef;
+                }
+            }
+        } elsif ($dbname eq "undef") {
+            $config{$store}{dbname} = undef;
+        }
     }
 
     my $dbixfts = $ENV{WIKI_TOOLKIT_DBIXFTS_MYSQL};
@@ -75,41 +75,41 @@ if ($Wiki::Toolkit::TestConfig::configured
 
     # Finally ask questions; then check the settings work.
     my %driver = ( MySQL => "DBD::mysql",
-	           Pg    => "DBD::Pg" );
+                   Pg    => "DBD::Pg" );
     foreach my $store_type (qw(MySQL Pg)) {
         # See whether we have the driver installed.
         eval "require " . $driver{$store_type};
         if ($@) {
             print "\n$driver{$store_type} not installed... skipping...\n";
-	    $config{$store_type}{dbname} = undef;
-	    next;
-	}
+            $config{$store_type}{dbname} = undef;
+            next;
+        }
 
         # Prompt for the options.
         my ($dbname, $dbuser, $dbpass, $dbhost);
         my $pad = ' ' x (7-length $store_type);
         $dbname = prompt "\n${pad}Database name for $store_type: ",
-	                 $config{$store_type}{dbname};
+                         $config{$store_type}{dbname};
         undef $dbname unless ($dbname and $dbname ne "undef");
         if ($dbname and $dbname ne "undef") {
-	    $dbuser = prompt "            Database user: ",
-	                     $config{$store_type}{dbuser};
+            $dbuser = prompt "            Database user: ",
+                             $config{$store_type}{dbuser};
             undef $dbuser unless ($dbuser and $dbuser ne "undef");
-	    $dbpass = prompt "        Database password: ",
-	                     $config{$store_type}{dbpass};
+            $dbpass = prompt "        Database password: ",
+                             $config{$store_type}{dbpass};
             undef $dbpass unless ($dbpass and $dbpass ne "undef");
-	    $dbhost = prompt "Database host (if needed): ",
-	                     $config{$store_type}{dbhost};
+            $dbhost = prompt "Database host (if needed): ",
+                             $config{$store_type}{dbhost};
             undef $dbhost unless ($dbhost and $dbhost ne "undef");
 
             $config{$store_type}{dbname} = $dbname;
             $config{$store_type}{dbuser} = $dbuser;
             $config{$store_type}{dbpass} = $dbpass;
             $config{$store_type}{dbhost} = $dbhost;
-	} else {
+        } else {
             print "\nNo database name supplied... skipping...\n";
-	    $config{$store_type}{dbname} = undef;
-	}
+            $config{$store_type}{dbname} = undef;
+        }
     }
 
     print "\n";
@@ -120,8 +120,9 @@ if ($Wiki::Toolkit::TestConfig::configured
 
 # If we have a MySQL store configured, we can test the DBIx::FullTextSearch
 # search backend.
-eval { require DBIx::FullTextSearch;
-       require Lingua::Stem;
+eval {
+    require DBIx::FullTextSearch;
+    require Lingua::Stem;
 };
 my $fts_inst = $@ ? 0 : 1;
 if ($Wiki::Toolkit::TestConfig::config{MySQL}{dbname} and $fts_inst) {
@@ -171,12 +172,12 @@ if ( $plucene_inst ) {
 
 # Write out the config for next run.
 open OUT, ">lib/Wiki/Toolkit/TestConfig.pm"
-  or die "Couldn't open lib/Wiki/Toolkit/TestConfig.pm for writing: $!";
+    or die "Couldn't open lib/Wiki/Toolkit/TestConfig.pm for writing: $!";
 # warning - blind copy and paste follows.  FIXME.
 print OUT Data::Dumper->new([ \%Wiki::Toolkit::TestConfig::config ],
-			    [ '*Wiki::Toolkit::TestConfig::config' ]
-			   )->Dump,
-  "\$Wiki::Toolkit::TestConfig::configured = 1;\n1;\n";
+                            [ '*Wiki::Toolkit::TestConfig::config' ]
+                           )->Dump,
+          "\$Wiki::Toolkit::TestConfig::configured = 1;\n1;\n";
 close OUT;
 
 # Some modules are only prerequisites if we intend to test a
@@ -201,19 +202,21 @@ if ( $config{plucene} ) {
 
 # Write the Makefile.
 WriteMakefile( NAME         => "Wiki::Toolkit",
-	       VERSION_FROM => "lib/Wiki/Toolkit.pm",
-	       PREREQ_PM    => { 'Text::WikiFormat' => '0.78', #earlier's buggy
-				 'HTML::PullParser' => 0,
-				 'Digest::MD5' => 0,
-			         'Test::More' => 0,
-			         'Time::Piece' => 0,
-			         %extras },
+               VERSION_FROM => "lib/Wiki/Toolkit.pm",
+               PREREQ_PM    => { 'Text::WikiFormat' => '0.78', #earlier's buggy
+                                 'HTML::PullParser' => 0,
+                                 'Digest::MD5' => 0,
+                                 'Test::More' => 0,
+                                 'Time::Piece' => 0,
+                                 %extras
+                               },
                EXE_FILES => [ "bin/wiki-toolkit-setupdb",
                               "bin/wiki-toolkit-rename-node",
                               "bin/wiki-toolkit-delete-node",
-                              "bin/wiki-toolkit-revert-to-date" ],
-	       clean => { FILES => "Config lib/Wiki/Toolkit/TestConfig.pm "
-			         . "t/sqlite-test.db t/sii-db-file-test.db "
+                              "bin/wiki-toolkit-revert-to-date"
+                            ],
+               clean => { FILES => "Config lib/Wiki/Toolkit/TestConfig.pm "
+                                 . "t/sqlite-test.db t/sii-db-file-test.db "
                                  . "t/node.db t/plucene"
                         }
-	     );
+             );

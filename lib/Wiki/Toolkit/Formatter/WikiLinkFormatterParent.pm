@@ -39,20 +39,20 @@ C<extended_links> and C<implicit_links>.)
 sub rename_links {
     my ($self, $from, $to, $content) = @_;
 
-	# If we support extended (square bracket) links, update those
-	if($self->{_extended_links}) {
-		$content =~ s/\[$from\]/\[$to\]/g;
-		$content =~ s/\[$from(\s*|.*?)\]/\[$to$1\]/g;
-	}
+    # If we support extended (square bracket) links, update those
+    if($self->{_extended_links}) {
+        $content =~ s/\[$from\]/\[$to\]/g;
+        $content =~ s/\[$from(\s*|.*?)\]/\[$to$1\]/g;
+    }
 
-	# If we support implicit (camelcase) links, update those
-	if($self->{_implicit_links}) {
-		$content =~ s/\b$from\b/$to/g;
-		$content =~ s/^$from\b/$to/gm;
-		$content =~ s/\b$from$/$to/gm;
-	}
+    # If we support implicit (camelcase) links, update those
+    if($self->{_implicit_links}) {
+        $content =~ s/\b$from\b/$to/g;
+        $content =~ s/^$from\b/$to/gm;
+        $content =~ s/\b$from$/$to/gm;
+    }
 
-	return $content;
+    return $content;
 }
 
 =item B<find_internal_links>
@@ -71,23 +71,23 @@ sub find_internal_links {
     @_links_found = ();
 
     my $foo = wikiformat($raw,
-			{ link => sub {
-					my ($link, $opts) = @_;
-					$opts ||= {};
-					my $title;
-					($link, $title) = split(/\|/, $link, 2)
-						if $opts->{extended};
-					push @Wiki::Toolkit::Formatter::WikiLinkFormatterParent::_links_found,
-						$link;
-					return ""; # don't care about output
-				}
-			},
-			{
-				extended       => $self->{_extended_links},
-				prefix         => $self->{_node_prefix},
-				implicit_links => $self->{_implicit_links} 
-			} 
-	);
+            { link => sub {
+                    my ($link, $opts) = @_;
+                    $opts ||= {};
+                    my $title;
+                    ($link, $title) = split(/\|/, $link, 2)
+                        if $opts->{extended};
+                    push @Wiki::Toolkit::Formatter::WikiLinkFormatterParent::_links_found,
+                        $link;
+                    return ""; # don't care about output
+                }
+            },
+            {
+                extended       => $self->{_extended_links},
+                prefix         => $self->{_node_prefix},
+                implicit_links => $self->{_implicit_links} 
+            } 
+    );
 
     my @links = @_links_found;
     @_links_found = ();

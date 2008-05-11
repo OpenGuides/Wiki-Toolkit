@@ -12,7 +12,7 @@ GetOptions( "type=s"         => \$dbtype,
             "help"           => \$help,
             "date=s"         => \$date,
             "time=s"         => \$time,
-           );
+          );
 
 unless (defined($dbtype)) {
     print "You must supply a database type with the --type option.\n";
@@ -27,20 +27,20 @@ unless (defined($dbname)) {
 }
 
 unless (defined($date)) {
-	print "You must supply the date with the --date option.\n";
-	print "Further help can be found by typing 'perldoc $0'\n";
-	exit 1;
+    print "You must supply the date with the --date option.\n";
+    print "Further help can be found by typing 'perldoc $0'\n";
+    exit 1;
 }
 
 unless ($date =~ /^\d{4}\-\d{2}\-\d{2}$/) {
-	print "You must supply the date with --date in the format YYYY-MM-DD.\n";
-	print "Further help can be found by typing 'perldoc $0'\n";
-	exit 1;
+    print "You must supply the date with --date in the format YYYY-MM-DD.\n";
+    print "Further help can be found by typing 'perldoc $0'\n";
+    exit 1;
 }
 unless (!$time || $time =~ /^\d{2}:\d{2}:\d{2}$/) {
-	print "You must supply either no time, or the time in the format HH:MM:SS.\n";
-	print "Further help can be found by typing 'perldoc $0'\n";
-	exit 1;
+    print "You must supply either no time, or the time in the format HH:MM:SS.\n";
+    print "Further help can be found by typing 'perldoc $0'\n";
+    exit 1;
 }
 
 if ($help) {
@@ -49,8 +49,8 @@ if ($help) {
 }
 
 my %setup_modules = ( postgres => "Wiki::Toolkit::Store::Pg",
-		      mysql    => "Wiki::Toolkit::Store::MySQL",
-		      sqlite  => "Wiki::Toolkit::Store::SQLite"
+                      mysql    => "Wiki::Toolkit::Store::MySQL",
+                      sqlite  => "Wiki::Toolkit::Store::SQLite"
 );
 
 unless ( defined($setup_modules{$dbtype}) ) {
@@ -71,61 +71,71 @@ if ( $@ ) {
 # Create a store instance
 my $store;
 my $args = "dbname=>'$dbname', dbuser=>'$dbuser'";
-if($dbpass) { $args .= ", dbpass=>'$dbpass'"; }
-if($dbhost) { $args .= ", dbhost=>'$dbhost'"; }
-if($dbport) { $args .= ", dbport=>'$dbport'"; }
+if($dbpass) {
+    $args .= ", dbpass=>'$dbpass'";
+}
+if($dbhost) {
+    $args .= ", dbhost=>'$dbhost'";
+}
+if($dbport) {
+    $args .= ", dbport=>'$dbport'";
+}
 eval "\$store = $class->new($args);";
 
 # Create a Wiki instance
 my $wiki = Wiki::Toolkit->new(store=>$store);
 
 # Grab the state as of then
-if($time) { $date .= " ".$time; }
+if($time) {
+    $date .= " ".$time;
+}
 print "Reverting to the state as of $date\n";
 
 my @nodes = $wiki->list_last_version_before($date);
 foreach my $node (@nodes) {
-	my %newnode = $wiki->retrieve_node($node->{name});
-	my $thenver = $node->{version};
-	if($thenver) { $thenver = sprintf("v%02d", $thenver); }
-	else         { $thenver = "(d)"; }
+    my %newnode = $wiki->retrieve_node($node->{name});
+    my $thenver = $node->{version};
+    if($thenver) {
+        $thenver = sprintf("v%02d", $thenver); }
+    else {
+        $thenver = "(d)";
+    }
 
-	print sprintf('  %03d  - %s (now v%02d) - %s', $node->{id}, $thenver, $newnode{version}, $node->{name})."\n";
+    print sprintf('  %03d  - %s (now v%02d) - %s', $node->{id}, $thenver, $newnode{version}, $node->{name})."\n";
 }
 
 print "\nProceed? (y/n)\n";
 my $ok = <>;
 chomp $ok;
 unless($ok eq "y") {
-	die("Aborting revert\n");
+    die("Aborting revert\n");
 }
 
 # Revert each node
 foreach my $node (@nodes) {
-	if($node->{version}) {
-		# Delete versions between now and then
-		my %newnode = $wiki->retrieve_node($node->{name});
-		for(my $ver=$newnode{version}; $ver>$node->{version}; $ver--) {
-			$wiki->delete_node(
-							name=>$node->{name}, 
-							version=>$ver,
-							wiki=>$wiki
-			);
-			print sprintf('Deleted node v%02d of %03d - %s',$ver, $node->{id},$node->{name})."\n";
-		}
-	} else {
-		# No version then, delete
-		$wiki->delete_node(
-							name=>$node->{name},
-							wiki=>$wiki
-		);
-		print sprintf('Deleted node %03d - %s',$node->{id},$node->{name})."\n";
-	}
+    if($node->{version}) {
+        # Delete versions between now and then
+        my %newnode = $wiki->retrieve_node($node->{name});
+        for (my $ver=$newnode{version}; $ver>$node->{version}; $ver--) {
+            $wiki->delete_node(
+                                name=>$node->{name}, 
+                                version=>$ver,
+                                wiki=>$wiki
+            );
+            print sprintf('Deleted node v%02d of %03d - %s',$ver, $node->{id},$node->{name})."\n";
+        }
+    } else {
+        # No version then, delete
+        $wiki->delete_node(
+                            name=>$node->{name},
+                            wiki=>$wiki
+        );
+        print sprintf('Deleted node %03d - %s',$node->{id},$node->{name})."\n";
+    }
 }
 
 # All done
 print "\nDone revert to $date\n";
-
 
 =head1 NAME
 
@@ -137,13 +147,13 @@ wiki-toolkit-revert-to-date - Revert the state of a Wiki::Toolkit instance to an
   #  (and optionally time), restoring it to the state at that point.
 
   wiki-toolkit-revert-to-date --type postgres
-		   --name mywiki \
-		   --user wiki  \
-		   --pass wiki \
-		   --host 'db.example.com' \
-		   --port 1234 \
-		   --date 2007-01-05 \
-		   --time 11:23:21
+           --name mywiki \
+           --user wiki  \
+           --pass wiki \
+           --host 'db.example.com' \
+           --port 1234 \
+           --date 2007-01-05 \
+           --time 11:23:21
 
 =head1 DESCRIPTION
 

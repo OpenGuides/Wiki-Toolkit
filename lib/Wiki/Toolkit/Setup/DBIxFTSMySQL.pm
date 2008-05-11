@@ -36,39 +36,39 @@ probably want to use the C<store> parameter to get it re-indexed.
 =cut
 
 sub setup {
-  my $dbh = _get_dbh( @_ );
+    my $dbh = _get_dbh( @_ );
 
-  # Drop FTS indexes if they already exist.
-  my $fts = DBIx::FullTextSearch->open($dbh, "_content_and_title_fts");
-  $fts->drop if $fts;
-  $fts = DBIx::FullTextSearch->open($dbh, "_title_fts");
-  $fts->drop if $fts;
+    # Drop FTS indexes if they already exist.
+    my $fts = DBIx::FullTextSearch->open($dbh, "_content_and_title_fts");
+    $fts->drop if $fts;
+    $fts = DBIx::FullTextSearch->open($dbh, "_title_fts");
+    $fts->drop if $fts;
 
-  # Set up FullText indexes and index anything already extant.
-  my $fts_all = DBIx::FullTextSearch->create($dbh, "_content_and_title_fts",
-					     frontend       => "table",
-					     backend        => "phrase",
-					     table_name     => "node",
-					     column_name    => ["name","text"],
-					     column_id_name => "name",
-					     stemmer        => "en-uk");
+    # Set up FullText indexes and index anything already extant.
+    my $fts_all = DBIx::FullTextSearch->create($dbh, "_content_and_title_fts",
+                         frontend       => "table",
+                         backend        => "phrase",
+                         table_name     => "node",
+                         column_name    => ["name","text"],
+                         column_id_name => "name",
+                         stemmer        => "en-uk");
 
-  my $fts_title = DBIx::FullTextSearch->create($dbh, "_title_fts",
-					       frontend       => "table",
-					       backend        => "phrase",
-					       table_name     => "node",
-					       column_name    => "name",
-					       column_id_name => "name",
-					       stemmer        => "en-uk");
+    my $fts_title = DBIx::FullTextSearch->create($dbh, "_title_fts",
+                         frontend       => "table",
+                         backend        => "phrase",
+                         table_name     => "node",
+                         column_name    => "name",
+                         column_id_name => "name",
+                         stemmer        => "en-uk");
 
-  my $sql = "SELECT name FROM node";
-  my $sth = $dbh->prepare($sql);
-  $sth->execute();
-  while (my ($name, $version) = $sth->fetchrow_array) {
-    $fts_title->index_document($name);
-    $fts_all->index_document($name);
-  }
-  $sth->finish;
+    my $sql = "SELECT name FROM node";
+    my $sth = $dbh->prepare($sql);
+    $sth->execute();
+    while (my ($name, $version) = $sth->fetchrow_array) {
+        $fts_title->index_document($name);
+        $fts_all->index_document($name);
+    }
+    $sth->finish;
 }
 
 sub _get_dbh {
@@ -77,9 +77,9 @@ sub _get_dbh {
     my $dsn = "dbi:mysql:$dbname";
     $dsn .= ";host=$dbhost" if $dbhost;
     my $dbh = DBI->connect($dsn, $dbuser, $dbpass,
-			   { PrintError => 1, RaiseError => 1,
-			     AutoCommit => 1 } )
-      or croak DBI::errstr;
+               { PrintError => 1, RaiseError => 1,
+                 AutoCommit => 1 } )
+        or croak DBI::errstr;
     return $dbh;
 }
 

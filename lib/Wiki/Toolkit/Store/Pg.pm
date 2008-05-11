@@ -40,7 +40,7 @@ sub _dsn {
 =item B<check_and_write_node>
 
   $store->check_and_write_node( node     => $node,
-				checksum => $checksum,
+                checksum => $checksum,
                                 %other_args );
 
 Locks the node, verifies the checksum, calls
@@ -65,8 +65,8 @@ sub check_and_write_node {
     if ($@) {
         my $error = $@;
         $dbh->rollback;
-	$dbh->{AutoCommit} = 1;
-	if ( $error =~ /can't serialize access due to concurrent update/i
+        $dbh->{AutoCommit} = 1;
+        if ( $error =~ /can't serialize access due to concurrent update/i
             or $error =~ /could not serialize access due to concurrent update/i
            ) {
             return 0;
@@ -75,8 +75,8 @@ sub check_and_write_node {
         }
     } else {
         $dbh->commit;
-	$dbh->{AutoCommit} = 1;
-	return $ok;
+        $dbh->{AutoCommit} = 1;
+        return $ok;
     }
 }
 

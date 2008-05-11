@@ -53,7 +53,7 @@ sub _dir { shift->{_dir} }
 sub _parsed_query {
         my ($self, $query, $default) = @_;
         my $parser = Plucene::QueryParser->new({
-			analyzer => Plucene::Analysis::SimpleAnalyzer->new(),
+                        analyzer => Plucene::Analysis::SimpleAnalyzer->new(),
                         default  => $default
                 });
         $parser->parse($query);
@@ -76,7 +76,7 @@ sub _writer {
         my $self = shift;
         return Plucene::Index::Writer->new(
                 $self->_dir,
-  	        Plucene::Analysis::SimpleAnalyzer->new,
+                Plucene::Analysis::SimpleAnalyzer->new,
                 -e catfile($self->_dir, "segments") ? 0 : 1
         );
 }
@@ -88,7 +88,7 @@ sub _search_nodes {
         return ();
     }
     local $Plucene::QueryParser::DefaultOperator = "AND"
-      unless ( $and_or and lc($and_or) eq "or" );
+        unless ( $and_or and lc($and_or) eq "or" );
     my @docs;
     my $searcher = $self->_searcher;
     my $hc       = Plucene::Search::HitCollector->new(
@@ -117,32 +117,32 @@ sub _fuzzy_match {
 }
 
 sub index_node {
-        my ($self, $node, $content) = @_;
-        my $writer = $self->_writer;
-        my $doc    = Plucene::Document->new;
-        my $fuzzy = $self->canonicalise_title( $node );
-        $doc->add( Plucene::Document::Field->Text( "content", join( " ", $node, $content ) ) );
-        $doc->add( Plucene::Document::Field->Text( "fuzzy", $fuzzy ) );
-        $doc->add( Plucene::Document::Field->Text( "title", $node ) );
-        $doc->add(Plucene::Document::Field->Keyword(id => $node));
-        $doc->add(Plucene::Document::Field->UnStored('text' => join( " ", $node, $content )));
-        $writer->add_document($doc);
+    my ($self, $node, $content) = @_;
+    my $writer = $self->_writer;
+    my $doc    = Plucene::Document->new;
+    my $fuzzy = $self->canonicalise_title( $node );
+    $doc->add( Plucene::Document::Field->Text( "content", join( " ", $node, $content ) ) );
+    $doc->add( Plucene::Document::Field->Text( "fuzzy", $fuzzy ) );
+    $doc->add( Plucene::Document::Field->Text( "title", $node ) );
+    $doc->add(Plucene::Document::Field->Keyword(id => $node));
+    $doc->add(Plucene::Document::Field->UnStored('text' => join( " ", $node, $content )));
+    $writer->add_document($doc);
 }
 
 sub optimize { shift->_writer->optimize() }
 
 sub indexed {
-        my ($self, $id) = @_;
-        my $term = Plucene::Index::Term->new({ field => 'id', text => $id });
-        return $self->_reader->doc_freq($term);
+    my ($self, $id) = @_;
+    my $term = Plucene::Index::Term->new({ field => 'id', text => $id });
+    return $self->_reader->doc_freq($term);
 }
 
 sub delete_node {
-        my ($self, $id) = @_;
-        my $reader = $self->_reader;
-        $reader->delete_term(
-			     Plucene::Index::Term->new({ field => "id", text => $id }));
-        $reader->close;
+    my ($self, $id) = @_;
+    my $reader = $self->_reader;
+    $reader->delete_term(
+                 Plucene::Index::Term->new({ field => "id", text => $id }));
+    $reader->close;
 }
 
 sub supports_phrase_searches { return 1; }

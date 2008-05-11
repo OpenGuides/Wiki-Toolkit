@@ -13,61 +13,57 @@ use Carp qw( croak );
 use Wiki::Toolkit::Feed::Listing;
 @ISA = qw( Wiki::Toolkit::Feed::Listing );
 
-sub new
-{
-  my $class = shift;
-  my $self  = {};
-  bless $self, $class;
+sub new {
+    my $class = shift;
+    my $self  = {};
+    bless $self, $class;
 
-  my %args = @_;
-  my $wiki = $args{wiki};
+    my %args = @_;
+    my $wiki = $args{wiki};
 
-  unless ($wiki && UNIVERSAL::isa($wiki, 'Wiki::Toolkit'))
-  {
-    croak 'No Wiki::Toolkit object supplied';
-  }
+    unless ($wiki && UNIVERSAL::isa($wiki, 'Wiki::Toolkit')) {
+        croak 'No Wiki::Toolkit object supplied';
+    }
   
-  $self->{wiki} = $wiki;
+    $self->{wiki} = $wiki;
   
-  # Mandatory arguments.
-  foreach my $arg (qw/site_name site_url make_node_url atom_link/)
-  {
-    croak "No $arg supplied" unless $args{$arg};
-    $self->{$arg} = $args{$arg};
-  }
+    # Mandatory arguments.
+    foreach my $arg (qw/site_name site_url make_node_url atom_link/) {
+        croak "No $arg supplied" unless $args{$arg};
+        $self->{$arg} = $args{$arg};
+    }
 
-  # Must-supply-one-of arguments
-  my %mustoneof = ( 'html_equiv_link' => ['html_equiv_link','recent_changes_link'] );
-  $self->handle_supply_one_of(\%mustoneof,\%args);
+    # Must-supply-one-of arguments
+    my %mustoneof = ( 'html_equiv_link' => ['html_equiv_link','recent_changes_link'] );
+    $self->handle_supply_one_of(\%mustoneof,\%args);
   
-  # Optional arguments.
-  foreach my $arg (qw/site_description software_name software_version software_homepage encoding/)
-  {
-    $self->{$arg} = $args{$arg} || '';
-  }
+    # Optional arguments.
+    foreach my $arg (qw/site_description software_name software_version software_homepage encoding/) {
+        $self->{$arg} = $args{$arg} || '';
+    }
 
-  # Supply some defaults, if a blank string isn't what we want
-  unless($self->{encoding}) {
-    $self->{encoding} = $self->{wiki}->store->{_charset};
-  }
+    # Supply some defaults, if a blank string isn't what we want
+    unless($self->{encoding}) {
+        $self->{encoding} = $self->{wiki}->store->{_charset};
+    }
 
-  $self->{timestamp_fmt} = $Wiki::Toolkit::Store::Database::timestamp_fmt;
-  $self->{utc_offset} = strftime "%z", localtime;
-  $self->{utc_offset} =~ s/(..)(..)$/$1:$2/;
+    $self->{timestamp_fmt} = $Wiki::Toolkit::Store::Database::timestamp_fmt;
+    $self->{utc_offset} = strftime "%z", localtime;
+    $self->{utc_offset} =~ s/(..)(..)$/$1:$2/;
   
-  # Escape any &'s in the urls
-  foreach my $key qw(site_url atom_link) {
-     my @ands = ($self->{$key} =~ /(\&.{1,6})/g);
-     foreach my $and (@ands) {
-        if($and ne "&amp;") {
-            my $new_and = $and;
-            $new_and =~ s/\&/\&amp;/;
-            $self->{$key} =~ s/$and/$new_and/;
+    # Escape any &'s in the urls
+    foreach my $key qw(site_url atom_link) {
+        my @ands = ($self->{$key} =~ /(\&.{1,6})/g);
+        foreach my $and (@ands) {
+            if($and ne "&amp;") {
+                my $new_and = $and;
+                $new_and =~ s/\&/\&amp;/;
+                $self->{$key} =~ s/$and/$new_and/;
+            }
         }
-     }
-  }
+    }
 
-  $self;
+    $self;
 }
 
 =item <build_feed_start>
@@ -78,26 +74,25 @@ Outputs the feed header, and initial feed info.
 =cut
 
 sub build_feed_start {
-  my ($self,$atom_timestamp) = @_;
+    my ($self,$atom_timestamp) = @_;
 
-  my $generator = '';
+    my $generator = '';
   
-  if ($self->{software_name})
-  {
-    $generator  = '  <generator';
-    $generator .= ' uri="' . $self->{software_homepage} . '"'   if $self->{software_homepage};
-    $generator .= ' version=' . $self->{software_version} . '"' if $self->{software_version};
-    $generator .= ">\n";
-    $generator .= $self->{software_name} . "</generator>\n";
-  }                          
+    if ($self->{software_name}) {
+        $generator  = '  <generator';
+        $generator .= ' uri="' . $self->{software_homepage} . '"'   if $self->{software_homepage};
+        $generator .= ' version=' . $self->{software_version} . '"' if $self->{software_version};
+        $generator .= ">\n";
+        $generator .= $self->{software_name} . "</generator>\n";
+    }                          
 
-  my $subtitle = $self->{site_description}
+    my $subtitle = $self->{site_description}
                  ? '<subtitle>' . $self->{site_description} . "</subtitle>\n"
                  : '';
 
-  $atom_timestamp ||= '';
+    $atom_timestamp ||= '';
 
-  my $atom = qq{<?xml version="1.0" encoding="} . $self->{encoding} . qq{"?>
+    my $atom = qq{<?xml version="1.0" encoding="} . $self->{encoding} . qq{"?>
 
 <feed 
  xmlns         = "http://www.w3.org/2005/Atom"
@@ -112,7 +107,7 @@ sub build_feed_start {
   <id>}                    . $self->{site_url}     . qq{</id>
   $subtitle};
   
-  return $atom;
+    return $atom;
 }
 
 =item <build_feed_end>
@@ -134,65 +129,64 @@ Generate and return an Atom feed for a list of nodes
 =cut
 
 sub generate_node_list_feed {
-  my ($self,$atom_timestamp,@nodes) = @_;
+    my ($self,$atom_timestamp,@nodes) = @_;
 
-  my $atom = $self->build_feed_start($atom_timestamp);
+    my $atom = $self->build_feed_start($atom_timestamp);
 
-  my (@urls, @items);
+    my (@urls, @items);
 
-  foreach my $node (@nodes)
-  {
-    my $node_name = $node->{name};
+    foreach my $node (@nodes) {
+        my $node_name = $node->{name};
 
-    my $item_timestamp = $node->{last_modified};
+        my $item_timestamp = $node->{last_modified};
     
-    # Make a Time::Piece object.
-    my $time = Time::Piece->strptime($item_timestamp, $self->{timestamp_fmt});
+        # Make a Time::Piece object.
+        my $time = Time::Piece->strptime($item_timestamp, $self->{timestamp_fmt});
 
-    my $utc_offset = $self->{utc_offset};
+        my $utc_offset = $self->{utc_offset};
     
-    $item_timestamp = $time->strftime( "%Y-%m-%dT%H:%M:%S$utc_offset" );
+        $item_timestamp = $time->strftime( "%Y-%m-%dT%H:%M:%S$utc_offset" );
 
-    my $author      = $node->{metadata}{username}[0] || $node->{metadata}{host}[0] || 'Anonymous';
-    my $description = $node->{metadata}{comment}[0]  || 'No description given for node';
+        my $author      = $node->{metadata}{username}[0] || $node->{metadata}{host}[0] || 'Anonymous';
+        my $description = $node->{metadata}{comment}[0]  || 'No description given for node';
 
-    $description .= " [$author]" if $author;
+        $description .= " [$author]" if $author;
 
-    my $version = $node->{version};
-    my $status  = (1 == $version) ? 'new' : 'updated';
+        my $version = $node->{version};
+        my $status  = (1 == $version) ? 'new' : 'updated';
 
-    my $major_change = $node->{metadata}{major_change}[0];
-       $major_change = 1 unless defined $major_change;
-    my $importance = $major_change ? 'major' : 'minor';
+        my $major_change = $node->{metadata}{major_change}[0];
+        $major_change = 1 unless defined $major_change;
+        my $importance = $major_change ? 'major' : 'minor';
 
-    my $url = $self->{make_node_url}->($node_name, $version);
+        my $url = $self->{make_node_url}->($node_name, $version);
 
-    # make XML-clean
-    my $title =  $node_name;
-       $title =~ s/&/&amp;/g;
-       $title =~ s/</&lt;/g;
-       $title =~ s/>/&gt;/g;
+        # make XML-clean
+        my $title =  $node_name;
+        $title =~ s/&/&amp;/g;
+        $title =~ s/</&lt;/g;
+        $title =~ s/>/&gt;/g;
 
-    # Pop the categories into atom:category elements (4.2.2)
-    # We can do this because the spec says:
-    #   "This specification assigns no meaning to the content (if any) 
-    #    of this element."
-    # TODO: Decide if we should include the "all categories listing" url
-    #        as the scheme (URI) attribute?
-    my $category_atom = "";
-    if($node->{metadata}->{category}) {
-        foreach my $cat (@{ $node->{metadata}->{category} }) {
-            $category_atom .= "    <category term=\"$cat\" />\n";
+        # Pop the categories into atom:category elements (4.2.2)
+        # We can do this because the spec says:
+        #   "This specification assigns no meaning to the content (if any) 
+        #    of this element."
+        # TODO: Decide if we should include the "all categories listing" url
+        #        as the scheme (URI) attribute?
+        my $category_atom = "";
+        if ($node->{metadata}->{category}) {
+            foreach my $cat (@{ $node->{metadata}->{category} }) {
+                $category_atom .= "    <category term=\"$cat\" />\n";
+            }
         }
-    }
 
-    # Include geospacial data, if we have it
-    my $geo_atom = $self->format_geo($node->{metadata});
+        # Include geospacial data, if we have it
+        my $geo_atom = $self->format_geo($node->{metadata});
 
-    # TODO: Find an Atom equivalent of ModWiki, so we can include more info
+        # TODO: Find an Atom equivalent of ModWiki, so we can include more info
 
     
-    push @items, qq{
+        push @items, qq{
   <entry>
     <title>$title</title>
     <link href="$url" />
@@ -205,12 +199,12 @@ $geo_atom
   </entry>
 };
 
-  }
+    }
   
-  $atom .= join('', @items) . "\n";
-  $atom .= $self->build_feed_end($atom_timestamp);
+    $atom .= join('', @items) . "\n";
+    $atom .= $self->build_feed_end($atom_timestamp);
 
-  return $atom;   
+    return $atom;   
 }
 
 =item <generate_node_name_distance_feed>
@@ -223,28 +217,27 @@ Typically used on search feeds.
 =cut
 
 sub generate_node_name_distance_feed {
-  my ($self,$atom_timestamp,@nodes) = @_;
+    my ($self,$atom_timestamp,@nodes) = @_;
 
-  my $atom = $self->build_feed_start($atom_timestamp);
+    my $atom = $self->build_feed_start($atom_timestamp);
 
-  my (@urls, @items);
+    my (@urls, @items);
 
-  foreach my $node (@nodes)
-  {
-    my $node_name = $node->{name};
+    foreach my $node (@nodes) {
+        my $node_name = $node->{name};
 
-    my $url = $self->{make_node_url}->($node_name);
+        my $url = $self->{make_node_url}->($node_name);
 
-    # make XML-clean
-    my $title =  $node_name;
-       $title =~ s/&/&amp;/g;
-       $title =~ s/</&lt;/g;
-       $title =~ s/>/&gt;/g;
+        # make XML-clean
+        my $title =  $node_name;
+        $title =~ s/&/&amp;/g;
+        $title =~ s/</&lt;/g;
+        $title =~ s/>/&gt;/g;
 
-    # What location stuff do we have?
-    my $geo_atom = $self->format_geo($node);
+        # What location stuff do we have?
+        my $geo_atom = $self->format_geo($node);
 
-    push @items, qq{
+        push @items, qq{
   <entry>
     <title>$title</title>
     <link href="$url" />
@@ -253,12 +246,12 @@ $geo_atom
   </entry>
 };
 
-  }
+    }
   
-  $atom .= join('', @items) . "\n";
-  $atom .= $self->build_feed_end($atom_timestamp);
+    $atom .= join('', @items) . "\n";
+    $atom .= $self->build_feed_end($atom_timestamp);
 
-  return $atom;   
+    return $atom;   
 }
 
 =item B<feed_timestamp>
@@ -268,21 +261,19 @@ Will return a timestamp for now if no node dates are available
 
 =cut
 
-sub feed_timestamp
-{
-  my ($self, $newest_node) = @_;
+sub feed_timestamp {
+    my ($self, $newest_node) = @_;
   
-  my $time;
-  if ($newest_node->{last_modified})
-  {
-    $time = Time::Piece->strptime( $newest_node->{last_modified}, $self->{timestamp_fmt} );
-  } else {
-    $time = localtime;
-  }
+    my $time;
+    if ($newest_node->{last_modified}) {
+        $time = Time::Piece->strptime( $newest_node->{last_modified}, $self->{timestamp_fmt} );
+    } else {
+        $time = localtime;
+    }
 
-  my $utc_offset = $self->{utc_offset};
+    my $utc_offset = $self->{utc_offset};
     
-  return $time->strftime( "%Y-%m-%dT%H:%M:%S$utc_offset" );
+    return $time->strftime( "%Y-%m-%dT%H:%M:%S$utc_offset" );
 }
 
 
@@ -415,11 +406,11 @@ will default to the wiki store's encoding.
   $wiki->write_node(
                      'About This Wiki',
                      'blah blah blah',
-		                 $checksum,
-              		   {
-                       comment  => 'Stub page, please update!',
-		                   username => 'Fred',
-                     }
+                         $checksum,
+                         {
+                           comment  => 'Stub page, please update!',
+                           username => 'Fred',
+                         }
   );
 
   print "Content-type: application/atom+xml\n\n";

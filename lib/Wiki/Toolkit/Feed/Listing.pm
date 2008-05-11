@@ -102,8 +102,7 @@ array of the feed, and the feed timestamp. Otherwise it just returns the feed.
 
 =cut
 
-sub recent_changes
-{
+sub recent_changes {
     my ($self, %args) = @_;
 
     my @changes = $self->fetch_recently_changed_nodes(%args);
@@ -113,7 +112,7 @@ sub recent_changes
 
     my $feed = $self->generate_node_list_feed($feed_timestamp, @changes);
 
-    if($args{'also_return_timestamp'}) {
+    if ($args{'also_return_timestamp'}) {
         return ($feed,$feed_timestamp);
     } else {
         return $feed;
@@ -130,8 +129,7 @@ array of the feed, and the feed timestamp. Otherwise it just returns the feed.
 
 =cut
 
-sub node_all_versions
-{
+sub node_all_versions {
     my ($self, %args) = @_;
 
     my @all_versions = $self->fetch_node_all_versions(%args);
