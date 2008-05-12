@@ -15,6 +15,64 @@ use Carp;
 $SCHEMA_VERSION = $VERSION*100;
 
 my $create_sql = {
+    8 => {
+        schema_info => [ qq|
+CREATE TABLE schema_info (
+  version   integer      NOT NULL default 0
+)
+|, qq|
+INSERT INTO schema_info VALUES (8)
+| ],
+
+        node => [ qq|
+CREATE SEQUENCE node_seq
+|, qq|
+CREATE TABLE node (
+  id        integer      NOT NULL DEFAULT NEXTVAL('node_seq'),
+  name      varchar(200) NOT NULL DEFAULT '',
+  version   integer      NOT NULL default 0,
+  text      text         NOT NULL default '',
+  modified  timestamp without time zone    default NULL,
+  CONSTRAINT pk_id PRIMARY KEY (id)
+)
+|, qq|
+CREATE UNIQUE INDEX node_name ON node (name)
+| ],
+
+        content => [ qq|
+CREATE TABLE content (
+  node_id   integer      NOT NULL,
+  version   integer      NOT NULL default 0,
+  text      text         NOT NULL default '',
+  modified  timestamp without time zone    default NULL,
+  comment   text         NOT NULL default '',
+  CONSTRAINT pk_node_id PRIMARY KEY (node_id,version),
+  CONSTRAINT fk_node_id FOREIGN KEY (node_id) REFERENCES node (id)
+)
+| ],
+
+        internal_links => [ qq|
+CREATE TABLE internal_links (
+  link_from varchar(200) NOT NULL default '',
+  link_to   varchar(200) NOT NULL default ''
+)
+|, qq|
+CREATE UNIQUE INDEX internal_links_pkey ON internal_links (link_from, link_to)
+| ],
+
+        metadata => [ qq|
+CREATE TABLE metadata (
+  node_id        integer      NOT NULL,
+  version        integer      NOT NULL default 0,
+  metadata_type  varchar(200) NOT NULL DEFAULT '',
+  metadata_value text         NOT NULL DEFAULT '',
+  CONSTRAINT fk_node_id FOREIGN KEY (node_id) REFERENCES node (id)
+)
+|, qq|
+CREATE INDEX metadata_index ON metadata (node_id, version, metadata_type, metadata_value)
+| ]
+
+    },
     9 => {
         schema_info => [ qq|
 CREATE TABLE schema_info (
@@ -112,6 +170,11 @@ ALTER TABLE metadata ALTER COLUMN node_id SET NOT NULL;
 ALTER TABLE metadata DROP COLUMN node;
 ALTER TABLE metadata ADD CONSTRAINT fk_node_id FOREIGN KEY (node_id) REFERENCES node (id);
 CREATE INDEX metadata_index ON metadata (node_id, version, metadata_type, metadata_value)
+|,
+
+qq|
+CREATE TABLE schema_info (version integer NOT NULL default 0);
+INSERT INTO schema_info VALUES (8)
 |
 ],
 
@@ -125,6 +188,7 @@ ALTER TABLE content ADD COLUMN moderated boolean;
 UPDATE content SET moderated = '1';
 ALTER TABLE content ALTER COLUMN moderated SET DEFAULT '1';
 ALTER TABLE content ALTER COLUMN moderated SET NOT NULL;
+UPDATE schema_info SET version = 9;
 |
 ],
 
@@ -184,15 +248,18 @@ sub setup {
     my $disconnect_required = _disconnect_required( @args );
     my $wanted_schema = _get_wanted_schema( @args ) || $SCHEMA_VERSION;
 
+    die "No schema information for requested schema version $wanted_schema\n"
+        unless $create_sql->{$wanted_schema};
+
     # Check whether tables exist
     my $sql = "SELECT tablename FROM pg_tables
                WHERE tablename in ("
-            . join( ",", map { $dbh->quote($_) } keys %{$create_sql->{$SCHEMA_VERSION}} ) . ")";
+            . join( ",", map { $dbh->quote($_) } keys %{$create_sql->{$wanted_schema}} ) . ")";
     my $sth = $dbh->prepare($sql) or croak $dbh->errstr;
     $sth->execute;
     my %tables;
     while ( my $table = $sth->fetchrow_array ) {
-        exists $create_sql->{$SCHEMA_VERSION}->{$table} and $tables{$table} = 1;
+        exists $create_sql->{$wanted_schema}->{$table} and $tables{$table} = 1;
     }
 
     # Do we need to upgrade the schema of existing tables?
@@ -205,12 +272,12 @@ sub setup {
     }
 
     # Set up tables if not found
-    foreach my $required ( reverse sort keys %{$create_sql->{$SCHEMA_VERSION}} ) {
+    foreach my $required ( reverse sort keys %{$create_sql->{$wanted_schema}} ) {
         if ( $tables{$required} ) {
             print "Table $required already exists... skipping...\n";
         } else {
             print "Creating table $required... done\n";
-            foreach my $sql ( @{ $create_sql->{$SCHEMA_VERSION}->{$required} } ) {
+            foreach my $sql ( @{ $create_sql->{$wanted_schema}->{$required} } ) {
                 $dbh->do($sql) or croak $dbh->errstr;
             }
         }
@@ -328,9 +395,6 @@ sub _get_wanted_schema {
         my %args = %{$_[0]};
         return $args{wanted_schema};
     }
-
-    # Args passed as list of connection details.
-    return $_[1];
 }
 
 sub _disconnect_required {

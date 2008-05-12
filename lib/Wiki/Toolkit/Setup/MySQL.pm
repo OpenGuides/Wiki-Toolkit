@@ -15,6 +15,54 @@ use Carp;
 $SCHEMA_VERSION = $VERSION*100;
 
 my $create_sql = {
+    8 => {
+        schema_info => [ qq|
+CREATE TABLE schema_info (
+  version   int(10)      NOT NULL default 0
+)
+|, qq|
+INSERT INTO schema_info VALUES (8)
+| ],
+
+        node => [ qq|
+CREATE TABLE node (
+  id        integer      NOT NULL AUTO_INCREMENT,
+  name      varchar(200) NOT NULL DEFAULT '',
+  version   int(10)      NOT NULL default 0,
+  text      mediumtext   NOT NULL default '',
+  modified  datetime     default NULL,
+  PRIMARY KEY (id)
+)
+| ],
+
+        content => [ qq|
+CREATE TABLE content (
+  node_id   integer      NOT NULL,
+  version   int(10)      NOT NULL default 0,
+  text      mediumtext   NOT NULL default '',
+  modified  datetime     default NULL,
+  comment   mediumtext   NOT NULL default '',
+  PRIMARY KEY (node_id, version)
+)
+| ],
+        internal_links => [ qq|
+CREATE TABLE internal_links (
+  link_from varchar(200) NOT NULL default '',
+  link_to   varchar(200) NOT NULL default '',
+  PRIMARY KEY (link_from, link_to)
+)
+| ],
+        metadata => [ qq|
+CREATE TABLE metadata (
+  node_id        integer      NOT NULL,
+  version        int(10)      NOT NULL default 0,
+  metadata_type  varchar(200) NOT NULL DEFAULT '',
+  metadata_value mediumtext   NOT NULL DEFAULT ''
+)
+|, qq|
+CREATE INDEX metadata_index ON metadata(node_id, version, metadata_type, metadata_value(10))
+| ]
+    },
     9 => {
         schema_info => [ qq|
 CREATE TABLE schema_info (
@@ -118,15 +166,18 @@ sub setup {
     my $disconnect_required = _disconnect_required( @args );
     my $wanted_schema = _get_wanted_schema( @args ) || $SCHEMA_VERSION;
 
+    die "No schema information for requested schema version $wanted_schema\n"
+        unless $create_sql->{$wanted_schema};
+
     # Check whether tables exist
-    my %tables = fetch_tables_listing($dbh);
+    my %tables = fetch_tables_listing($dbh, $wanted_schema);
 
     # Do we need to upgrade the schema of existing tables?
     # (Don't check if no tables currently exist)
     my $upgrade_schema;
     my @cur_data;
     if(scalar keys %tables > 0) {
-        $upgrade_schema = Wiki::Toolkit::Setup::Database::get_database_upgrade_required($dbh,$SCHEMA_VERSION);
+        $upgrade_schema = Wiki::Toolkit::Setup::Database::get_database_upgrade_required($dbh,$wanted_schema);
     }
     if($upgrade_schema) {
         # Grab current data
@@ -145,16 +196,16 @@ sub setup {
         cleardb($dbh);
 
         # Grab new list of tables
-        %tables = fetch_tables_listing($dbh);
+        %tables = fetch_tables_listing($dbh, $wanted_schema);
     }
 
     # Set up tables if not found
-    foreach my $required ( keys %{$create_sql->{$SCHEMA_VERSION}} ) {
+    foreach my $required ( keys %{$create_sql->{$wanted_schema}} ) {
         if ( $tables{$required} ) {
             print "Table $required already exists... skipping...\n";
         } else {
             print "Creating table $required... done\n";
-            foreach my $sql ( @{$create_sql->{$SCHEMA_VERSION}->{$required}} ) {
+            foreach my $sql ( @{$create_sql->{$wanted_schema}->{$required}} ) {
                 $dbh->do($sql) or croak $dbh->errstr;
             }
         }
@@ -172,13 +223,14 @@ sub setup {
 # Internal method - what Wiki::Toolkit tables are defined?
 sub fetch_tables_listing {
     my $dbh = shift;
+    my $wanted_schema = shift;
 
     # Check what tables exist
     my $sth = $dbh->prepare("SHOW TABLES") or croak $dbh->errstr;
     $sth->execute;
     my %tables;
     while ( my $table = $sth->fetchrow_array ) {
-        exists $create_sql->{$SCHEMA_VERSION}->{$table} and $tables{$table} = 1;
+        exists $create_sql->{$wanted_schema}->{$table} and $tables{$table} = 1;
     }
     return %tables;
 }
@@ -263,9 +315,6 @@ sub _get_wanted_schema {
         my %args = %{$_[0]};
         return $args{wanted_schema};
     }
-
-    # Args passed as list of connection details.
-    return $_[1];
 }
 
 sub _disconnect_required {

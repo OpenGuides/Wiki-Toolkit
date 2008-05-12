@@ -2,10 +2,10 @@ package Wiki::Toolkit::Setup::Database;
 
 use strict;
 
-use vars qw( $VERSION @SUPPORTED_SCHEMAS );
+use vars qw( $VERSION @SUPPORTED_SCHEMAS);
 
 $VERSION = 0.08;
-@SUPPORTED_SCHEMAS = qw(9);
+@SUPPORTED_SCHEMAS = qw(8 9);
 
 =head1 NAME
 

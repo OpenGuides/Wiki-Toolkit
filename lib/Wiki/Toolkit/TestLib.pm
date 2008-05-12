@@ -69,6 +69,7 @@ foreach my $dbtype (qw( MySQL Pg SQLite )) {
                                                  dbpass => $config{dbpass},
                                                  dbhost => $config{dbhost},
                                                },
+                                     dsn    => $dsn
                                    };
     }
 }
