@@ -7,7 +7,7 @@ use vars qw( @ISA $VERSION $SCHEMA_VERSION );
 use Wiki::Toolkit::Setup::Database;
 
 @ISA = qw( Wiki::Toolkit::Setup::Database );
-$VERSION = '0.09';
+$VERSION = '0.10';
 
 use DBI;
 use Carp;
@@ -113,7 +113,123 @@ CREATE TABLE metadata (
 CREATE INDEX metadata_index ON metadata(node_id, version, metadata_type, metadata_value(10))
 | ]
     },
+    10 => {
+        schema_info => [ qq|
+CREATE TABLE schema_info (
+  version   int(10)      NOT NULL default 0
+)
+|, qq|
+INSERT INTO schema_info VALUES (10)
+| ],
+
+        node => [ qq|
+CREATE TABLE node (
+  id        integer      NOT NULL AUTO_INCREMENT,
+  name      varchar(200) NOT NULL DEFAULT '',
+  version   int(10)      NOT NULL default 0,
+  text      mediumtext   NOT NULL default '',
+  modified  datetime     default NULL,
+  moderate  bool         NOT NULL default '0',
+  deleted   bool         NOT NULL default '0',
+  PRIMARY KEY (id)
+)
+|, qq|
+CREATE UNIQUE INDEX node_name ON node (name)
+|, qq|
+CREATE INDEX node_deleted_index ON node (deleted)
+| ],
+
+        content => [ qq|
+CREATE TABLE content (
+  node_id   integer      NOT NULL,
+  version   int(10)      NOT NULL default 0,
+  text      mediumtext   NOT NULL default '',
+  modified  datetime     default NULL,
+  comment   mediumtext   NOT NULL default '',
+  moderated bool         NOT NULL default '1',
+  deleted   bool         NOT NULL DEFAULT '0',
+  verified  datetime     default NULL,
+  PRIMARY KEY (node_id, version)
+)
+|, qq|
+CREATE INDEX content_deleted_index ON content (deleted)
+| ],
+        internal_links => [ qq|
+CREATE TABLE internal_links (
+  link_from varchar(200) NOT NULL default '',
+  link_to   varchar(200) NOT NULL default '',
+  deleted   bool         NOT NULL default '0',
+  PRIMARY KEY (link_from, link_to)
+)
+|, qq|
+CREATE INDEX internal_links_deleted_index ON internal_links (deleted)
+| ],
+        metadata => [ qq|
+CREATE TABLE metadata (
+  node_id        integer      NOT NULL,
+  version        int(10)      NOT NULL default 0,
+  metadata_type  varchar(200) NOT NULL DEFAULT '',
+  metadata_value mediumtext   NOT NULL DEFAULT '',
+  deleted        bool         NOT NULL DEFAULT '0'
+)
+|, qq|
+CREATE INDEX metadata_index ON metadata(node_id, version, metadata_type, metadata_value(10))
+|, qq|
+CREATE INDEX metadata_deleted_index ON metadata (deleted)
+| ]
+    },
 };
+
+my %fetch_upgrades = (
+    old_to_8  => 1,
+    old_to_9  => 1,
+    old_to_10 => 1,
+    '8_to_9'  => 1,
+    '8_to_10' => 1,
+);
+
+my %upgrades = (
+'9_to_10' => [ qq|
+CREATE UNIQUE INDEX node_name ON node (name)
+|, qq|
+ALTER TABLE node ADD COLUMN deleted boolean
+|, qq|
+UPDATE node SET deleted = '0'
+|, qq|
+ALTER TABLE node MODIFY COLUMN deleted bool NOT NULL DEFAULT '0'
+|, qq|
+CREATE INDEX node_deleted_index ON node (deleted)
+|, qq|
+ALTER TABLE content ADD COLUMN deleted boolean
+|, qq|
+UPDATE content SET deleted = '0'
+|, qq|
+ALTER TABLE content MODIFY COLUMN deleted bool NOT NULL DEFAULT '0'
+|, qq|
+CREATE INDEX content_deleted_index ON content (deleted)
+|, qq|
+ALTER TABLE internal_links ADD COLUMN deleted boolean
+|, qq|
+UPDATE internal_links SET deleted = '0'
+|, qq|
+ALTER TABLE internal_links MODIFY COLUMN deleted bool NOT NULL DEFAULT '0'
+|, qq|
+CREATE INDEX internal_links_deleted_index ON internal_links (deleted)
+|, qq|
+ALTER TABLE metadata ADD COLUMN deleted boolean
+|, qq|
+UPDATE metadata SET deleted = '0'
+|, qq|
+ALTER TABLE metadata MODIFY COLUMN deleted bool NOT NULL DEFAULT '0'
+|, qq|
+CREATE INDEX metadata_deleted_index ON metadata (deleted)
+|, qq|
+ALTER TABLE content ADD COLUMN verified datetime default NULL
+|, qq|
+UPDATE schema_info SET version = 10
+|
+],
+);
 
 =head1 NAME
 
@@ -180,23 +296,25 @@ sub setup {
         $upgrade_schema = Wiki::Toolkit::Setup::Database::get_database_upgrade_required($dbh,$wanted_schema);
     }
     if($upgrade_schema) {
-        # Grab current data
-        print "Upgrading: $upgrade_schema\n";
-        @cur_data = eval("&Wiki::Toolkit::Setup::Database::fetch_upgrade_".$upgrade_schema."(\$dbh)");
-        if($@) { warn $@; }
+        if ($fetch_upgrades{$upgrade_schema}) {
+            # Grab current data
+            print "Upgrading: $upgrade_schema\n";
+            @cur_data = eval("&Wiki::Toolkit::Setup::Database::fetch_upgrade_".$upgrade_schema."(\$dbh)");
+            if($@) { warn $@; }
 
-        # Check to make sure we can create, index and drop tables
-        # before doing any more
-        my $perm_check = Wiki::Toolkit::Setup::Database::perm_check($dbh);
-        if ($perm_check) {
-            die "Unable to create/drop database tables as required by upgrade: $perm_check";
-        }
+            # Check to make sure we can create, index and drop tables
+            # before doing any more
+            my $perm_check = Wiki::Toolkit::Setup::Database::perm_check($dbh);
+            if ($perm_check) {
+                die "Unable to create/drop database tables as required by upgrade: $perm_check";
+            }
         
-        # Drop the current tables
-        cleardb($dbh);
+            # Drop the current tables
+            cleardb($dbh);
 
-        # Grab new list of tables
-        %tables = fetch_tables_listing($dbh, $wanted_schema);
+            # Grab new list of tables
+            %tables = fetch_tables_listing($dbh, $wanted_schema);
+        }
     }
 
     # Set up tables if not found
@@ -213,7 +331,23 @@ sub setup {
 
     # If upgrading, load in the new data
     if($upgrade_schema) {
-        Wiki::Toolkit::Setup::Database::bulk_data_insert($dbh,@cur_data);
+        if ($fetch_upgrades{$upgrade_schema}) {
+            Wiki::Toolkit::Setup::Database::bulk_data_insert($dbh,@cur_data);
+        } else {
+            print "Upgrading schema: $upgrade_schema\n";
+            my @updates = @{$upgrades{$upgrade_schema}};
+            foreach my $update (@updates) {
+                if(ref($update) eq "CODE") {
+                    &$update($dbh);
+                } elsif(ref($update) eq "ARRAY") {
+                    foreach my $nupdate (@$update) {
+                        $dbh->do($nupdate);
+                    }
+                } else {
+                    $dbh->do($update);
+                }
+            } 
+        }
     }
 
     # Clean up if we made our own dbh.

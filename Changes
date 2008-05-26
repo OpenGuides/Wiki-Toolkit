@@ -1,6 +1,9 @@
 0.76
         Really add missing prereq of DBI!
-        Add testing of database schema upgrades
+        Add testing of database schema upgrades (#32)
+        Move to new schema version 10, including some missing indexes
+          and support for deletion flags and verified flags. Note that
+          the code using these columns has not yet been written (#25, #34).
 
 0.75	11 May 2008
         Added support for selecting versions by moderation status (see

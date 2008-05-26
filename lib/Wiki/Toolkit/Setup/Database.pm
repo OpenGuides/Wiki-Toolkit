@@ -4,8 +4,8 @@ use strict;
 
 use vars qw( $VERSION @SUPPORTED_SCHEMAS);
 
-$VERSION = 0.08;
-@SUPPORTED_SCHEMAS = qw(8 9);
+$VERSION = 0.09;
+@SUPPORTED_SCHEMAS = qw(8 9 10);
 
 =head1 NAME
 
@@ -14,14 +14,18 @@ classes for Wiki::Toolkit
 
 =cut
 
-# Fetch from the old style database, ready for an upgrade to db version 8
 sub fetch_upgrade_old_to_8 {
-    # Compatible with old_to_9
-    fetch_upgrade_old_to_9(@_);
+    # Compatible with old_to_10
+    fetch_upgrade_old_to_10(@_);
 }
 
-# Fetch from the old style database, ready for an upgrade to db version 9
 sub fetch_upgrade_old_to_9 {
+    # Compatible with old_to_10
+    fetch_upgrade_old_to_10(@_);
+}
+
+# Fetch from the old style database, ready for an upgrade to db version 10
+sub fetch_upgrade_old_to_10 {
     my $dbh = shift;
     my %nodes;
     my %metadatas;
@@ -103,8 +107,13 @@ sub fetch_upgrade_old_to_9 {
     return (\%nodes,\%contents,\%metadatas,\@internal_links,\%ids);
 }
 
-# Fetch from schema version 8, and upgrade to version 9
 sub fetch_upgrade_8_to_9 {
+    # Compatible with 8_to_10 
+    fetch_upgrade_8_to_10(@_);
+}
+
+# Fetch from schema version 8, and upgrade to version 10
+sub fetch_upgrade_8_to_10 {
     my $dbh = shift;
     my %nodes;
     my %metadatas;
@@ -138,6 +147,73 @@ sub fetch_upgrade_8_to_9 {
         $content{'modified'} = $modified;
         $content{'comment'} = $comment;
         $content{'moderated'} = 1;
+        $contents{$node_id."-".$version} = \%content;
+    }
+
+    # Grab all the metadata
+    $sth = $dbh->prepare("SELECT node_id,version,metadata_type,metadata_value FROM metadata");
+    $sth->execute;
+    my $i = 0;
+    while( my($node_id,$version,$metadata_type,$metadata_value) = $sth->fetchrow_array) {
+        my %metadata;
+        $metadata{'node_id'} = $node_id;
+        $metadata{'version'} = $version;
+        $metadata{'metadata_type'} = $metadata_type;
+        $metadata{'metadata_value'} = $metadata_value;
+        $metadatas{$node_id."-".($i++)} = \%metadata;
+    }
+
+    # Grab all the internal links
+    $sth = $dbh->prepare("SELECT link_from,link_to FROM internal_links");
+    $sth->execute;
+    while( my($link_from,$link_to) = $sth->fetchrow_array) {
+        my %il;
+        $il{'link_from'} = $link_from;
+        $il{'link_to'} = $link_to;
+        push @internal_links, \%il;
+    }
+
+    print "done\n";
+
+    # Return it all
+    return (\%nodes,\%contents,\%metadatas,\@internal_links);
+}
+
+# Fetch from schema version 9, and upgrade to version 10
+sub fetch_upgrade_9_to_10 {
+    my $dbh = shift;
+    my %nodes;
+    my %metadatas;
+    my %contents;
+    my @internal_links;
+
+    print "Grabbing and upgrading old data... ";
+
+    # Grab all the nodes
+    my $sth = $dbh->prepare("SELECT id,name,version,text,modified,moderate FROM node");
+    $sth->execute;
+    while( my($id,$name,$version,$text,$modified,$moderate) = $sth->fetchrow_array) {
+        my %node;
+        $node{'name'} = $name;
+        $node{'version'} = $version;
+        $node{'text'} = $text;
+        $node{'modified'} = $modified;
+        $node{'id'} = $id;
+        $node{'moderate'} = $moderate;
+        $nodes{$name} = \%node;
+    }
+
+    # Grab all the content
+    $sth = $dbh->prepare("SELECT node_id,version,text,modified,comment,moderated FROM content");
+    $sth->execute;
+    while ( my($node_id,$version,$text,$modified,$comment,$moderated) = $sth->fetchrow_array) {
+        my %content;
+        $content{'node_id'} = $node_id;
+        $content{'version'} = $version;
+        $content{'text'} = $text;
+        $content{'modified'} = $modified;
+        $content{'comment'} = $comment;
+        $content{'moderated'} = $moderated;
         $contents{$node_id."-".$version} = \%content;
     }
 

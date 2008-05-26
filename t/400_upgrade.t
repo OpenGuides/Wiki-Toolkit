@@ -14,7 +14,14 @@ INSERT INTO node VALUES (2, 'Test node 2', 1, 'More content', 'now')|, qq|
 INSERT INTO content VALUES (1, 1, 'Some content', 'now', 'no comment')|, qq|
 INSERT INTO content VALUES (2, 1, 'More content', 'now', 'no comment')|, qq|
 INSERT INTO metadata VALUES (1, 1, 'foo', 'bar')|, qq|
-INSERT INTO metadata VALUES (2, 1, 'baz', 'quux')| ]
+INSERT INTO metadata VALUES (2, 1, 'baz', 'quux')| ],
+    9 => [ qq|
+INSERT INTO node (id, name, version, text, modified) VALUES (1, 'Test node 1', 1, 'Some content', 'now')|, qq|
+INSERT INTO node (id, name, version, text, modified) VALUES (2, 'Test node 2', 1, 'More content', 'now')|, qq|
+INSERT INTO content (node_id, version, text, modified, comment) VALUES (1, 1, 'Some content', 'now', 'no comment')|, qq|
+INSERT INTO content (node_id, version, text, modified, comment) VALUES (2, 1, 'More content', 'now', 'no comment')|, qq|
+INSERT INTO metadata VALUES (1, 1, 'foo', 'bar')|, qq|
+INSERT INTO metadata VALUES (2, 1, 'baz', 'quux')| ],
 };
 
 my $iterator = Wiki::Toolkit::TestLib->new_wiki_maker;

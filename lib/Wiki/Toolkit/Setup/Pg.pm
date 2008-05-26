@@ -7,7 +7,7 @@ use vars qw( @ISA $VERSION $SCHEMA_VERSION );
 use Wiki::Toolkit::Setup::Database;
 
 @ISA = qw( Wiki::Toolkit::Setup::Database );
-$VERSION = '0.09';
+$VERSION = '0.10';
 
 use DBI;
 use Carp;
@@ -132,6 +132,72 @@ CREATE TABLE metadata (
 CREATE INDEX metadata_index ON metadata (node_id, version, metadata_type, metadata_value)
 | ]
     },
+    10 => {
+        schema_info => [ qq|
+CREATE TABLE schema_info (
+  version   integer      NOT NULL default 0
+)
+|, qq|
+INSERT INTO schema_info VALUES (10)
+| ],
+
+        node => [ qq|
+CREATE SEQUENCE node_seq
+|, qq|
+CREATE TABLE node (
+  id        integer      NOT NULL DEFAULT NEXTVAL('node_seq'),
+  name      varchar(200) NOT NULL DEFAULT '',
+  version   integer      NOT NULL default 0,
+  text      text         NOT NULL default '',
+  modified  timestamp without time zone    default NULL,
+  moderate  boolean      NOT NULL default '0',
+  deleted   boolean      NOT NULL default '0',
+  CONSTRAINT pk_id PRIMARY KEY (id)
+)
+|, qq|
+CREATE UNIQUE INDEX node_name ON node (name)
+|, qq|
+CREATE INDEX node_deleted_index ON node (deleted)
+| ],
+
+        content => [ qq|
+CREATE TABLE content (
+  node_id   integer      NOT NULL,
+  version   integer      NOT NULL default 0,
+  text      text         NOT NULL default '',
+  modified  timestamp without time zone    default NULL,
+  comment   text         NOT NULL default '',
+  moderated boolean      NOT NULL default '1',
+  deleted   boolean      NOT NULL default '0',
+  verified  timestamp without time zone    default NULL,
+  CONSTRAINT pk_node_id PRIMARY KEY (node_id,version),
+  CONSTRAINT fk_node_id FOREIGN KEY (node_id) REFERENCES node (id)
+)
+|, qq|
+CREATE INDEX content_deleted_index ON content (deleted)
+| ],
+
+        internal_links => [ qq|
+CREATE TABLE internal_links (
+  link_from varchar(200) NOT NULL default '',
+  link_to   varchar(200) NOT NULL default ''
+)
+|, qq|
+CREATE UNIQUE INDEX internal_links_pkey ON internal_links (link_from, link_to)
+| ],
+
+        metadata => [ qq|
+CREATE TABLE metadata (
+  node_id        integer      NOT NULL,
+  version        integer      NOT NULL default 0,
+  metadata_type  varchar(200) NOT NULL DEFAULT '',
+  metadata_value text         NOT NULL DEFAULT '',
+  CONSTRAINT fk_node_id FOREIGN KEY (node_id) REFERENCES node (id)
+)
+|, qq|
+CREATE INDEX metadata_index ON metadata (node_id, version, metadata_type, metadata_value)
+| ]
+    },
 };
 
 my %upgrades = (
@@ -192,10 +258,43 @@ UPDATE schema_info SET version = 9;
 |
 ],
 
+'9_to_10' => [ qq|
+ALTER TABLE node ADD COLUMN deleted boolean;
+UPDATE node SET deleted = '0';
+ALTER TABLE node ALTER COLUMN deleted SET DEFAULT '0';
+ALTER TABLE node ALTER COLUMN deleted SET NOT NULL;
+CREATE INDEX node_deleted_index ON node (deleted);
+|, qq|
+ALTER TABLE content ADD COLUMN deleted boolean;
+UPDATE content SET deleted = '0';
+ALTER TABLE content ALTER COLUMN deleted SET DEFAULT '0';
+ALTER TABLE content ALTER COLUMN deleted SET NOT NULL;
+CREATE INDEX content_deleted_index ON content (deleted);
+|, qq|
+ALTER TABLE internal_links ADD COLUMN deleted boolean;
+UPDATE internal_links SET deleted = '0';
+ALTER TABLE internal_links ALTER COLUMN deleted SET DEFAULT '0';
+ALTER TABLE internal_links ALTER COLUMN deleted SET NOT NULL;
+CREATE INDEX internal_links_deleted_index ON internal_links (deleted);
+|, qq|
+ALTER TABLE metadata ADD COLUMN deleted boolean;
+UPDATE metadata SET deleted = '0';
+ALTER TABLE metadata ALTER COLUMN deleted SET DEFAULT '0';
+ALTER TABLE metadata ALTER COLUMN deleted SET NOT NULL;
+CREATE INDEX metadata_deleted_index ON metadata (deleted);
+|, qq|
+ALTER TABLE content ADD COLUMN verified timestamp without time zone default NULL;
+|, qq|
+UPDATE schema_info SET version = 10;
+|
+],
+
 );
 
-my @old_to_9 = ($upgrades{'old_to_8'},$upgrades{'8_to_9'});
-$upgrades{'old_to_9'} = \@old_to_9;
+my @old_to_10 = ($upgrades{'old_to_8'},$upgrades{'8_to_9'},$upgrades{'9_to_10'});
+my @eight_to_10 = ($upgrades{'8_to_9'},$upgrades{'9_to_10'});
+$upgrades{'old_to_10'} = \@old_to_10;
+$upgrades{'8_to_10'} = \@eight_to_10;
 
 =head1 NAME
 
