@@ -101,7 +101,7 @@ if($version) {
 print "\n";
 
 # Do the delete
-$wiki->delete_node(name => $node_name, verion => $version);
+$wiki->delete_node(name => $node_name, version => $version);
 
 # All done
 print "done.\n";
