@@ -120,13 +120,10 @@ CREATE TABLE node (
   version   integer      NOT NULL default 0,
   text      mediumtext   NOT NULL default '',
   modified  datetime     default NULL,
-  moderate  boolean      NOT NULL default '0',
-  deleted   boolean      NOT NULL default '0'
+  moderate  boolean      NOT NULL default '0'
 ) 
 |, qq|
 CREATE UNIQUE INDEX node_name ON node (name)
-|, qq|
-CREATE INDEX node_deleted_index ON node (deleted)
 | ],
         content => [ qq|
 CREATE TABLE content (
@@ -136,33 +133,24 @@ CREATE TABLE content (
   modified  datetime     default NULL,
   comment   mediumtext   NOT NULL default '',
   moderated boolean      NOT NULL default '1',
-  deleted   boolean      NOT NULL default '0',
   verified  datetime     default NULL,
   PRIMARY KEY (node_id, version)
 ) 
-|, qq|
-CREATE INDEX content_deleted_index ON content (deleted)
 | ],
         internal_links => [ qq|
 CREATE TABLE internal_links (
   link_from varchar(200) NOT NULL default '',
   link_to   varchar(200) NOT NULL default '',
-  deleted   boolean      NOT NULL default '0',
   PRIMARY KEY (link_from, link_to)
 ) 
-|, qq|
-CREATE INDEX internal_links_deleted_index ON internal_links (deleted)
 | ],
         metadata => [ qq|
 CREATE TABLE metadata (
   node_id        integer      NOT NULL,
   version        integer      NOT NULL default 0,
   metadata_type  varchar(200) NOT NULL DEFAULT '',
-  metadata_value mediumtext   NOT NULL DEFAULT '',
-  deleted        boolean      NOT NULL DEFAULT '0'
+  metadata_value mediumtext   NOT NULL DEFAULT ''
 ) 
-|, qq|
-CREATE INDEX metadata_deleted_index ON metadata (deleted)
 | ] 
     },
 };

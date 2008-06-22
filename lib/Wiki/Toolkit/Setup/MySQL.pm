@@ -130,13 +130,10 @@ CREATE TABLE node (
   text      mediumtext   NOT NULL default '',
   modified  datetime     default NULL,
   moderate  bool         NOT NULL default '0',
-  deleted   bool         NOT NULL default '0',
   PRIMARY KEY (id)
 )
 |, qq|
 CREATE UNIQUE INDEX node_name ON node (name)
-|, qq|
-CREATE INDEX node_deleted_index ON node (deleted)
 | ],
 
         content => [ qq|
@@ -147,35 +144,26 @@ CREATE TABLE content (
   modified  datetime     default NULL,
   comment   mediumtext   NOT NULL default '',
   moderated bool         NOT NULL default '1',
-  deleted   bool         NOT NULL DEFAULT '0',
   verified  datetime     default NULL,
   PRIMARY KEY (node_id, version)
 )
-|, qq|
-CREATE INDEX content_deleted_index ON content (deleted)
 | ],
         internal_links => [ qq|
 CREATE TABLE internal_links (
   link_from varchar(200) NOT NULL default '',
   link_to   varchar(200) NOT NULL default '',
-  deleted   bool         NOT NULL default '0',
   PRIMARY KEY (link_from, link_to)
 )
-|, qq|
-CREATE INDEX internal_links_deleted_index ON internal_links (deleted)
 | ],
         metadata => [ qq|
 CREATE TABLE metadata (
   node_id        integer      NOT NULL,
   version        int(10)      NOT NULL default 0,
   metadata_type  varchar(200) NOT NULL DEFAULT '',
-  metadata_value mediumtext   NOT NULL DEFAULT '',
-  deleted        bool         NOT NULL DEFAULT '0'
+  metadata_value mediumtext   NOT NULL DEFAULT ''
 )
 |, qq|
 CREATE INDEX metadata_index ON metadata(node_id, version, metadata_type, metadata_value(10))
-|, qq|
-CREATE INDEX metadata_deleted_index ON metadata (deleted)
 | ]
     },
 };
@@ -191,38 +179,6 @@ my %fetch_upgrades = (
 my %upgrades = (
 '9_to_10' => [ qq|
 CREATE UNIQUE INDEX node_name ON node (name)
-|, qq|
-ALTER TABLE node ADD COLUMN deleted boolean
-|, qq|
-UPDATE node SET deleted = '0'
-|, qq|
-ALTER TABLE node MODIFY COLUMN deleted bool NOT NULL DEFAULT '0'
-|, qq|
-CREATE INDEX node_deleted_index ON node (deleted)
-|, qq|
-ALTER TABLE content ADD COLUMN deleted boolean
-|, qq|
-UPDATE content SET deleted = '0'
-|, qq|
-ALTER TABLE content MODIFY COLUMN deleted bool NOT NULL DEFAULT '0'
-|, qq|
-CREATE INDEX content_deleted_index ON content (deleted)
-|, qq|
-ALTER TABLE internal_links ADD COLUMN deleted boolean
-|, qq|
-UPDATE internal_links SET deleted = '0'
-|, qq|
-ALTER TABLE internal_links MODIFY COLUMN deleted bool NOT NULL DEFAULT '0'
-|, qq|
-CREATE INDEX internal_links_deleted_index ON internal_links (deleted)
-|, qq|
-ALTER TABLE metadata ADD COLUMN deleted boolean
-|, qq|
-UPDATE metadata SET deleted = '0'
-|, qq|
-ALTER TABLE metadata MODIFY COLUMN deleted bool NOT NULL DEFAULT '0'
-|, qq|
-CREATE INDEX metadata_deleted_index ON metadata (deleted)
 |, qq|
 ALTER TABLE content ADD COLUMN verified datetime default NULL
 |, qq|
