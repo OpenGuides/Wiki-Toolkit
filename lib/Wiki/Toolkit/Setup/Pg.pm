@@ -166,6 +166,7 @@ CREATE TABLE content (
   comment   text         NOT NULL default '',
   moderated boolean      NOT NULL default '1',
   verified  timestamp without time zone    default NULL,
+  verified_info text     NOT NULL default '',
   CONSTRAINT pk_node_id PRIMARY KEY (node_id,version),
   CONSTRAINT fk_node_id FOREIGN KEY (node_id) REFERENCES node (id)
 )
@@ -254,6 +255,7 @@ UPDATE schema_info SET version = 9;
 
 '9_to_10' => [ qq|
 ALTER TABLE content ADD COLUMN verified timestamp without time zone default NULL;
+ALTER TABLE content ADD COLUMN verified_info text NOT NULL default '';
 |, qq|
 UPDATE schema_info SET version = 10;
 |

@@ -134,6 +134,7 @@ CREATE TABLE content (
   comment   mediumtext   NOT NULL default '',
   moderated boolean      NOT NULL default '1',
   verified  datetime     default NULL,
+  verified_info mediumtext   NOT NULL default '',
   PRIMARY KEY (node_id, version)
 ) 
 | ],

@@ -145,6 +145,7 @@ CREATE TABLE content (
   comment   mediumtext   NOT NULL default '',
   moderated bool         NOT NULL default '1',
   verified  datetime     default NULL,
+  verified_info mediumtext NOT NULL default '',
   PRIMARY KEY (node_id, version)
 )
 | ],
@@ -181,6 +182,8 @@ my %upgrades = (
 CREATE UNIQUE INDEX node_name ON node (name)
 |, qq|
 ALTER TABLE content ADD COLUMN verified datetime default NULL
+|, qq|
+ALTER TABLE content ADD COLUMN verified_info mediumtext NOT NULL default ''
 |, qq|
 UPDATE schema_info SET version = 10
 |
