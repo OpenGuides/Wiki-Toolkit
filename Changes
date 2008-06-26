@@ -4,6 +4,8 @@
         Move to new schema version 10, including some missing indexes
           and support for verified flags. Note that
           the code using this column has not yet been written (#25, #34).
+        Changed Wiki::Toolkit::Feed::Listing to use metadata_was instead of
+          metadata_wasnt, for efficiency reasons.
 
 0.75	11 May 2008
         Added support for selecting versions by moderation status (see

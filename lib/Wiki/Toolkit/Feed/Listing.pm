@@ -22,16 +22,24 @@ sub fetch_recently_changed_nodes {
     #  default to 15.
     $args{days} ? $criteria{days}           = $args{days}
                 : $criteria{last_n_changes} = $args{items} || 15;
+
+    my %was_filter;
+    if ( $args{filter_on_metadata} ) {
+        %was_filter = %{ $args{filter_on_metadata} };
+    }
+
+    if ( $args{ignore_minor_edits} ) {
+        %was_filter = ( %was_filter, major_change => 1 );
+    }
   
-    $criteria{metadata_wasnt} = { major_change => 0 }     if $args{ignore_minor_edits};
-    $criteria{metadata_was}   = $args{filter_on_metadata} if $args{filter_on_metadata};
+    $criteria{metadata_was} = \%was_filter;
 
     my @changes = $wiki->list_recent_changes(%criteria);
 
     return @changes;
 }
 
-=item B<fetch_oldest_for_recently_changed>
+=item B<fetch_newest_for_recently_changed>
 
 Based on the supplied criteria (but not using all of those used by
 B<fetch_recently_changed_nodes>), find the newest node from the recently
@@ -42,16 +50,7 @@ changed nodes set. Normally used for dating the whole of a Feed.
 sub fetch_newest_for_recently_changed {
     my ($self, %args) = @_;
 
-    my %criteria = (ignore_case => 1);
-
-    $args{days} ? $criteria{days}           = $args{days}
-                : $criteria{last_n_changes} = $args{items} || 15;
-
-    $criteria{metadata_wasnt} = { major_change => 0 }     if $args{ignore_minor_edits};
-    $criteria{metadata_was}   = $args{filter_on_metadata} if $args{filter_on_metadata};
-
-    my @changes = $self->{wiki}->list_recent_changes(%criteria);
-
+    my @changes = $self->fetch_recently_changed_nodes( %args );
     return $changes[0];
 }
 
