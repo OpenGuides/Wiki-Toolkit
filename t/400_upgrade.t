@@ -67,7 +67,6 @@ foreach my $database (@configured_databases) {
         eval "require $class";
 
         my $dsn = $database->{dsn};
-        $dsn .= ';dbhost=' . $params->{dbhost} if $params->{dbhost};
 
         my $dbh = DBI->connect($dsn, $params->{dbuser}, $params->{dbpass});
 
