@@ -387,7 +387,10 @@ sub list_backlinks {
     my $node = $args{node};
     croak "Must supply a node name" unless $node;
     my $dbh = $self->dbh;
-    my $sql = "SELECT link_from FROM internal_links WHERE link_to="
+    # XXX see comment in list_dangling_links
+    my $sql = "SELECT link_from FROM internal_links INNER JOIN
+               node AS node_from ON node_from.name=internal_links.link_from
+               WHERE link_to="
             . $dbh->quote($node);
     my $sth = $dbh->prepare($sql);
     $sth->execute or croak $dbh->errstr;
@@ -412,10 +415,15 @@ link to it.
 sub list_dangling_links {
     my $self = shift;
     my $dbh = $self->dbh;
+    # XXX this is really hiding an inconsistency in the database;
+    # should really fix the constraints so that this inconsistency
+    # cannot be introduced; also rework this table completely so
+    # that it uses IDs, not node names (will simplify rename_node too)
     my $sql = "SELECT DISTINCT internal_links.link_to
-               FROM internal_links LEFT JOIN node
-                                   ON node.name=internal_links.link_to
-               WHERE node.version IS NULL";
+               FROM internal_links INNER JOIN node AS node_from ON
+               node_from.name=internal_links.link_from LEFT JOIN node
+               AS node_to ON node_to.name=internal_links.link_to
+               WHERE node_to.version IS NULL";
     my $sth = $dbh->prepare($sql);
     $sth->execute or croak $dbh->errstr;
     my @links;

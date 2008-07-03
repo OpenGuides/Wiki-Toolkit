@@ -6,6 +6,10 @@
           the code using this column has not yet been written (#25, #34).
         Changed Wiki::Toolkit::Feed::Listing to use metadata_was instead of
           metadata_wasnt, for efficiency reasons.
+        list_dangling_links, list_backlinks: don't return internal links
+          that are from a node which does not exist. This works around
+          database inconsistencies (introduced by manual deletion of nodes)
+          which should be fixed by adding constraints to the database (see #38)
 
 0.75	11 May 2008
         Added support for selecting versions by moderation status (see
