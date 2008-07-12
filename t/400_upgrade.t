@@ -30,6 +30,9 @@ my @schemas_to_test;
 
 use Wiki::Toolkit::Setup::SQLite;
 
+my $num_mysql_only_tests = 0;
+my @mysql_databases;
+
 foreach my $db (@configured_databases) {
     my $setup_class = $db->{setup_class};
     eval "require $setup_class";
@@ -41,9 +44,14 @@ foreach my $db (@configured_databases) {
     foreach my $schema (@Wiki::Toolkit::Setup::Database::SUPPORTED_SCHEMAS) {
         push @schemas_to_test, $schema if $schema < $current_schema;
     }
+    if ( $db->{dsn} =~ /mysql/i ) {
+        $num_mysql_only_tests = 2;
+        push @mysql_databases, $db;
+    }
 }
 
-plan tests => scalar @schemas_to_test * scalar @configured_databases * 2;
+my $num_tests = (scalar @schemas_to_test * scalar @configured_databases * 2) + $num_mysql_only_tests;
+plan tests => $num_tests;
 
 foreach my $database (@configured_databases) {
     my $setup_class = $database->{setup_class};
@@ -91,3 +99,43 @@ foreach my $database (@configured_databases) {
             "can retrieve second test node after $schema to $current_schema" );
     }
 }
+
+if ( $num_mysql_only_tests ) {
+    foreach my $database ( @mysql_databases ) {
+        my $setup_class = $database->{setup_class};
+        my $current_schema;
+        {
+            no strict 'refs';
+            $current_schema = eval ${$setup_class . '::SCHEMA_VERSION'};
+        }
+        # Set up database with old schema
+        my $params = $database->{params};
+        $params->{wanted_schema} = 9;
+
+        {
+            no strict 'refs';
+            eval &{$setup_class . '::cleardb'} ( $params );
+            eval &{$setup_class . '::setup'} ( $params );
+        }
+
+        my $class = $database->{class};
+        eval "require $class";
+
+        my $dsn = $database->{dsn};
+
+        my $dbh = DBI->connect($dsn, $params->{dbuser}, $params->{dbpass});
+        
+        # Manually create index that the upgrade also wants to create
+        eval { $dbh->do('CREATE UNIQUE INDEX node_name ON node (name);') };
+        is( $@, '', "Manually creating confusing index didn't die" );
+
+        # Now upgrade
+        delete $params->{wanted_schema};
+        {
+            no strict 'refs';
+            eval &{$setup_class . '::setup'} ( $params );
+            is( $@, '', "Upgrade didn't die even though node_name index had been created manually" );
+        }
+    }
+}
+

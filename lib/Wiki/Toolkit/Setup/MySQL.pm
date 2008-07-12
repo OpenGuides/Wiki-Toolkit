@@ -178,16 +178,23 @@ my %fetch_upgrades = (
 );
 
 my %upgrades = (
-'9_to_10' => [ qq|
-CREATE UNIQUE INDEX node_name ON node (name)
-|, qq|
+    '9_to_10' => [ sub {
+        my $dbh = shift;
+        my $sth = $dbh->prepare('SHOW INDEX FROM node WHERE key_name="node_name"');
+        $sth->execute();
+        unless ( $sth->rows ) {
+            $dbh->do('CREATE UNIQUE INDEX node_name ON node (name)')
+                or croak $dbh->errstr;
+        }
+    },
+    qq|
 ALTER TABLE content ADD COLUMN verified datetime default NULL
 |, qq|
 ALTER TABLE content ADD COLUMN verified_info mediumtext NOT NULL default ''
 |, qq|
 UPDATE schema_info SET version = 10
-|
-],
+| ]
+
 );
 
 =head1 NAME
