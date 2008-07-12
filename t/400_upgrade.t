@@ -126,7 +126,7 @@ if ( $num_mysql_only_tests ) {
         my $dbh = DBI->connect($dsn, $params->{dbuser}, $params->{dbpass});
         
         # Manually create index that the upgrade also wants to create
-        eval { $dbh->do('CREATE UNIQUE INDEX node_name ON node (name);') };
+        eval { $dbh->do('CREATE UNIQUE INDEX node_name ON node (name);') or die $dbh->errstr };
         is( $@, '', "Manually creating confusing index didn't die" );
 
         # Now upgrade
