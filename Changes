@@ -1,4 +1,4 @@
-0.76
+0.76    13 July 2008
         Really add missing prereq of DBI!
         Add testing of database schema upgrades (#32)
         Move to new schema version 10, including some missing indexes
