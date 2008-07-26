@@ -4,7 +4,6 @@ our $VERSION = '0.01';
 
 use base 'Wiki::Toolkit::Search::Base';
 
-#use File::Spec::Functions qw(catfile);
 use File::Spec;
 use KinoSearch::InvIndexer;
 use KinoSearch::Analysis::PolyAnalyzer;
@@ -133,9 +132,11 @@ __END__
 =item Phrase Searching 
 =item Fuzzy Matching
 
+=back
+
 =head1 SEE ALSO
 
-L<Wiki::Toolkit>, L<Wiki::Toolkit::Search::Base>.
+L<KinoSearch>, L<Wiki::Toolkit>, L<Wiki::Toolkit::Search::Base>.
 
 =cut
 
