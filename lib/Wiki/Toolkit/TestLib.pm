@@ -145,6 +145,12 @@ if ( $configured{plucene} ) {
     $plucene_path = "t/plucene";
 }
 
+my $kino_path;
+# Test with Plucene if possible.
+if ( $configured{kinosearch} ) {
+    $kino_path = "t/kinosearch";
+}
+
 # @wiki_info describes which searches work with which stores.
 
 # Database-specific searchers.
@@ -169,6 +175,10 @@ foreach my $dbtype ( qw( MySQL Pg SQLite ) ) {
         if ( $datastore_info{$dbtype} and $plucene_path );
     push @wiki_info, { datastore_info => $datastore_info{$dbtype} }
         if $datastore_info{$dbtype};
+        
+    push @wiki_info, { datastore_info => $datastore_info{$dbtype},
+                       plucene_path   => $kino_path }
+        if ( $datastore_info{$dbtype} and $kino_path );
 }
 
 =head1 METHODS

@@ -170,6 +170,17 @@ if ( $plucene_inst ) {
     $Wiki::Toolkit::TestConfig::config{plucene} = undef;
 }
 
+# If we have Plucene installed, we can test that without asking questions.
+eval { require KinoSearch; };
+my $plucene_inst = $@ ? 0 : 1;
+if ( $plucene_inst ) {
+    print "You have KinoSearch installed, so will test with that...\n\n";
+    $Wiki::Toolkit::TestConfig::config{kinosearch} = 1;
+} else {
+    print "KinoSearch not installed; skipping test...\n\n";
+    $Wiki::Toolkit::TestConfig::config{kinosearch} = undef;
+}
+
 # Write out the config for next run.
 open OUT, ">lib/Wiki/Toolkit/TestConfig.pm"
     or die "Couldn't open lib/Wiki/Toolkit/TestConfig.pm for writing: $!";
