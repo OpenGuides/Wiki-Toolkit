@@ -1949,26 +1949,13 @@ sub list_last_version_before {
     return @nodes;
 }
 
-=item B<list_metadata_by_type>
 
-    List all the currently defined values of the given type of metadata.
+# Internal function only, used when querying latest metadata
+sub _current_node_id_versions {
+    my ($self) = @_;
 
-    Will only return data from the latest moderated version of each node
-
-    # List all of the different metadata values with the type 'category'
-    my @categories = $wiki->list_metadata_by_type('category');
-
-=cut
-
-sub list_metadata_by_type {
-    my ($self, $type) = @_;
-
-    return undef unless $type;
     my $dbh = $self->dbh;
 
-    # Ideally we'd do this as one big query
-    # However, this would need a temporary table on many
-    #  database engines, so we cheat and do it as two
     my $nv_sql = 
        "SELECT node_id, MAX(version) ".
        "FROM content ".
@@ -1983,6 +1970,29 @@ sub list_metadata_by_type {
         my $where = "(node_id=$node_id AND version=$version)";
         push @nv_where, $where;
     }
+    return @nv_where;
+}
+
+=item B<list_metadata_by_type>
+
+    List all the currently defined values of the given type of metadata.
+
+    Will only return data from the latest moderated version of each node
+
+    # List all of the different metadata values with the type 'category'
+    my @categories = $wiki->list_metadata_by_type('category');
+
+=cut
+sub list_metadata_by_type {
+    my ($self, $type) = @_;
+
+    return undef unless $type;
+    my $dbh = $self->dbh;
+
+    # Ideally we'd do this as one big query
+    # However, this would need a temporary table on many
+    #  database engines, so we cheat and do it as two
+    my @nv_where = $self->_current_node_id_versions();
 
     # Now the metadata bit
     my $sql = 
@@ -1992,11 +2002,46 @@ sub list_metadata_by_type {
        "AND (".
        join(" OR ", @nv_where).
        ")";
-    $sth = $dbh->prepare( $sql );
+    my $sth = $dbh->prepare( $sql );
     $sth->execute($type);
 
     my $values = $sth->fetchall_arrayref([0]);
     return ( map { $self->charset_decode( $_->[0] ) } (@$values) );
+}
+
+
+=item B<list_metadata_names>
+
+    List all the currently defined kinds of metadata, eg Locale, Postcode
+
+    Will only return data from the latest moderated version of each node
+
+    # List all of the different kinds of metadata
+    my @metadata_types = $wiki->list_metadata_names()
+
+=cut
+sub list_metadata_names {
+    my ($self) = @_;
+
+    my $dbh = $self->dbh;
+
+    # Ideally we'd do this as one big query
+    # However, this would need a temporary table on many
+    #  database engines, so we cheat and do it as two
+    my @nv_where = $self->_current_node_id_versions();
+
+    # Now the metadata bit
+    my $sql = 
+       "SELECT DISTINCT metadata_type ".
+       "FROM metadata ".
+       "WHERE (".
+       join(" OR ", @nv_where).
+       ")";
+    my $sth = $dbh->prepare( $sql );
+    $sth->execute();
+
+    my $types = $sth->fetchall_arrayref([0]);
+    return ( map { $self->charset_decode( $_->[0] ) } (@$types) );
 }
 
 
