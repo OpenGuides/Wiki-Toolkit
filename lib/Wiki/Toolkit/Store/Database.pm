@@ -1953,7 +1953,7 @@ sub list_last_version_before {
 
     List all the currently defined values of the given type of metadata.
 
-    Will only work with the latest moderated version
+    Will only return data from the latest moderated version of each node
 
     # List all of the different metadata values with the type 'category'
     my @categories = $wiki->list_metadata_by_type('category');
@@ -1963,7 +1963,40 @@ sub list_last_version_before {
 sub list_metadata_by_type {
     my ($self, $type) = @_;
 
-    return 0 unless $type;
+    return undef unless $type;
+    my $dbh = $self->dbh;
+
+    # Ideally we'd do this as one big query
+    # However, this would need a temporary table on many
+    #  database engines, so we cheat and do it as two
+    my $nv_sql = 
+       "SELECT node_id, MAX(version) ".
+       "FROM content ".
+       "WHERE moderated ".
+       "GROUP BY node_id ";
+    my $sth = $dbh->prepare( $nv_sql );
+    $sth->execute();
+
+    my @nv_where;
+    while(my @results = $sth->fetchrow_array) {
+        my ($node_id, $version) = @results;
+        my $where = "(node_id=$node_id AND version=$version)";
+        push @nv_where, $where;
+    }
+
+    # Now the metadata bit
+    my $sql = 
+       "SELECT DISTINCT metadata_value ".
+       "FROM metadata ".
+       "WHERE metadata_type = ? ".
+       "AND (".
+       join(" OR ", @nv_where).
+       ")";
+    $sth = $dbh->prepare( $sql );
+    $sth->execute($type);
+
+    my $values = $sth->fetchall_arrayref([0]);
+    return ( map { $self->charset_decode( $_->[0] ) } (@$values) );
 }
 
 

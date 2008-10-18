@@ -1,3 +1,7 @@
+0.77    ???
+        Complete support for store->list_metadata_by_type, which
+          returns a list of all the metadata values
+
 0.76    13 July 2008
         Really add missing prereq of DBI!
         Add testing of database schema upgrades (#32)
