@@ -792,7 +792,8 @@ The final parameter, $requires_moderation (which defaults to false),
 is ignored except on new nodes. For existing nodes, use 
 $wiki->toggle_node_moderation to change the node moderation flag.
 
-Returns 1 on success, 0 on conflict, croaks on error.
+Returns the version of the updated node on success, 0 on conflict, croaks on
+error.
 
 B<Note> on the metadata hashref: Any data in here that you wish to
 access directly later must be a key-value pair in which the value is
@@ -852,7 +853,7 @@ sub write_node {
     if ($search and $content) {
         $search->index_node($node, $store->charset_encode($content) );
     }
-    return 1;
+    return $ret;
 }
 
 =item B<format>

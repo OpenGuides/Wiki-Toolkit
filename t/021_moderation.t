@@ -6,7 +6,7 @@ use Time::Piece;
 if ( scalar @Wiki::Toolkit::TestLib::wiki_info == 0 ) {
     plan skip_all => "no backends configured";
 } else {
-    plan tests => ( 86 * scalar @Wiki::Toolkit::TestLib::wiki_info );
+    plan tests => ( 89 * scalar @Wiki::Toolkit::TestLib::wiki_info );
 }
 
 my $iterator = Wiki::Toolkit::TestLib->new_wiki_maker;
@@ -61,10 +61,13 @@ while ( my $wiki = $iterator->new_wiki ) {
 
 
 	# Update it
-    ok( $wiki->write_node("Moderation", "yy", $mn_data{checksum}),
-		"Can update where moderation is enabled" );
+    my $nmn_ver = $wiki->write_node("Moderation", "yy", $mn_data{checksum});
+    ok( $nmn_ver, "Can update where moderation is enabled" );
     my %nmn_data = $wiki->retrieve_node("Moderation");
     my %nmnv_data = $wiki->retrieve_node(name=>"Moderation", version=>2);
+    is( $nmn_data{version}, '1', "Latest moderated version" );
+    is( $nmnv_data{version}, '2', "Latest unmoderated version" );
+    is( $nmn_ver, '2', "Latest (unmoderated) version returned by write_node" );
 
 	# Check content was updated right
 	is( $nmnv_data{content}, "yy", "Version 2 text");

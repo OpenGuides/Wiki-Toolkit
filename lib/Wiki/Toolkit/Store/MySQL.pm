@@ -45,8 +45,8 @@ sub _dsn {
 
 Locks the node, verifies the checksum, calls
 C<write_node_post_locking> with all supplied arguments, unlocks the
-node. Returns 1 on successful writing, 0 if checksum doesn't match,
-croaks on error.
+node. Returns the version of the updated node on successful writing, 0 if
+checksum doesn't match, croaks on error.
 
 Note:  Uses MySQL's user level locking, so any locks are released when
 the database handle disconnects.  Doing it like this because I can't seem

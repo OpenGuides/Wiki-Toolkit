@@ -450,7 +450,7 @@ C<version>, C<content>, C<metadata>.
 Making sure that locking/unlocking/transactions happen is left up to
 you (or your chosen subclass). This method shouldn't really be used
 directly as it might overwrite someone else's changes. Croaks on error
-but otherwise returns true.
+but otherwise returns the version number of the update just made.
 
 Supplying a ref to an array of nodes that this ones links to is
 optional, but if you do supply it then this node will be returned when
@@ -657,7 +657,7 @@ sub write_node_post_locking {
         }
     }
 
-    return 1;
+    return $version;
 }
 
 # Returns the timestamp of now, unless epoch is supplied.
