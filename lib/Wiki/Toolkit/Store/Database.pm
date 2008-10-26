@@ -176,6 +176,8 @@ contents of the node plus additional data:
 =item B<metadata> - a reference to a hash containing any caller-supplied
 metadata sent along the last time the node was written
 
+=back
+
 The node parameter is mandatory. The version parameter is optional and
 defaults to the newest version. If the node hasn't been created yet,
 it is considered to exist but be empty (this behaviour might change).
@@ -281,14 +283,21 @@ sub _retrieve_node_content {
     return %data;
 }
 
-# Expects a hash as returned by ->retrieve_node
+# Expects a hash as returned by ->retrieve_node - it's actually slightly lax
+# in this, in that while ->retrieve_node always wraps up the metadata values in
+# (refs to) arrays, this method will accept scalar metadata values too.
 sub _checksum {
     my ($self, %node_data) = @_;
     my $string = $node_data{content};
     my %metadata = %{ $node_data{metadata} || {} };
     foreach my $key ( sort keys %metadata ) {
-        $string .= "\0\0\0" . $key . "\0\0"
-                 . join("\0", sort @{$metadata{$key}} );
+        $string .= "\0\0\0" . $key . "\0\0";
+        my $val = $metadata{$key};
+        if ( ref $val eq "ARRAY" ) {
+            $string .= join("\0", sort @$val );
+        } else {
+            $string .= $val;
+        }
     }
     return md5_hex($self->charset_encode($string));
 }
@@ -450,7 +459,11 @@ C<version>, C<content>, C<metadata>.
 Making sure that locking/unlocking/transactions happen is left up to
 you (or your chosen subclass). This method shouldn't really be used
 directly as it might overwrite someone else's changes. Croaks on error
-but otherwise returns the version number of the update just made.
+but otherwise returns the version number of the update just made.  A
+return value of -1 indicates that the change was not applied.  This
+may be because the plugins voted against the change, or because the
+content and metadata in the proposed new version were identical to the
+current version (a "null" change).
 
 Supplying a ref to an array of nodes that this ones links to is
 optional, but if you do supply it then this node will be returned when
@@ -510,6 +523,11 @@ sub write_node_post_locking {
     }
     if($write_allowed < 1) {
         # The plugins didn't want to allow this action
+        return -1;
+    }
+
+    if ( $self->_checksum( %args ) eq $args{checksum} ) {
+        # Refuse to commit as nothing has changed
         return -1;
     }
 
