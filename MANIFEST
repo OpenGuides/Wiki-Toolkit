@@ -80,6 +80,7 @@ t/302_feed_atom_recentchanges.t
 t/303_feed_atom_node_all_versions.t
 t/304_feed_atom_gen_node_dist_feed.t
 t/400_upgrade.t
+t/401_null_change.t
 t/lib/Wiki/Toolkit/Plugin/Bar.pm
 t/lib/Wiki/Toolkit/Plugin/Foo.pm
 

@@ -5,6 +5,8 @@
           different metadata types (names)
         write_node: return the version of the node that was just committed,
         if successful
+        Don't write out a new version of a node if the checksum is the
+        same as the one already stored (#43)
 
 0.76    13 July 2008
         Really add missing prereq of DBI!
