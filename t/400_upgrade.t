@@ -51,7 +51,11 @@ foreach my $db (@configured_databases) {
 }
 
 my $num_tests = (scalar @schemas_to_test * scalar @configured_databases * 2) + $num_mysql_only_tests;
-plan tests => $num_tests;
+if ( $num_tests == 0 ) {
+    plan skip_all => "no backends configured";
+} else {
+    plan tests => $num_tests;
+}
 
 foreach my $database (@configured_databases) {
     my $setup_class = $database->{setup_class};
