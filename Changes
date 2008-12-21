@@ -9,6 +9,7 @@
         same as the one already stored (#43)
         t/400_upgrade.t: skip all tests correctly if no backends
         configured (#44)
+        Configure charset correctly when passing in an existing $dbh (#24)
 
 0.76    13 July 2008
         Really add missing prereq of DBI!

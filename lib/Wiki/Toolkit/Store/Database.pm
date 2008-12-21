@@ -95,6 +95,7 @@ sub _init {
     if ( $args{dbh} ) {
         $self->{_dbh} = $args{dbh};
         $self->{_external_dbh} = 1; # don't disconnect at DESTROY time
+        $self->{_charset} = $args{charset} || "iso-8859-1";
     } else {
         die "Must supply a dbname" unless defined $args{dbname};
         $self->{_dbname} = $args{dbname};
