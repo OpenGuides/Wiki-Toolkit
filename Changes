@@ -1,4 +1,4 @@
-0.77    ???
+0.77    24 December 2008
         Complete support for store->list_metadata_by_type, which
           returns a list of all the metadata values
         Add store->list_metadata_names, which will tell you all the

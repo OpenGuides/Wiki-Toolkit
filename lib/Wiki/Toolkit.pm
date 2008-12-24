@@ -1042,6 +1042,16 @@ The developer web site and bug tracker is at
 You could also subscribe to the dev list at
   http://www.earth.li/cgi-bin/mailman/listinfo/cgi-wiki-dev
 
+=head1 BUGS
+
+Versions between 0.75 and 0.77 inclusive contain a bug which prevents
+Recent Changes routines from working correctly if minor changes are excluded
+<http://www.wiki-toolkit.org/ticket/41>. You may wish to avoid upgrading to
+this version until it is fixed if this is important to you; the fix is
+however not trivial so noone has been able to step up yet.
+
+Other minor bugs are documented at <http://www.wiki-toolkit.org/report>
+
 =head1 CREDITS
 
 Various London.pm types helped out with code review, encouragement,
