@@ -3,7 +3,6 @@ INSTALL
 MANIFEST
 Makefile.PL
 README
-SIGNATURE
 bin/wiki-toolkit-rename-node
 bin/wiki-toolkit-delete-node
 bin/wiki-toolkit-setupdb
@@ -81,7 +80,6 @@ t/303_feed_atom_node_all_versions.t
 t/304_feed_atom_gen_node_dist_feed.t
 t/400_upgrade.t
 t/401_null_change.t
+t/500_pod.t
 t/lib/Wiki/Toolkit/Plugin/Bar.pm
 t/lib/Wiki/Toolkit/Plugin/Foo.pm
-
-META.yml                                 Module meta-data (added by MakeMaker)

@@ -3,7 +3,20 @@ package Wiki::Toolkit::Feed::Listing;
 use strict;
 use Carp qw( croak );
 
-=item B<fetch_recently_changed_nodes>
+=head1 NAME
+
+Wiki::Toolkit::Feed::Listing - parent class for Feeds from Wiki::Toolkit.
+
+=head1 DESCRIPTION
+
+Handles common data fetching tasks, so that child classes need only
+worry about formatting the feeds.
+
+Also enforces some common methods that must be implemented.
+
+=head1 METHODS
+
+=head2 C<fetch_recently_changed_nodes>
 
 Based on the supplied criteria, fetch a list of the recently changed nodes
 
@@ -39,7 +52,7 @@ sub fetch_recently_changed_nodes {
     return @changes;
 }
 
-=item B<fetch_newest_for_recently_changed>
+=head2 C<fetch_newest_for_recently_changed>
 
 Based on the supplied criteria (but not using all of those used by
 B<fetch_recently_changed_nodes>), find the newest node from the recently
@@ -55,7 +68,7 @@ sub fetch_newest_for_recently_changed {
 }
 
 
-=item B<fetch_node_all_versions>
+=head2 C<fetch_node_all_versions>
 
 For a given node (name or ID), return all the versions there have been,
 including all metadata required for it to go into a "recent changes"
@@ -91,7 +104,7 @@ sub fetch_node_all_versions {
 }
 
 
-=item B<recent_changes>
+=head2 C<recent_changes>
 
 Build an Atom Feed of the recent changes to the Wiki::Toolkit instance,
 using any supplied parameters to narrow the results.
@@ -119,7 +132,7 @@ sub recent_changes {
 }
 
 
-=item B<node_all_versions>
+=head2 C<node_all_versions>
 
 Build an Atom Feed of all the different versions of a given node.
 
@@ -143,7 +156,7 @@ sub node_all_versions {
     }
 } 
 
-=item B<format_geo>
+=head2 C<format_geo>
 
 Using the geo and space xml namespaces, format the supplied node metadata
 into geo: and space: tags, suitable for inclusion in a feed with those
@@ -186,11 +199,8 @@ sub format_geo {
     return $feed;
 }
 
-#item B<handle_supply_one_of>
 # Utility method, to help with argument passing where one of a list of 
 #  arguments must be supplied
-#
-#=cut
 
 sub handle_supply_one_of {
     my ($self,$mref,$aref) = @_;
@@ -213,9 +223,11 @@ sub handle_supply_one_of {
 }
 
 
-# The following are methods that any feed renderer must provide
+=pod
 
-=item B<feed_timestamp>
+The following are methods that any feed renderer must provide:
+
+=head2 C<feed_timestamp>
 
 All implementing feed renderers must implement a method to produce a
 feed specific timestamp, based on the supplied node
@@ -224,7 +236,7 @@ feed specific timestamp, based on the supplied node
 
 sub feed_timestamp          { die("Not implemented by feed renderer!"); }
 
-=item B<generate_node_list_feed>
+=head2 C<generate_node_list_feed>
 
 All implementing feed renderers must implement a method to produce a
 feed from the supplied list of nodes
@@ -233,7 +245,7 @@ feed from the supplied list of nodes
 
 sub generate_node_list_feed { die("Not implemented by feed renderer!"); }
 
-=item B<generate_node_name_distance_feed>
+=head2 C<generate_node_name_distance_feed>
 
 All implementing feed renderers must implement a method to produce a
 stripped down feed from the supplied list of node names, and optionally
@@ -243,7 +255,7 @@ locations and distance from a reference point.
 
 sub generate_node_name_distance_feed { die("Not implemented by feed renderer!"); }
 
-=item B<parse_feed_timestamp>
+=head2 C<parse_feed_timestamp>
 
 Take a feed_timestamp and return a Time::Piece object. 
 
@@ -255,24 +267,13 @@ sub parse_feed_timestamp { die("Not implemented by feed renderer!"); }
 
 __END__
 
-=head1 NAME
-
-Wiki::Toolkit::Feed::Listing - parent class for Feeds from Wiki::Toolkit.
-
-=head1 DESCRIPTION
-
-Handles common data fetching tasks, so that child classes need only
-worry about formatting the feeds.
-
-Also enforces some common methods that must be implemented.
-
 =head1 MAINTAINER
 
 The Wiki::Toolkit team, http://www.wiki-toolkit.org/.
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright 2006 the Wiki::Toolkit team.
+Copyright 2006-2009 the Wiki::Toolkit team.
 
 This module is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.

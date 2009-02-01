@@ -28,9 +28,7 @@ This class details the methods that need to be overriden by search plugins.
 
 =head1 METHODS
 
-=over 4
-
-=item B<new>
+=head2 C<new>
 
   my $search = Wiki::Toolkit::Search::XXX->new( @args );
 
@@ -52,7 +50,7 @@ sub _init {
     return $self;
 }
 
-=item B<search_nodes>
+=head2 C<search_nodes>
 
   # Find all the nodes which contain the word 'expert'.
   my %results = $search->search_nodes('expert');
@@ -85,7 +83,7 @@ sub search_nodes {
 
 sub _do_search { shift->_abstract };
 
-=item B<analyze>
+=head2 C<analyze>
 
     @terms = $self->analyze($string)
 
@@ -105,7 +103,7 @@ sub analyze {
                 );
 }
 
-=item B<fuzzy_title_match>
+=head2 C<fuzzy_title_match>
 
   $wiki->write_node( "King's Cross St Pancras", "A station." );
   my %matches = $search->fuzzy_title_match( "Kings Cross St. Pancras" );
@@ -132,7 +130,7 @@ sub fuzzy_title_match {
 
 sub _fuzzy_match { shift->_abstract };
 
-=item B<index_node>
+=head2 C<index_node>
 
   $search->index_node($node, $content);
 
@@ -174,7 +172,7 @@ sub canonicalise_title {
     return $canonical;
 }
 
-=item B<delete_node>
+=head2 C<delete_node>
 
   $search->delete_node($node);
 
@@ -191,7 +189,7 @@ sub delete_node {
 
 sub _delete_node { shift->_abstract };
 
-=item B<supports_phrase_searches>
+=head2 C<supports_phrase_searches>
 
   if ( $search->supports_phrase_searches ) {
       return $search->search_nodes( '"fox in socks"' );
@@ -204,7 +202,7 @@ false otherwise.
 
 sub supports_phrase_searches { shift->_abstract };
 
-=item B<supports_fuzzy_searches>
+=head2 C<supports_fuzzy_searches>
 
   if ( $search->supports_fuzzy_searches ) {
       return $search->fuzzy_title_match("Kings Cross St Pancreas");
@@ -216,8 +214,6 @@ false otherwise.
 =cut
 
 sub supports_fuzzy_searches { shift->_abstract };
-
-=back
 
 =head1 SEE ALSO
 
