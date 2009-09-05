@@ -1,5 +1,6 @@
 0.78
         Fix various POD errors and add POD testing (#45)
+        More recent changes tests (for #41)
 
 0.77    24 December 2008
         Complete support for store->list_metadata_by_type, which

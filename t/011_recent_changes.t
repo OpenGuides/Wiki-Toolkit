@@ -5,7 +5,7 @@ use Test::More;
 if ( scalar @Wiki::Toolkit::TestLib::wiki_info == 0 ) {
     plan skip_all => "no backends configured";
 } else {
-    plan tests => ( 25 * scalar @Wiki::Toolkit::TestLib::wiki_info );
+    plan tests => ( 28 * scalar @Wiki::Toolkit::TestLib::wiki_info );
 }
 
 my $iterator = Wiki::Toolkit::TestLib->new_wiki_maker;
@@ -24,7 +24,7 @@ while ( my $wiki = $iterator->new_wiki ) {
     do_sleep();
     my $node = "Node1";
     my %node_data = $wiki->retrieve_node( $node );
-    $wiki->write_node( $node, @node_data{ qw( content checksum ) },
+    $wiki->write_node( $node, "data", @node_data{checksum} ,
                        {
                          username  => "Kake",
                          edit_type => "Minor tidying",
@@ -34,18 +34,20 @@ while ( my $wiki = $iterator->new_wiki ) {
     do_sleep();
     $node = "Everyone's Favourite Hobby";
     %node_data = $wiki->retrieve_node( $node );
-    $wiki->write_node( $node, @node_data{ qw( content checksum ) },
+    $wiki->write_node( $node, "hobby data", @node_data{checksum},
                        {
                          comment   => "Test",
+                         edit_type => "Normal edit",
                        }
                      );
     do_sleep();
     $node = "Another Node";
     %node_data = $wiki->retrieve_node( $node );
-    $wiki->write_node( $node, @node_data{ qw( content checksum ) },
+    $wiki->write_node( $node, "another node 1", @node_data{checksum},
                        {
                          username  => "nou",
                          comment   => "Test",
+                         edit_type => "Normal edit",
                        }
                      );
 
@@ -96,6 +98,9 @@ while ( my $wiki = $iterator->new_wiki ) {
         last_n_changes => 2,
         metadata_is    => { username => "Kake" }
     );
+
+    @nodenames = map { $_->{name} } @nodes;
+    print "# Found nodes: " . join(" ", @nodenames) . "\n";
     is( scalar @nodes, 1, "metadata_is does constrain the search" );
     is( $nodes[0]{name}, "Node1", "...correctly" );
 
@@ -112,6 +117,8 @@ while ( my $wiki = $iterator->new_wiki ) {
         last_n_changes => 1,
         metadata_isnt  => { edit_type => "Minor tidying" }
     );
+    @nodenames = map { $_->{name} } @nodes;
+    print "# Found nodes: " . join(" ", @nodenames) . "\n";
     is( scalar @nodes, 1,
        "metadata_isnt includes nodes where this metadata type isn't set" );
     is( $nodes[0]{name}, "Another Node", "...correctly" );
@@ -132,7 +139,7 @@ while ( my $wiki = $iterator->new_wiki ) {
     do_sleep();
     $node = "Another Node";
     %node_data = $wiki->retrieve_node( $node );
-    $wiki->write_node( $node, @node_data{ qw( content checksum ) },
+    $wiki->write_node( $node, "another node 2", @node_data{checksum},
                        {
                          username  => "Kake",
                          comment  => "Kake writes the node that nou wrote",
@@ -141,6 +148,8 @@ while ( my $wiki = $iterator->new_wiki ) {
                      );
 
     @nodes = $wiki->list_recent_changes( days => 1 );
+    @nodenames = map { $_->{name} } @nodes;
+    print "# Found nodes: " . join(" ", @nodenames) . "\n";
     is( scalar @nodes, 3,
         "By default each node returned only once however many times changed" );
 
@@ -152,6 +161,8 @@ while ( my $wiki = $iterator->new_wiki ) {
         last_n_changes => 5,
         metadata_was => { username => "nou" }
     );
+    @nodenames = map { $_->{name} } @nodes;
+    print "# Found nodes: " . join(" ", @nodenames) . "\n";
     is( scalar @nodes, 1,
        "metadata_was returns nodes whose current version doesn't match" );
     is( $nodes[0]{name}, "Another Node", "...correctly" );
@@ -168,8 +179,45 @@ while ( my $wiki = $iterator->new_wiki ) {
                             edit_type => "Minor tidying",
                           },
     );
+    @nodenames = map { $_->{name} } @nodes;
+    print "# Found nodes: " . join(" ", @nodenames) . "\n";
     is( scalar @nodes, 2,
         "metadata_wasnt returns nodes whose current version matches" );
+
+    # lets add yet another normal edit to check proper display of multple normal edits
+    do_sleep();
+    $node = "Another Node";
+    %node_data = $wiki->retrieve_node( $node );
+    $wiki->write_node( $node, "another node 3", @node_data{checksum},
+                       {
+                         username  => "bob",
+                         comment  => "bob writes the node that nou and Kake aready wrote",
+                         edit_type => "Normal edit",
+                       }
+                     );
+
+    @nodenames = map { $_->{name} } @nodes;
+    print "# Found nodes: " . join(" ", @nodenames) . "\n";
+    @nodes = $wiki->list_recent_changes( days => 1 );
+    is( scalar @nodes, 3,
+        "By default each node returned only once however many times changed" );
+    @nodes = $wiki->list_recent_changes( days => 1, include_all_changes => 1 );
+    is( scalar @nodes, 5,
+        "...returned more than once when 'include_all_changes' set" );
+    @nodes = $wiki->list_recent_changes(
+	days => 1,
+        metadata_was => {
+                            edit_type => "Normal edit",
+                          },
+    );
+    @nodenames = map { $_->{name} } @nodes;
+    print "# Found nodes: " . join(" ", @nodenames) . "\n";
+    
+    TODO: {
+        local $TODO = 'http://www.wiki-toolkit.org/ticket/41';
+        is( scalar @nodes, 2,
+            "metadata_was returns nodes whose current version matches" );
+    }
 }
 
 sub do_sleep {
