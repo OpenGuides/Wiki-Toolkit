@@ -174,13 +174,13 @@ Wiki::Toolkit::Setup::SQLite - Set up tables for a Wiki::Toolkit store in a SQLi
 =head1 SYNOPSIS
 
   use Wiki::Toolkit::Setup::SQLite;
-  Wiki::Toolkit::Setup::MySQLite::setup($dbfile);
+  Wiki::Toolkit::Setup::SQLite::setup( $dbfile );
 
 =head1 DESCRIPTION
 
 Set up a SQLite database for use as a Wiki::Toolkit store.
 
-=head1 FUNCIONS
+=head1 FUNCTIONS
 
 =over 4
 
@@ -426,7 +426,7 @@ Kake Pugh (kake@earth.li).
 =head1 COPYRIGHT
 
      Copyright (C) 2002-2004 Kake Pugh.  All Rights Reserved.
-     Copyright (C) 2006 the Wiki::Toolkit team. All Rights Reserved.
+     Copyright (C) 2006-2009 the Wiki::Toolkit team. All Rights Reserved.
 
 This module is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
