@@ -1046,7 +1046,7 @@ You could also subscribe to the dev list at
 
 =head1 BUGS
 
-Versions between 0.75 and 0.77 inclusive contain a bug which prevents
+Versions between 0.75 and 0.78 inclusive contain a bug which prevents
 Recent Changes routines from working correctly if minor changes are excluded
 <http://www.wiki-toolkit.org/ticket/41>. You may wish to avoid upgrading to
 this version until it is fixed if this is important to you; the fix is
