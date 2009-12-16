@@ -24,7 +24,7 @@ while ( my $wiki = $iterator->new_wiki ) {
     do_sleep();
     my $node = "Node1";
     my %node_data = $wiki->retrieve_node( $node );
-    $wiki->write_node( $node, "data", @node_data{checksum} ,
+    $wiki->write_node( $node, "data", $node_data{checksum} ,
                        {
                          username  => "Kake",
                          edit_type => "Minor tidying",
