@@ -66,18 +66,15 @@ sub check_and_write_node {
     my ($node, $checksum) = @args{qw( node checksum )};
 
     my $dbh = $self->{_dbh};
-    $dbh->{AutoCommit} = 0;
+    $dbh->begin_work;
 
     my $ok = eval {
-        $dbh->do("END TRANSACTION");
-        $dbh->do("BEGIN TRANSACTION");
         $self->verify_checksum($node, $checksum) or return 0;
         $self->write_node_post_locking( %args );
     };
     if ($@) {
         my $error = $@;
         $dbh->rollback;
-        $dbh->{AutoCommit} = 1;
         if ( $error =~ /database is locked/
             or $error =~ /DBI connect.+failed/ ) {
             return 0;
@@ -86,7 +83,6 @@ sub check_and_write_node {
         }
     } else {
         $dbh->commit;
-        $dbh->{AutoCommit} = 1;
         return $ok;
     }
 }
