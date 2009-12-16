@@ -34,7 +34,7 @@ while ( my $wiki = $iterator->new_wiki ) {
     do_sleep();
     $node = "Everyone's Favourite Hobby";
     %node_data = $wiki->retrieve_node( $node );
-    $wiki->write_node( $node, "hobby data", @node_data{checksum},
+    $wiki->write_node( $node, "hobby data", $node_data{checksum},
                        {
                          comment   => "Test",
                          edit_type => "Normal edit",
@@ -43,7 +43,7 @@ while ( my $wiki = $iterator->new_wiki ) {
     do_sleep();
     $node = "Another Node";
     %node_data = $wiki->retrieve_node( $node );
-    $wiki->write_node( $node, "another node 1", @node_data{checksum},
+    $wiki->write_node( $node, "another node 1", $node_data{checksum},
                        {
                          username  => "nou",
                          comment   => "Test",
@@ -139,7 +139,7 @@ while ( my $wiki = $iterator->new_wiki ) {
     do_sleep();
     $node = "Another Node";
     %node_data = $wiki->retrieve_node( $node );
-    $wiki->write_node( $node, "another node 2", @node_data{checksum},
+    $wiki->write_node( $node, "another node 2", $node_data{checksum},
                        {
                          username  => "Kake",
                          comment  => "Kake writes the node that nou wrote",
@@ -188,7 +188,7 @@ while ( my $wiki = $iterator->new_wiki ) {
     do_sleep();
     $node = "Another Node";
     %node_data = $wiki->retrieve_node( $node );
-    $wiki->write_node( $node, "another node 3", @node_data{checksum},
+    $wiki->write_node( $node, "another node 3", $node_data{checksum},
                        {
                          username  => "bob",
                          comment  => "bob writes the node that nou and Kake aready wrote",
