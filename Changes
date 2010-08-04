@@ -1,3 +1,7 @@
+0.79
+        Fix Win32 test failure http://www.cpantesters.org/cpan/report/8099980
+        (thanks to Alexandr Ciornii for the patch)
+
 0.78    16 December 2009
         Fix various POD errors and add POD testing (#45)
         More recent changes tests (for #41)

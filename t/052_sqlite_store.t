@@ -69,7 +69,8 @@ SKIP: {
         # as well to avoid warnings that an unmocked method has been called
         # (we don't actually care).
         my $fake_dbh = Test::MockObject->new();
-        $fake_dbh->mock("do", sub { die "Dave told us to"; });
+        $fake_dbh->mock("quote", sub { die "Dave told us to"; });
+        $fake_dbh->set_true("begin_work");
         $fake_dbh->set_true("rollback");
         $fake_dbh->set_true("disconnect");
         $store->{_dbh} = $fake_dbh;
@@ -78,6 +79,6 @@ SKIP: {
                                           content  => "This is a node.",
                                           checksum => $node_data{checksum} );
         };
-        ok( $@ =~ /Dave told us to/, "...and croaks on database error" );
+        like( $@,qr/Dave told us to/, "...and croaks on database error" );
     }
 }
