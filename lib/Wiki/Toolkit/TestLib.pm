@@ -1,5 +1,6 @@
 package Wiki::Toolkit::TestLib;
 
+use 5.006; #by perlver
 use strict;
 use Carp "croak";
 use Wiki::Toolkit;

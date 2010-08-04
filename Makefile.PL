@@ -1,6 +1,7 @@
+use strict;
+use 5.006; #by perlver
 use ExtUtils::MakeMaker;
 use Data::Dumper;
-use strict;
 
 # Large chunks of this were inspired by the Makefile.PL supplied with
 # DBIx::FullTextSearch -- thanks!
