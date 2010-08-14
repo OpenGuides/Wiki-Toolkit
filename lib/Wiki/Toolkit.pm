@@ -3,7 +3,7 @@ package Wiki::Toolkit;
 use strict;
 
 use vars qw( $VERSION );
-$VERSION = '0.78';
+$VERSION = '0.79';
 
 use Carp qw(croak carp);
 use Digest::MD5 "md5_hex";
@@ -1046,7 +1046,7 @@ You could also subscribe to the dev list at
 
 =head1 BUGS
 
-Versions between 0.75 and 0.78 inclusive contain a bug which prevents
+Versions between 0.75 and 0.79 inclusive contain a bug which prevents
 Recent Changes routines from working correctly if minor changes are excluded
 <http://www.wiki-toolkit.org/ticket/41>. You may wish to avoid upgrading to
 this version until it is fixed if this is important to you; the fix is
