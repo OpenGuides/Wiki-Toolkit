@@ -1,4 +1,4 @@
-0.79
+0.79    14 August 2010
         Fix Win32 test failure http://www.cpantesters.org/cpan/report/8099980
         Declare minimum required Perl version
         (thanks to Alexandr Ciornii for the patches)
