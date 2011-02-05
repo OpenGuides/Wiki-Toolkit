@@ -1,3 +1,6 @@
+0.80    5  February 2011
+        Spelling fix in Wiki::Toolkit::Search::Base
+
 0.79    14 August 2010
         Fix Win32 test failure http://www.cpantesters.org/cpan/report/8099980
         Declare minimum required Perl version

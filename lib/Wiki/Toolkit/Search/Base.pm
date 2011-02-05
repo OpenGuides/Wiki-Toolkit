@@ -22,7 +22,7 @@ Wiki::Toolkit::Search::Base - Base class for Wiki::Toolkit search plugins.
   my $search = Wiki::Toolkit::Search::XXX->new( @args );
   my %wombat_nodes = $search->search_nodes("wombat");
 
-This class details the methods that need to be overriden by search plugins.
+This class details the methods that need to be overridden by search plugins.
 
 =cut
 
