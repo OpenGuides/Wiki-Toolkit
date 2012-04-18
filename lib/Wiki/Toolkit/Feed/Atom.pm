@@ -211,7 +211,7 @@ sub new {
     $self->{utc_offset} =~ s/(..)(..)$/$1:$2/;
   
     # Escape any &'s in the urls
-    foreach my $key qw(site_url atom_link) {
+    foreach my $key (qw(site_url atom_link)) {
         my @ands = ($self->{$key} =~ /(\&.{1,6})/g);
         foreach my $and (@ands) {
             if($and ne "&amp;") {
