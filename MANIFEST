@@ -64,6 +64,7 @@ t/051_pg_store.t
 t/052_sqlite_store.t
 t/060_recent_changes_new_only.t
 t/061_list_metadata_by_type.t
+t/062_recent_changes_metadata_was.t
 t/100_formatting.t
 t/101_default_formatter.t
 t/102_multiple_formatter.t

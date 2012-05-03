@@ -1268,12 +1268,12 @@ element of the array is a reference to a hash with the following entries:
 
 =item * B<name>: the name of the node
 
-=item * B<version>: the latest version number
+=item * B<version>: the version number of the node
 
-=item * B<last_modified>: the timestamp of when it was last modified
+=item * B<last_modified>: timestamp showing when this version was written
 
 =item * B<metadata>: a ref to a hash containing any metadata attached
-to the current version of the node
+to this version of the node
 
 =back
 
@@ -1431,7 +1431,8 @@ sub _find_recent_changes_by_criteria {
     # Figure out which table we should be joining to to check the dates and
     # versions - node or content.
     my $date_table = "node";
-    if ( $include_all_changes || $new_only ) {
+    if ( $include_all_changes || $new_only
+           || $metadata_was || $metadata_wasnt ) {
         $date_table = "content";
         $use_content_table = 1;
     }

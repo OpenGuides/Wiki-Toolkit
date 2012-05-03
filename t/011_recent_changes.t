@@ -204,20 +204,6 @@ while ( my $wiki = $iterator->new_wiki ) {
     @nodes = $wiki->list_recent_changes( days => 1, include_all_changes => 1 );
     is( scalar @nodes, 5,
         "...returned more than once when 'include_all_changes' set" );
-    @nodes = $wiki->list_recent_changes(
-	days => 1,
-        metadata_was => {
-                            edit_type => "Normal edit",
-                          },
-    );
-    @nodenames = map { $_->{name} } @nodes;
-    print "# Found nodes: " . join(" ", @nodenames) . "\n";
-    
-    TODO: {
-        local $TODO = 'http://www.wiki-toolkit.org/ticket/41';
-        is( scalar @nodes, 2,
-            "metadata_was returns nodes whose current version matches" );
-    }
 }
 
 sub do_sleep {

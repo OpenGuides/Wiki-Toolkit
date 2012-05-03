@@ -1,3 +1,6 @@
+0.81    ?
+        Fixed bug with metadata_was in recent changes (#41).
+
 0.80    5  February 2011
         Spelling fix in Wiki::Toolkit::Search::Base
 
