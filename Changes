@@ -1,4 +1,4 @@
-0.80    ?
+0.80    3 May 2012
         Spelling fix in Wiki::Toolkit::Search::Base
         Fixed deprecated use of foreach ... qw (fixes #53 and #54)
         Fixed bug with metadata_was in recent changes (#41).
