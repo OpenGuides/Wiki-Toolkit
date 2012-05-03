@@ -1,4 +1,5 @@
 0.81    ?
+        Fixed deprecated use of foreach ... qw (fixes #53 and #54)
         Fixed bug with metadata_was in recent changes (#41).
 
 0.80    5  February 2011
