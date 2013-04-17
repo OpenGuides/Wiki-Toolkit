@@ -87,6 +87,18 @@ sub check_and_write_node {
     }
 }
 
+# Get the attributes for the database connection.  We set
+# sqlite_use_immediate_transaction to false because we use database locking
+# explicitly in check_and_write_node.  This is required for DBD::SQLite 1.38.
+sub _get_dbh_connect_attr {
+    my $self = shift;
+    my $attrs = $self->SUPER::_get_dbh_connect_attr;
+    return {
+             %$attrs,
+             sqlite_use_immediate_transaction => 0
+    };
+}
+
 sub _get_lowercase_compare_sql {
     my ($self, $column) = @_;
     return "$column LIKE ?";

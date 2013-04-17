@@ -111,8 +111,7 @@ sub _init {
         my $dsn = $self->_dsn($dbname, $dbhost, $dbport)
             or croak "No data source string provided by class";
         $self->{_dbh} = DBI->connect( $dsn, $dbuser, $dbpass,
-                      { PrintError => 0, RaiseError => 1,
-                        AutoCommit => 1 } )
+                                      $self->_get_dbh_connect_attr )
             or croak "Can't connect to database $dbname using $dsn: "
                    . DBI->errstr;
     }
@@ -125,6 +124,16 @@ sub _init {
     }
 
     return $self;
+}
+
+# Internal method to get attributes for passing to DBI->connect().
+# Override in subclasses to add database-dependent attributes.
+sub _get_dbh_connect_attr {
+    return {
+             PrintError => 0,
+             RaiseError => 1,
+             AutoCommit => 1,
+    };
 }
 
 # Internal method, used to handle the logic of how to add up return
