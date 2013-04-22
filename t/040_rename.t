@@ -12,8 +12,9 @@ if ( scalar @Wiki::Toolkit::TestLib::wiki_info == 0 ) {
 my $iterator = Wiki::Toolkit::TestLib->new_wiki_maker;
 
 while ( my $wiki = $iterator->new_wiki ) {
-	my %non_existant_node = (content=>"", version=>0, last_modified=>"", checksum=>"d41d8cd98f00b204e9800998ecf8427e", moderated=>undef, node_requires_moderation=>undef, metadata=>{});
-
+    my %non_existent_node = ( content => "", version => 0, last_modified => "",
+       checksum => "d41d8cd98f00b204e9800998ecf8427e", moderated => undef,
+       node_requires_moderation => undef, metadata => {} );
 
 	# Ensure our formatter supports renaming
 	ok( $wiki->{_formatter}->can("rename_links"), "The formatter must be able to rename links for these tests to work" );
@@ -50,7 +51,7 @@ while ( my $wiki = $iterator->new_wiki ) {
 	my %asnodef = $wiki->retrieve_node("NodeFoo");
 	$nodeone2{checksum} = $asnodef{checksum};
 
-	is_deeply( \%asnode1, \%non_existant_node, "Renamed to NodeFoo" );
+	is_deeply( \%asnode1, \%non_existent_node, "Renamed to NodeFoo" );
 	is_deeply( \%asnodef, \%nodeone2, "Renamed to NodeFoo" );
 	is( "This is the second version of the first node, which links to NodeTwo, NodeThree, [NodeTwo], [NodeFour|Node Four] and [NodeThree | Node Three].", $asnodef{"content"}, "no change needed to node" );
 
@@ -75,7 +76,7 @@ while ( my $wiki = $iterator->new_wiki ) {
 	%asnodef = $wiki->retrieve_node("NodeFoo");
 	$nodeone2{checksum} = $asnode1{checksum};
 
-	is_deeply( \%asnodef, \%non_existant_node, "Renamed to NodeOne" );
+	is_deeply( \%asnodef, \%non_existent_node, "Renamed to NodeOne" );
 	is_deeply( \%asnode1, \%nodeone2, "Renamed to NodeFoo" );
 	is( "This is the second version of the first node, which links to NodeTwo, NodeThree, [NodeTwo], [NodeFour|Node Four] and [NodeThree | Node Three].", $asnode1{"content"}, "no change needed to node" );
 
@@ -103,7 +104,7 @@ while ( my $wiki = $iterator->new_wiki ) {
 	$nodetwo2{content} = "This is the second version of the second node, which links to [NodeFooBar|itself] and NodeOne";
 	$nodetwo2{last_modified} = $asnodef{last_modified};
 
-	is_deeply( \%asnode2, \%non_existant_node, "Renamed to NodeFooBar" );
+	is_deeply( \%asnode2, \%non_existent_node, "Renamed to NodeFooBar" );
 	is_deeply( \%asnodef, \%nodetwo2, "Renamed to NodeFooBar" );
 	is( $asnodef{"content"}, $nodetwo2{content}, "node was changed" );
 
@@ -126,7 +127,7 @@ while ( my $wiki = $iterator->new_wiki ) {
 	$nodetwo2{version} = 3;
 	$nodetwo2{last_modified} = $asnode2{last_modified};
 
-	is_deeply( \%asnodef, \%non_existant_node, "Renamed back to NodeTwo" );
+	is_deeply( \%asnodef, \%non_existent_node, "Renamed back to NodeTwo" );
 	is_deeply( \%asnode2, \%nodetwo2, "Renamed back to NodeTwo" );
 	is( $asnode2{"content"}, $nodetwo2{content}, "node was changed" );
 	is( $asnode2{"version"}, 3, "new node version" );

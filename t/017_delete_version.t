@@ -179,14 +179,21 @@ while ( my $wiki = $iterator->new_wiki ) {
     # Test deletion of a nonexistent node.
     eval { $wiki->delete_node( name => "idonotexist", version => 2 ); };
     is( $@, "",
-	"delete_node doesn't die when deleting a non-existent node" );
+	"delete_node doesn't die when deleting a nonexistent node" );
 
-    # Test deletion of a nonexistent version.
+    # Test deletion of a nonexistent version.  There will be a warning, so
+    # capture it and print it as a diagnostic.
     $wiki->write_node( "Five Node", "elephant", undef, { five => 1 } )
       or die "Can't write node";
-    eval { $wiki->delete_node( name => "Five Node", version => 2 ); };
+    my @warnings;
+    eval {
+        local $SIG{__WARN__} = sub { push @warnings, $_[0]; };
+        $wiki->delete_node( name => "Five Node", version => 2 );
+    };
     is( $@, "",
-	"delete_node doesn't die when deleting a non-existent version" );
+	"delete_node doesn't die when deleting a nonexistent version" );
+    print "# ...but it does warn: " . join( " ", @warnings )
+        if scalar @warnings;
     ok( $wiki->node_exists("Five Node"),
         "...and ->node_exists still returns true" );
     is( $wiki->retrieve_node("Five Node"), "elephant",

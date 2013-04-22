@@ -1059,7 +1059,8 @@ sub delete_node {
     # Skip out early if we're trying to delete a nonexistent version.
     my %verdata = $self->retrieve_node( name => $name, version => $version );
     unless($verdata{version}) {
-        warn("Asked to delete non existant version $version of node $node_id ($name)");
+        warn( "Asked to delete nonexistent version $version of node "
+               . "$node_id ($name)" );
         return 1;
     }
 
