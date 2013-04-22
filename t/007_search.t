@@ -5,15 +5,17 @@ use Test::More;
 if ( scalar @Wiki::Toolkit::TestLib::wiki_info == 0 ) {
     plan skip_all => "no backends configured";
 } else {
-    plan tests => ( 15 * scalar @Wiki::Toolkit::TestLib::wiki_info );
+    plan tests => ( 16 * scalar @Wiki::Toolkit::TestLib::wiki_info );
 }
 
 my $iterator = Wiki::Toolkit::TestLib->new_wiki_maker;
 
 while ( my $wiki = $iterator->new_wiki ) {
     SKIP: {
-        skip "Not testing search for this configuration", 15
+        skip "Not testing search for this configuration", 16
             unless $wiki->search_obj;
+
+        print '# $wiki->search_obj is a ' . $wiki->search_obj . "\n";
 
         my %results = eval { $wiki->search_nodes( "foo" ); };
         is( $@, "",
@@ -102,5 +104,16 @@ while ( my $wiki = $iterator->new_wiki ) {
         %results = $wiki->search_nodes('Sunnydale');
         ok( ! defined $results{"New Searching Node"},
             "...and removed from the indexes on deletion" );
+
+        # Make sure that overwritten content doesn't come up in searches.
+        $wiki->write_node( "Overwritten Node", "aubergines" )
+            or die "Can't write 'Overwritten Node'";
+        my %node_data = $wiki->retrieve_node( "Overwritten Node" );
+        $wiki->write_node( "Overwritten Node", "bananas",
+                           $node_data{checksum} )
+            or die "Can't write 'Overwritten Node'";
+        %results = $wiki->search_nodes( "aubergines" );
+        ok( ! defined $results{ "Overwritten Node" },
+            "Overwritten content doesn't show up in searches." );
     }
 }

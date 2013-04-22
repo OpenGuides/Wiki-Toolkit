@@ -76,6 +76,9 @@ You must supply both the node name and its content.
 sub index_node {
     my ( $self, $node, $content ) = @_;
 
+    # Delete the old version.
+    $self->_delete_node( $node );
+
     my $indexer = Lucy::Index::Indexer->new(
         index    => $self->_dir,
         schema   => $self->_schema,
