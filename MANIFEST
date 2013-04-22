@@ -18,6 +18,7 @@ lib/Wiki/Toolkit/Formatter/WikiLinkFormatterParent.pm
 lib/Wiki/Toolkit/Plugin.pm
 lib/Wiki/Toolkit/Search/Base.pm
 lib/Wiki/Toolkit/Search/DBIxFTS.pm
+lib/Wiki/Toolkit/Search/Lucy.pm
 lib/Wiki/Toolkit/Search/Plucene.pm
 lib/Wiki/Toolkit/Search/SII.pm
 lib/Wiki/Toolkit/Setup/Database.pm

@@ -1,4 +1,4 @@
-use Test::More tests => 16;
+use Test::More tests => 17;
 
 use_ok( "Wiki::Toolkit" );
 use_ok( "Wiki::Toolkit::Formatter::Default" );
@@ -22,6 +22,12 @@ eval { require Plucene; };
 SKIP: {
         skip "Plucene not installed", 1 if $@;
         use_ok( "Wiki::Toolkit::Search::Plucene" );
+}
+
+eval { require Lucy; };
+SKIP: {
+        skip "Lucy not installed", 1 if $@;
+        use_ok( "Wiki::Toolkit::Search::Lucy" );
 }
 
 use_ok( "Wiki::Toolkit::Setup::MySQL" );

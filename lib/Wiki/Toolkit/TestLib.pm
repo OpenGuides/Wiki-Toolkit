@@ -140,10 +140,13 @@ if ( $configured{search_invertedindex} ) {
                          };
 }
 
-my $plucene_path;
-# Test with Plucene if possible.
+my ( $plucene_path, $lucy_path );
+# Test with Plucene and Lucy if possible.
 if ( $configured{plucene} ) {
     $plucene_path = "t/plucene";
+}
+if ( $configured{lucy} ) {
+    $lucy_path = "t/lucy";
 }
 
 # @wiki_info describes which searches work with which stores.
@@ -160,7 +163,7 @@ push @wiki_info, { datastore_info => $datastore_info{Pg},
     if ( $datastore_info{Pg} and $sii_info{Pg} );
 
 # All stores are compatible with the default S::II search, and with Plucene,
-# and with no search.
+# and with Lucy, and with no search.
 foreach my $dbtype ( qw( MySQL Pg SQLite ) ) {
     push @wiki_info, { datastore_info => $datastore_info{$dbtype},
                        sii_info       => $sii_info{DB_File} }
@@ -168,6 +171,9 @@ foreach my $dbtype ( qw( MySQL Pg SQLite ) ) {
     push @wiki_info, { datastore_info => $datastore_info{$dbtype},
                        plucene_path   => $plucene_path }
         if ( $datastore_info{$dbtype} and $plucene_path );
+    push @wiki_info, { datastore_info => $datastore_info{$dbtype},
+                       lucy_path   => $lucy_path }
+        if ( $datastore_info{$dbtype} and $lucy_path );
     push @wiki_info, { datastore_info => $datastore_info{$dbtype} }
         if $datastore_info{$dbtype};
 }
@@ -263,9 +269,16 @@ sub new_wiki {
         unlink <$dir/*>; # don't die if false since there may be no files
         if ( -d $dir ) {
             rmdir $dir or die $!;
-    }
+        }
         mkdir $dir or die $!;
         $wiki_config{search} = Wiki::Toolkit::Search::Plucene->new( path => $dir );
+    } elsif ( $details->{lucy_path} ) {
+        require Wiki::Toolkit::Search::Lucy;
+        require File::Path;
+        my $dir = $details->{lucy_path};
+        File::Path::rmtree( $dir, 0, 1 ); #  0 = verbose, 1 = safe
+        mkdir $dir or die $!;
+        $wiki_config{search} = Wiki::Toolkit::Search::Lucy->new(path => $dir );
     }
 
     # Make a wiki.

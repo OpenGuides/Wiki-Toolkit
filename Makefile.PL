@@ -171,6 +171,17 @@ if ( $plucene_inst ) {
     $Wiki::Toolkit::TestConfig::config{plucene} = undef;
 }
 
+# If we have Lucy installed, we can test that without asking questions.
+eval { require Lucy; require File::Path };
+my $lucy_inst = $@ ? 0 : 1;
+if ( $lucy_inst ) {
+    print "You have Lucy installed, so will test with that...\n\n";
+    $Wiki::Toolkit::TestConfig::config{lucy} = 1;
+} else {
+    print "Either Lucy or File::Path not installed; skipping test...\n\n";
+    $Wiki::Toolkit::TestConfig::config{lucy} = undef;
+}
+
 # Write out the config for next run.
 open OUT, ">lib/Wiki/Toolkit/TestConfig.pm"
     or die "Couldn't open lib/Wiki/Toolkit/TestConfig.pm for writing: $!";
@@ -220,6 +231,6 @@ WriteMakefile( (MM->can('signature_target') ? (SIGN => 1) : ()),
                             ],
                clean => { FILES => "Config lib/Wiki/Toolkit/TestConfig.pm "
                                  . "t/sqlite-test.db t/sii-db-file-test.db "
-                                 . "t/node.db t/plucene"
+                                 . "t/node.db t/plucene t/lucy"
                         }
              );

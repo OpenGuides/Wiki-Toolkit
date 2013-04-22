@@ -55,6 +55,12 @@ foreach my $infoid ( @wiki_info ) {
             my $search = Wiki::Toolkit::Search::Plucene->new( path => $infoid->{plucene_path} );
             isa_ok( $search, "Wiki::Toolkit::Search::Plucene" );
             $wiki_config{search} = $search;
+        } elsif ( $infoid->{lucy_path} ) {
+            require Wiki::Toolkit::Search::Lucy;
+            my $search = Wiki::Toolkit::Search::Lucy->new(
+                             path => $infoid->{lucy_path} );
+            isa_ok( $search, "Wiki::Toolkit::Search::Lucy" );
+            $wiki_config{search} = $search;
         }
     } # end of SKIP for no search
 

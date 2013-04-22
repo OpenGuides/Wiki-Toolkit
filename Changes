@@ -1,3 +1,6 @@
+0.81    ?
+        Added a backend for searching with Lucy - Wiki::Toolkit::Search::Lucy
+
 0.80    3 May 2012
         Spelling fix in Wiki::Toolkit::Search::Base
         Fixed deprecated use of foreach ... qw (fixes #53 and #54)
