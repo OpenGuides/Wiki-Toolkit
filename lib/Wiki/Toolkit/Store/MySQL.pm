@@ -52,6 +52,8 @@ Note:  Uses MySQL's user level locking, so any locks are released when
 the database handle disconnects.  Doing it like this because I can't seem
 to get it to work properly with transactions.
 
+=back
+
 =cut
 
 sub check_and_write_node {

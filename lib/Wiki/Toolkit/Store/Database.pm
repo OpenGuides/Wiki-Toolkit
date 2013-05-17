@@ -2212,4 +2212,8 @@ sub charset_encode {
     return @input;
 }
 
+=back
+
+=cut
+
 1;
