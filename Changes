@@ -1,4 +1,5 @@
 0.81    ?
+        Fix compatibility with DBD::SQLite 1.83+ (RT#84680)
         Added a backend for searching with Lucy - Wiki::Toolkit::Search::Lucy
         Fix POD errors which are fatal with perl 5.18.
 
