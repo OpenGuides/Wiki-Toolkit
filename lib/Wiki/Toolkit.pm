@@ -3,7 +3,7 @@ package Wiki::Toolkit;
 use strict;
 
 use vars qw( $VERSION );
-$VERSION = '0.80';
+$VERSION = '0.81';
 
 use Carp qw(croak carp);
 use Digest::MD5 "md5_hex";
@@ -1031,7 +1031,7 @@ Questions should go to cgi-wiki-dev@earth.li.
 =head1 COPYRIGHT
 
      Copyright (C) 2002-2004 Kake Pugh.  All Rights Reserved.
-     Copyright (C) 2006-2012 the Wiki::Toolkit team. All Rights Reserved.
+     Copyright (C) 2006-2013 the Wiki::Toolkit team. All Rights Reserved.
 
 This module is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.

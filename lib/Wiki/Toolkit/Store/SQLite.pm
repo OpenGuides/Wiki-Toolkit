@@ -8,7 +8,7 @@ use Wiki::Toolkit::Store::Database;
 use Carp qw/carp croak/;
 
 @ISA = qw( Wiki::Toolkit::Store::Database );
-$VERSION = 0.05;
+$VERSION = 0.06;
 
 =head1 NAME
 

@@ -13,7 +13,7 @@ use Plucene::Search::HitCollector;
 
 use vars qw( @ISA $VERSION );
 
-$VERSION = '0.01';
+$VERSION = '0.02';
 use base 'Wiki::Toolkit::Search::Base';
 
 =head1 NAME
