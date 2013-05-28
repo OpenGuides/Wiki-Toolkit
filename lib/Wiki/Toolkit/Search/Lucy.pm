@@ -129,10 +129,8 @@ sub search_nodes {
     # Bail and return empty list if nothing stored.
     return () unless $self->_index_exists;
 
-    $and_or = uc( $and_or );
-    unless ( defined $and_or and $and_or eq "OR" ) {
-        $and_or = "AND";
-    }
+    $and_or = uc( $and_or || "" );
+    $and_or = "AND" unless $and_or eq "OR";
 
     my $queryparser = Lucy::Search::QueryParser->new(
         schema         => $self->_schema,
