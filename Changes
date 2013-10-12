@@ -1,3 +1,6 @@
+0.82    12 October 2013
+        Fix uninitialised value warnings in Lucy backend
+
 0.81    25 May 2013
         Fix compatibility with DBD::SQLite 1.83+ (RT#84680)
         Added a backend for searching with Lucy - Wiki::Toolkit::Search::Lucy
