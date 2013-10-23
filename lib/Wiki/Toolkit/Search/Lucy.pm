@@ -12,7 +12,7 @@ use Lucy::Search::QueryParser;
 
 use vars qw( @ISA $VERSION );
 
-$VERSION = '0.02';
+$VERSION = '0.03';
 use base 'Wiki::Toolkit::Search::Base';
 
 =head1 NAME
@@ -55,6 +55,7 @@ sub _init {
     $schema->spec_field( name => "content", type => $unstored_type );
     $schema->spec_field( name => "fuzzy",   type => $unstored_type );
     $schema->spec_field( name => "title",   type => $stored_type );
+    $schema->spec_field( name => "key",     type => $stored_type );
 
     $self->{_schema} = $schema;
     $self->{_dir} = $args{path};
@@ -86,11 +87,14 @@ sub index_node {
         truncate => 0,
     );
 
+    my $key = $self->_make_key( $node );
     my $fuzzy = $self->canonicalise_title( $node );
+
     $indexer->add_doc( {
         content => join( " ", $node, $content ),
         fuzzy   => $fuzzy,
         title   => $node,
+        key     => $key,
     } );
     $indexer->commit;
 }
@@ -104,8 +108,19 @@ sub _delete_node {
         create   => 1,
         truncate => 0,
     );
-    $indexer->delete_by_term( field => "title", term => $node );
+
+    my $key = $self->_make_key( $node );
+
+    $indexer->delete_by_term( field => "key", term => $key );
     $indexer->commit;
+}
+
+# We need to make a unique key for when we come to delete a doc - can't just
+# delete on title as it does a search rather than an exact match on the field.
+sub _make_key {
+    my ( $self, $node ) = @_;
+    $node =~ s/\s//g;
+    return lc( $node );
 }
 
 =item B<search_nodes>

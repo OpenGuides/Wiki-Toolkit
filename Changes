@@ -1,3 +1,7 @@
+0.83
+        Fix bug in Lucy backend (if you wrote a node Foo Bar and then one
+        called Foo, it would delete Foo Bar from its index).
+
 0.82    12 October 2013
         Fix uninitialised value warnings in Lucy backend
 
