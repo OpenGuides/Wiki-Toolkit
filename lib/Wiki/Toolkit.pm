@@ -3,7 +3,7 @@ package Wiki::Toolkit;
 use strict;
 
 use vars qw( $VERSION );
-$VERSION = '0.82';
+$VERSION = '0.83';
 
 use Carp qw(croak carp);
 use Digest::MD5 "md5_hex";
@@ -604,9 +604,11 @@ sub delete_node {
         # Remove old data.
         $search->delete_node( $args{name} );
         # If we have any versions left, index the new latest version.
-        my $new_current_content = $self->retrieve_node( $args{name } );
-        if ( $new_current_content ) {
-            $search->index_node( $args{name}, $new_current_content );
+        my %new_current_data = $self->retrieve_node( $args{name } );
+        # Nonexistent nodes will return blank content.
+        if ( $new_current_data{content} ) {
+            $search->index_node( $args{name}, $new_current_data{content},
+                                 $new_current_data{metadata} );
         }
     }
 
@@ -851,7 +853,8 @@ sub write_node {
 
     my $search = $self->{_search};
     if ($search and $content) {
-        $search->index_node($node, $store->charset_encode($content) );
+        $search->index_node( $node, $store->charset_encode( $content ),
+                             $metadata );
     }
     return $ret;
 }

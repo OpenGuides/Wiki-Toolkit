@@ -132,10 +132,21 @@ sub _fuzzy_match { shift->_abstract };
 
 =head2 C<index_node>
 
-  $search->index_node($node, $content);
+  $search->index_node( $node, $content, $metadata );
 
 Indexes or reindexes the given node in the search engine indexes. 
-You must supply both the node name and its content.
+You must supply both the node name and its content, but metadata is
+optional.
+
+If you do supply metadata, it will be used if and only if your chosen
+search backend supports metadata indexing (see
+C<supports_metadata_indexing>).  It should be a reference to a hash
+where the keys are the names of the metadata fields and the values are
+either scalars or references to arrays of scalars.  For example:
+
+  $search->index_node( "Calthorpe Arms", "Nice pub in Bloomsbury.",
+                       { category => [ "Pubs", "Bloomsbury" ],
+                         postcode => "WC1X 8JR" } );
 
 =cut
 
@@ -214,6 +225,19 @@ false otherwise.
 =cut
 
 sub supports_fuzzy_searches { shift->_abstract };
+
+=head2 C<supports_metadata_indexing>
+
+  if ( $search->supports_metadata_indexing ) {
+      print "This search backend indexes metadata as well as content.";
+  }
+
+Returns true if this search backend supports metadata indexing, and
+false otherwise.
+
+=cut
+
+sub supports_metadata_indexing { 0; };
 
 =head1 SEE ALSO
 

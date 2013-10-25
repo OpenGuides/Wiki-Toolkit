@@ -39,6 +39,9 @@ Each time you call C<< ->next >> on your iterator, you will get a
 fresh blank wiki object. The iterator will iterate over all configured
 search and storage backends.
 
+The Lucy search backend will be configured to index three metadata fields:
+address, category, and locale.
+
 =cut
 
 my %configured = %Wiki::Toolkit::TestConfig::config;
@@ -278,7 +281,9 @@ sub new_wiki {
         my $dir = $details->{lucy_path};
         File::Path::rmtree( $dir, 0, 1 ); #  0 = verbose, 1 = safe
         mkdir $dir or die $!;
-        $wiki_config{search} = Wiki::Toolkit::Search::Lucy->new(path => $dir );
+        $wiki_config{search} = Wiki::Toolkit::Search::Lucy->new(
+            path => $dir,
+            metadata_fields => [ "address", "category", "locale" ] );
     }
 
     # Make a wiki.

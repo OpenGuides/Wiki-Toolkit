@@ -34,10 +34,15 @@ Provides L<Lucy>-based search methods for L<Wiki::Toolkit>.
 
 =item B<new>
 
-  my $search = Wiki::Toolkit::Search::Lucy->new( path => "/var/lucy/wiki" );
+  my $search = Wiki::Toolkit::Search::Lucy->new(
+      path => "/var/lucy/wiki",
+      metadata_fields => [ "category", "locale", "address" ] );
 
-Takes only one parameter, which is mandatory. C<path> must be a directory
+The C<path> parameter is mandatory. C<path> must be a directory
 for storing the indexed data.  It should exist and be writeable.
+
+The C<metadata_fields> parameter is optional.  It should be a reference
+to an array of metadata field names.
 
 =cut
 
@@ -57,8 +62,13 @@ sub _init {
     $schema->spec_field( name => "title",   type => $stored_type );
     $schema->spec_field( name => "key",     type => $stored_type );
 
+    foreach my $md_field ( @{$args{metadata_fields}} ) {
+        $schema->spec_field( name => $md_field, type => $unstored_type );
+    }
+
     $self->{_schema} = $schema;
     $self->{_dir} = $args{path};
+    $self->{_metadata_fields} = $args{metadata_fields};
     return $self;
 }
 
@@ -67,15 +77,26 @@ sub _schema { shift->{_schema} }
 
 =item B<index_node>
 
-  $search->index_node( $node, $content );
+  $search->index_node( $node, $content, $metadata );
 
 Indexes or reindexes the given node in the search engine indexes. 
-You must supply both the node name and its content.
+You must supply both the node name and its content, but metadata is optional.
+
+If you do supply metadata, it should be a reference to a hash where
+the keys are the names of the metadata fields and the values are
+either scalars or references to arrays of scalars.  For example:
+
+  $search->index_node( "Calthorpe Arms", "Nice pub in Bloomsbury.",
+                       { category => [ "Pubs", "Bloomsbury" ],
+                         postcode => "WC1X 8JR" } );
+
+Only those metadata fields which were supplied to ->new will be taken
+notice of - others will be silently ignored.
 
 =cut
 
 sub index_node {
-    my ( $self, $node, $content ) = @_;
+    my ( $self, $node, $content, $metadata ) = @_;
 
     # Delete the old version.
     $self->_delete_node( $node );
@@ -90,12 +111,26 @@ sub index_node {
     my $key = $self->_make_key( $node );
     my $fuzzy = $self->canonicalise_title( $node );
 
-    $indexer->add_doc( {
+    my %data = (
         content => join( " ", $node, $content ),
         fuzzy   => $fuzzy,
         title   => $node,
         key     => $key,
-    } );
+    );
+
+    my @fields = @{$self->{_metadata_fields}};
+    foreach my $field ( @fields ) {
+        my $value = $metadata->{$field};
+        if ( $value ) {
+            if ( ref $value ) {
+                $data{$field} = join( " ", @$value );
+            } else {
+                $data{$field} = $value;
+            }
+        }
+    }
+
+    $indexer->add_doc( \%data );
     $indexer->commit;
 }
 
@@ -211,6 +246,7 @@ sub _index_exists {
 
 sub supports_fuzzy_searches { 1; }
 sub supports_phrase_searches { 1; }
+sub supports_metadata_indexing { 1; }
 
 =back
 
