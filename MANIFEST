@@ -83,5 +83,9 @@ t/304_feed_atom_gen_node_dist_feed.t
 t/400_upgrade.t
 t/401_null_change.t
 t/500_pod.t
+t/700_lucy_bug.t
+t/701_lucy_setup.t
+t/702_metadata_search.t
+t/703_weighted_search.t
 t/lib/Wiki/Toolkit/Plugin/Bar.pm
 t/lib/Wiki/Toolkit/Plugin/Foo.pm
