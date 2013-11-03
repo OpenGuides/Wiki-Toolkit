@@ -36,13 +36,19 @@ Provides L<Lucy>-based search methods for L<Wiki::Toolkit>.
 
   my $search = Wiki::Toolkit::Search::Lucy->new(
       path => "/var/lucy/wiki",
-      metadata_fields => [ "category", "locale", "address" ] );
+      metadata_fields => [ "category", "locale", "address" ],
+      boost => { title => 2.5 } );
 
 The C<path> parameter is mandatory. C<path> must be a directory
 for storing the indexed data.  It should exist and be writeable.
 
 The C<metadata_fields> parameter is optional.  It should be a reference
 to an array of metadata field names.
+
+The C<boost> parameter is also optional.  It should be a reference to
+a hash in which the keys are fields and the values are numbers - see
+L<Lucy::Plan::FieldType> for more info.  Only C<title> is currently
+supported as a field value.
 
 =cut
 
@@ -57,9 +63,15 @@ sub _init {
                           analyzer => $polyanalyzer );
     my $unstored_type = Lucy::Plan::FullTextType->new(
                           analyzer => $polyanalyzer, stored => 0 );
+    my %title_args = ( analyzer => $polyanalyzer, stored => 1 );
+    if ( $args{boost}{title} ) {
+        $title_args{boost} = $args{boost}{title};
+    }
+    my $title_type = Lucy::Plan::FullTextType->new( %title_args );
+                          
     $schema->spec_field( name => "content", type => $unstored_type );
     $schema->spec_field( name => "fuzzy",   type => $unstored_type );
-    $schema->spec_field( name => "title",   type => $stored_type );
+    $schema->spec_field( name => "title",   type => $title_type );
     $schema->spec_field( name => "key",     type => $stored_type );
 
     foreach my $md_field ( @{$args{metadata_fields}} ) {
