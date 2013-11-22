@@ -1,4 +1,4 @@
-0.83
+0.83    22 November 2013
         Fix bug in Lucy backend (if you wrote a node Foo Bar and then one
           called Foo, it would delete Foo Bar from its index).
         Make Lucy backend capable of indexing metadata as well.
