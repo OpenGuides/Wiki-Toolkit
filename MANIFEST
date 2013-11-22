@@ -86,6 +86,6 @@ t/500_pod.t
 t/700_lucy_bug.t
 t/701_lucy_setup.t
 t/702_metadata_search.t
-t/703_weighted_search.t
+t/703_search_weightings.t
 t/lib/Wiki/Toolkit/Plugin/Bar.pm
 t/lib/Wiki/Toolkit/Plugin/Foo.pm
