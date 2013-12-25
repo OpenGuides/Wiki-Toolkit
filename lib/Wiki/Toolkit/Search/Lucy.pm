@@ -37,18 +37,39 @@ Provides L<Lucy>-based search methods for L<Wiki::Toolkit>.
   my $search = Wiki::Toolkit::Search::Lucy->new(
       path => "/var/lucy/wiki",
       metadata_fields => [ "category", "locale", "address" ],
-      boost => { title => 2.5 } );
+      boost => { title => 2.5 },
+      content_munger => sub {
+                            my $content = shift;
+                            $content =~ s/secretword//gs;
+                            return $content;
+                        },
+      node_filter => sub {
+                         my %args = @_;
+                         return $args{content} =~ /REDIRECT/ ? 0 : 1;
+                        },
+  );
 
 The C<path> parameter is mandatory. C<path> must be a directory
 for storing the indexed data.  It should exist and be writeable.
 
-The C<metadata_fields> parameter is optional.  It should be a reference
-to an array of metadata field names.
+The other four parameters are optional:
 
-The C<boost> parameter is also optional.  It should be a reference to
-a hash in which the keys are fields and the values are numbers - see
-L<Lucy::Plan::FieldType> for more info.  Only C<title> is currently
-supported as a field value.
+C<metadata_fields> should be a reference to an array of metadata field
+names.
+
+C<boost> should be a reference to a hash in which the keys are fields
+and the values are numbers - see L<Lucy::Plan::FieldType> for more
+info.  Only C<title> is currently supported as a field value.
+
+C<content_munger> should be a reference to a subroutine which takes
+the node content as a string and returns another string which will be
+indexed in place of the original content.
+
+C<node_filter> should be a reference to a subroutine which takes the
+named arguments C<node>, C<content>, and C<metadata> and returns either
+true (yes, index this node) or false (no, don't index this node).
+
+Content munging takes place BEFORE node filtering.
 
 =cut
 
@@ -81,6 +102,8 @@ sub _init {
     $self->{_schema} = $schema;
     $self->{_dir} = $args{path};
     $self->{_metadata_fields} = $args{metadata_fields};
+    $self->{_content_munger} = $args{content_munger};
+    $self->{_node_filter} = $args{node_filter};
     return $self;
 }
 
@@ -105,6 +128,14 @@ either scalars or references to arrays of scalars.  For example:
 Only those metadata fields which were supplied to ->new will be taken
 notice of - others will be silently ignored.
 
+If C<content_munger> has been supplied to C<new> as a subroutine
+reference, then C<$content> will be run through this before indexing.
+
+If C<node_filter> has been supplied to C<new> as a subroutine reference,
+then this will be used to check whether the node should be indexed or ignored.
+
+Content munging takes place BEFORE node filtering.
+
 =cut
 
 sub index_node {
@@ -112,6 +143,20 @@ sub index_node {
 
     # Delete the old version.
     $self->_delete_node( $node );
+
+    # See if we need to munge the content.
+    my $munger = $self->{_content_munger};
+    if ( $munger && ref $munger eq "CODE" ) {
+        $content = &$munger( $content );
+    }
+
+    # See if this node should be ignored.
+    my $filter = $self->{_node_filter};
+    if ( $filter && ref $filter eq "CODE"
+         && ! &$filter( node => $node, content => $content,
+                        metadata => $metadata ) ) {
+        return;
+    }
 
     my $indexer = Lucy::Index::Indexer->new(
         index    => $self->_dir,

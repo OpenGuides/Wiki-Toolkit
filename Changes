@@ -1,3 +1,8 @@
+0.84
+        Add new options to Lucy and Plucene backends: (1) content munging
+          before search indexing, (2) total exclusion of certain nodes from
+          search indexing.
+
 0.83    22 November 2013
         Fix bug in Lucy backend (if you wrote a node Foo Bar and then one
           called Foo, it would delete Foo Bar from its index).

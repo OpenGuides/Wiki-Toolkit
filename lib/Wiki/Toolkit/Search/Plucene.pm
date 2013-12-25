@@ -35,16 +35,40 @@ Provides search-related methods for L<Wiki::Toolkit>.
 
 =item B<new>
 
-  my $search = Wiki::Toolkit::Search::Plucene->new( path => "/var/plucene/wiki" );
+  my $search = Wiki::Toolkit::Search::Plucene->new(
+                   path => "/var/plucene/wiki",
+                   content_munger => sub {
+                       my $content = shift;
+                       $content =~ s/secretword//gs;
+                       return $content;
+                   },
+                   node_filter => sub {
+                       my %args = @_;
+                       return $args{content} =~ /REDIRECT/ ? 0 : 1;
+                   },
+  );
 
-Takes only one parameter, which is mandatory. C<path> must be a directory
+The C<path> parameter is mandatory. C<path> must be a directory
 for storing the indexed data.  It should exist and be writeable.
+
+The C<content_munger> parameter is optional.  It should be a reference to a
+subroutine which takes the node content as a string and returns
+another string which will be indexed in place of the original content.
+
+The C<node_filter> parameter is also optional.  It should be a
+reference to a subroutine which takes the named arguments C<node> and
+C<content>, and returns either true (yes, index this node) or false
+(no, don't index this node).
+
+Content munging takes place BEFORE node filtering.
 
 =cut
 
 sub _init {
     my ($self, %args) = @_;
     $self->{_dir} = $args{path};
+    $self->{_content_munger} = $args{content_munger};
+    $self->{_node_filter} = $args{node_filter};
     return $self;
 }
 
@@ -129,9 +153,23 @@ sub index_node {
     # Delete the old version.
     $self->delete_node( $node );
 
+    # See if we need to munge the content.
+    my $munger = $self->{_content_munger};
+    if ( $munger && ref $munger eq "CODE" ) {
+        $content = &$munger( $content );
+    }
+
+    # See if this node should be ignored.
+    my $filter = $self->{_node_filter};
+    if ( $filter && ref $filter eq "CODE"
+         && ! &$filter( node => $node, content => $content ) ) {
+        return;
+    }
+
     my $writer = $self->_writer;
     my $doc    = Plucene::Document->new;
     my $fuzzy = $self->canonicalise_title( $node );
+
     $doc->add( Plucene::Document::Field->Text( "content", join( " ", $node, $content ) ) );
     $doc->add( Plucene::Document::Field->Text( "fuzzy", $fuzzy ) );
     $doc->add( Plucene::Document::Field->Text( "title", $node ) );

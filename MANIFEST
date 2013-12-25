@@ -87,5 +87,7 @@ t/700_lucy_bug.t
 t/701_lucy_setup.t
 t/702_metadata_search.t
 t/703_search_weightings.t
+t/704_search_content_munging.t
+t/705_search_exclusion.t
 t/lib/Wiki/Toolkit/Plugin/Bar.pm
 t/lib/Wiki/Toolkit/Plugin/Foo.pm
