@@ -723,6 +723,15 @@ sub rename_node {
     my $dbh = $self->dbh;
     my $formatter = $wiki->{_formatter};
 
+    # For formatters that support it, run the new name through the node name
+    # to param conversion and back again, to make sure any necessary munging
+    # gets done.
+    if ( $formatter->can( "node_name_to_node_param" )
+         && $formatter->can( "node_param_to_node_name" ) ) {
+        $new_name = $formatter->node_param_to_node_name(
+                        $formatter->node_name_to_node_param( $new_name ) );
+    }
+
     my $timestamp = $self->_get_timestamp();
 
     # Call pre_rename on any plugins, in case they want to tweak anything

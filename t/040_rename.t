@@ -6,7 +6,7 @@ use Time::Piece;
 if ( scalar @Wiki::Toolkit::TestLib::wiki_info == 0 ) {
     plan skip_all => "no backends configured";
 } else {
-    plan tests => ( 35 * scalar @Wiki::Toolkit::TestLib::wiki_info );
+    plan tests => ( 39 * scalar @Wiki::Toolkit::TestLib::wiki_info );
 }
 
 my $iterator = Wiki::Toolkit::TestLib->new_wiki_maker;
@@ -172,5 +172,40 @@ while ( my $wiki = $iterator->new_wiki ) {
         "no explicit to update, implicit link not" );
     is( 1, $anode3{'version'}, "no new version" );
 
-    # Now with implicit and explicit
+    # Ensure force_ucfirst_nodes is respected if and only if it's switched on.
+    # Note that this isn't the same as the perl function ucfirst, which only
+    # uppercases the first character of a string - it uppercases the first
+    # character of each word.
+    eval { require Wiki::Toolkit::Formatter::UseMod; };
+    SKIP: {
+        skip "Wiki::Toolkit::Formatter::UseMod not available", 4 if $@;
+
+        # First check with it on.
+        $wiki->{_formatter} = Wiki::Toolkit::Formatter::UseMod->new(
+            force_ucfirst_nodes => 1,
+            munge_urls => 1,
+        );
+        $wiki->write_node( "Test Node", "A test node" )
+            or die "Couldn't write Test Node";
+        # "testing node" should be forced to "Testing Node"
+        $wiki->rename_node( "Test Node", "testing node" );
+        ok( $wiki->retrieve_node( "Testing Node" ),
+            "New name for renamed node is forced ucfirst if we want it to be");
+        ok( !$wiki->retrieve_node( "testing node" ),
+            "... and the non-ucfirst name is not found" );
+
+        # And now check with it off.
+        $wiki->{_formatter} = Wiki::Toolkit::Formatter::UseMod->new(
+            force_ucfirst_nodes => 0,
+            munge_urls => 1,
+        );
+        $wiki->write_node( "Test Node Two", "Another test node" )
+            or die "Couldn't write Test Node Two";
+        $wiki->rename_node( "Test Node Two", "testing node two" );
+        ok( !$wiki->retrieve_node( "Testing Node Two" ),
+            "New name for renamed node isn't forced ucfirst if we don't "
+            . "want it to be" );
+        ok( $wiki->retrieve_node( "testing node two" ),
+            "... and the non-ucfirst name is found instead" );
+    }
 }

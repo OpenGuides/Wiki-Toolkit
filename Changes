@@ -1,4 +1,8 @@
-0.84   23 February 2014
+0.85
+        Make ->rename_node try to ensure a valid new node name (depending on
+          formatter parameters).
+
+0.84    23 February 2014
         Add new options to Lucy and Plucene backends: (1) content munging
           before search indexing, (2) total exclusion of certain nodes from
           search indexing.
