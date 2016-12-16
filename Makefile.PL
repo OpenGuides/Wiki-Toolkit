@@ -222,6 +222,7 @@ WriteMakefile( (MM->can('signature_target') ? (SIGN => 1) : ()),
                                  'Test::More'       => 0,
                                  'Time::Piece'      => 0,
                                  'DBI'              => 0,
+                                 'CGI'              => 0,
                                  %extras
                                },
                EXE_FILES => [ "bin/wiki-toolkit-setupdb",
