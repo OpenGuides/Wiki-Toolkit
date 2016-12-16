@@ -242,6 +242,9 @@ WriteMakefile( (MM->can('signature_target') ? (SIGN => 1) : ()),
                             url =>  'https://github.com/OpenGuides/Wiki-Toolkit.git',
                             web => 'https://github.com/OpenGuides/Wiki-Toolkit',
                         },
+                        bugtracker => {
+                            url => 'https://github.com/OpenGuides/Wiki-Toolkit/issues',
+                        },
                     },
                },
              );
