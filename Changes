@@ -1,6 +1,7 @@
-0.85
+0.85    16 December 2016
         Make ->rename_node try to ensure a valid new node name (depending on
           formatter parameters).
+        Add dependency on CGI which is no longer core (RT#118582)
 
 0.84    23 February 2014
         Add new options to Lucy and Plucene backends: (1) content munging
