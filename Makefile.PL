@@ -232,5 +232,15 @@ WriteMakefile( (MM->can('signature_target') ? (SIGN => 1) : ()),
                clean => { FILES => "Config lib/Wiki/Toolkit/TestConfig.pm "
                                  . "t/sqlite-test.db t/sii-db-file-test.db "
                                  . "t/node.db t/plucene t/lucy"
-                        }
+                        },
+               META_MERGE        => {
+                    "meta-spec" => { version => 2 },
+                    resources => {
+                        repository => {
+                            type => 'git',
+                            url =>  'https://github.com/OpenGuides/Wiki-Toolkit.git',
+                            web => 'https://github.com/OpenGuides/Wiki-Toolkit',
+                        },
+                    },
+               },
              );
