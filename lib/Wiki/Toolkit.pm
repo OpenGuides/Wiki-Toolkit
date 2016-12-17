@@ -1031,7 +1031,7 @@ and Dominic Hargreaves)
 
 Questions should go to cgi-wiki-dev@earth.li.
 
-=head1 COPYRIGHT
+=head1 LICENSE AND COPYRIGHT
 
      Copyright (C) 2002-2004 Kake Pugh.  All Rights Reserved.
      Copyright (C) 2006-2013 the Wiki::Toolkit team. All Rights Reserved.

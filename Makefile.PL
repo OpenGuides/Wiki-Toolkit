@@ -216,6 +216,7 @@ if ( $config{plucene} ) {
 WriteMakefile( (MM->can('signature_target') ? (SIGN => 1) : ()),
                NAME         => "Wiki::Toolkit",
                VERSION_FROM => "lib/Wiki/Toolkit.pm",
+               LICENSE      => "perl_5",
                PREREQ_PM    => { 'Text::WikiFormat' => '0.78', #earlier's buggy
                                  'HTML::PullParser' => 0,
                                  'Digest::MD5'      => 0,
