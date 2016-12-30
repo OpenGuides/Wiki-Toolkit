@@ -2,24 +2,14 @@ language: perl
 env:
   global:
     - WIKI_TOOLKIT_MYSQL_DBNAME=wikitest
-    - WIKI_TOOLKIT_MYSQL_DBUSER=travis
+    - WIKI_TOOLKIT_MYSQL_DBUSER=root
     - WIKI_TOOLKIT_MYSQL_DBHOST=localhost
-    - WIKI_TOOLKIT_PG_DBNAME=wikitest
-    - WIKI_TOOLKIT_PG_DBUSER=postgres
-    - WIKI_TOOLKIT_PG_DBHOST=localhost
 perl:
   - "5.22"
-  - "5.20"
-  - "5.18"
-  - "5.16"
-  - "5.14"
-  - "5.12"
-  - "5.10"
 services:
   - mysql
-  - postgresql
 before_install:
   - mysql -e 'CREATE DATABASE wikitest;'
-  - psql -c 'create database wikitest;' -U postgres
   - cpanm --quiet --notest DBD::SQLite Plucene File::Spec::Functions Lucy File::Path Lingua::Stem DBD::Pg DBD::mysql DBIx::FullTextSearch Test::Pod Test::MockObject Hook::LexWrap Wiki::Toolkit::Formatter::UseMod
 sudo: false
+script: perl Makefile.PL && make && prove -v
