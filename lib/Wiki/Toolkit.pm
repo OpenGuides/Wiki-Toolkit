@@ -33,6 +33,9 @@ you.  You will still need to write some code - this isn't an instant Wiki.
   # inverted index/DB_File search backend.  This store/search
   # combination can be used on systems with no access to an actual
   # database server.
+  #
+  # The database should already exist; it can be created using
+  # the supplied wiki-toolkit-setupdb script.
 
   my $store     = Wiki::Toolkit::Store::SQLite->new(
       dbname => "/home/wiki/store.db" );
