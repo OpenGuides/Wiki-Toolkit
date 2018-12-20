@@ -587,11 +587,14 @@ sub write_node_post_locking {
 
         # Update the node only if node doesn't require moderation
         if(!$node_requires_moderation) {
-            $sql = "UPDATE node SET version=" . $dbh->quote($version)
-             . ", text=" . $dbh->quote($self->charset_encode($content))
-             . ", modified=" . $dbh->quote($timestamp)
-             . " WHERE name=" . $dbh->quote($self->charset_encode($node));
-            $dbh->do($sql) or croak "Error updating database: " . DBI->errstr;
+            $sql = "UPDATE node SET version=?"
+                . ", text=?"
+                . ",modified=?"
+                . " WHERE NAME=?";
+            my $sth = $dbh->prepare($sql);
+            $sth->execute(map { $self->charset_encode($_) }
+                              ($version,$content,$timestamp,$node)
+                      )  or croak "Error updating database: " . DBI->errstr;
         }
 
         # You can't use this to enable moderation on an existing node
