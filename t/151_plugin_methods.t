@@ -30,4 +30,6 @@ while ( my $wiki = $iterator->new_wiki ) {
     my $plugin_2 = Wiki::Toolkit::Plugin::Bar->new;
     eval { $wiki->register_plugin( plugin => $plugin_2 ); };
     is( $@, "", "->on_register can access datastore" );
+
+    delete $wiki->{_registered_plugins}; # break cyclic references
 }
