@@ -1,3 +1,9 @@
+0.86
+        Upgrade database schema to version 11 (text columns no longer have a
+          default value, for compatibility with MySQL strict mode).
+        Remove code for dealing with upgrades to database schema version 10
+	  (which came in over a decade ago).
+
 0.85    16 December 2016
         Make ->rename_node try to ensure a valid new node name (depending on
           formatter parameters).
