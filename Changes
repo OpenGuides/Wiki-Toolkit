@@ -2,7 +2,10 @@
         Upgrade database schema to version 11 (text columns no longer have a
           default value, for compatibility with MySQL strict mode).
         Remove code for dealing with upgrades to database schema version 10
-	  (which came in over a decade ago).
+          (which came in over a decade ago).  PLEASE NOTE that if your schema
+          version is older than 10 (see the schema_info table in your database)
+          then you MUST upgrade to version 10 by running wiki-toolkit-setupdb
+          BEFORE you install this version of Wiki::Toolkit.
 
 0.85    16 December 2016
         Make ->rename_node try to ensure a valid new node name (depending on
