@@ -10,6 +10,7 @@
           version is older than 10 (see the schema_info table in your database)
           then you MUST upgrade to version 10 by running wiki-toolkit-setupdb
           BEFORE you install this version of Wiki::Toolkit.
+        Fix an issue with MySQL locking of nodes with long names.
 
 0.85    16 December 2016
         Make ->rename_node try to ensure a valid new node name (depending on
