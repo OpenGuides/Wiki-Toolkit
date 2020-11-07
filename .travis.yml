@@ -21,5 +21,5 @@ services:
 before_install:
   - mysql -e 'CREATE DATABASE wikitest;'
   - psql -c 'create database wikitest;' -U postgres
-  - cpanm --quiet --notest DBD::SQLite Plucene File::Spec::Functions Lucy File::Path Lingua::Stem DBD::Pg DBD::mysql DBIx::FullTextSearch Test::Pod Test::MockObject Hook::LexWrap Wiki::Toolkit::Formatter::UseMod
+  - cpanm --quiet --notest DBD::SQLite Plucene File::Spec::Functions Lucy File::Path Lingua::Stem DBD::Pg DBD::mysql Test::Pod Test::MockObject Hook::LexWrap Wiki::Toolkit::Formatter::UseMod
 sudo: false
