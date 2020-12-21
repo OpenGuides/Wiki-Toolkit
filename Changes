@@ -1,4 +1,4 @@
-0.86
+0.86    21 December 2020
         Upgrade database schema to version 11 (text columns no longer have a
           default value, for compatibility with MySQL strict mode).  To upgrade
           your existing databases to the new schema, run wiki-toolkit-setupdb.
