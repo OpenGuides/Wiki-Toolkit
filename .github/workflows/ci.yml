@@ -1,0 +1,81 @@
+name: CI
+env:
+    AUTOMATED_TESTING: 1
+on:
+  - push
+  - pull_request
+
+jobs:
+  perl_tester:
+    runs-on: ubuntu-latest
+    name: "perl ${{ matrix.perl_version }}"
+    env:
+      WIKI_TOOLKIT_MYSQL_DBNAME: wikitest
+      WIKI_TOOLKIT_MYSQL_DBUSER: wikitest
+      WIKI_TOOLKIT_MYSQL_DBPASS: wikitest
+      WIKI_TOOLKIT_MYSQL_DBHOST: mysql
+      WIKI_TOOLKIT_PG_DBNAME: wikitest
+      WIKI_TOOLKIT_PG_DBUSER: wikitest
+      WIKI_TOOLKIT_PG_DBPASS: wikitest
+      WIKI_TOOLKIT_PG_DBHOST: postgres
+
+    strategy:
+      fail-fast: false
+      matrix:
+        # versions of perl shipped with ubuntu/debian and latest
+        perl_version:
+          - "5.32"
+          - "5.30"
+          - "5.28"
+          - "5.26"
+          - "5.24"
+          - "5.22"
+          - "5.20"
+
+    container:
+      image: "perldocker/perl-tester:${{ matrix.perl_version }}"
+    services:
+      mysql:
+        image: mysql:5.7
+        env:
+            MYSQL_DATABASE: wikitest
+            MYSQL_USER: wikitest
+            MYSQL_PASSWORD: wikitest
+            MYSQL_ALLOW_EMPTY_PASSWORD: yes
+        ports:
+           - 3306
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_PASSWORD: wikitest
+          POSTGRES_USER: wikitest
+        ports:
+          - 5432
+
+    steps:
+      - uses: actions/checkout@v2
+        # install modules needed to make full test suite run
+      - name: uses install-with-cpanm
+        uses: perl-actions/install-with-cpanm@v1.1
+        with:
+          install: |
+            DBD::SQLite
+            Plucene
+            File::Spec::Functions
+            Lucy
+            File::Path
+            Lingua::Stem
+            DBD::Pg
+            DBD::mysql
+            Test::Pod
+            Test::MockObject
+            Hook::LexWrap
+            Wiki::Toolkit::Formatter::UseMod
+          sudo: false
+          args: "--quiet"
+        # install default module dependences
+      - run: cpanm --quiet --installdeps --notest .
+      - run: perl Makefile.PL
+      - run: make
+        # actually run the tests
+      - run: make test
