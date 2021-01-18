@@ -1758,7 +1758,7 @@ sub list_nodes_by_missing_metadata {
     my $dbh = $self->dbh;
     if ( $args{ignore_case} ) {
         $type  = lc( $type  );
-        $value = lc( $value );
+        $value = lc( $value || "");
     }
 
     my @nodes;
