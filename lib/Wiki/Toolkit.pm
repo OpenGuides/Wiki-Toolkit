@@ -1044,8 +1044,7 @@ under the same terms as Perl itself.
 
 =head1 FEEDBACK
 
-The developer web site and bug tracker is at
-  http://www.wiki-toolkit.org/ - please file bugs there as appropriate.
+Please file bugs at https://github.com/OpenGuides/Wiki-Toolkit/issues.
 
 You could also subscribe to the dev list at
   http://www.earth.li/cgi-bin/mailman/listinfo/cgi-wiki-dev
